@@ -60,14 +60,14 @@ namespace code0k_cc
             return BadResult;
         }
 
-        private readonly static Dictionary<Token, RequireDelegate> SymbolDelegates;
+        private readonly static Dictionary<TokenType, RequireDelegate> SymbolDelegates;
 
 
         static SymbolAnalyzer()
         {
             // symbol
-            SymbolDelegates = new Dictionary<Token, RequireDelegate>();
-            foreach (var symbol in Token.GetAll())
+            SymbolDelegates = new Dictionary<TokenType, RequireDelegate>();
+            foreach (var symbol in TokenType.GetAll())
             {
                 SymbolDelegates.Add(
                     symbol,
@@ -79,7 +79,7 @@ namespace code0k_cc
 
         }
 
-        private static RequireDelegateResult RequireSymbol(Token symbol, SymbolTable table, int tableIndex)
+        private static RequireDelegateResult RequireSymbol(TokenType symbol, SymbolTable table, int tableIndex)
         {
             var next = table.List[tableIndex];
             if (symbol == next.Symbol)
@@ -107,7 +107,7 @@ namespace code0k_cc
         private static RequireDelegateResult RequireMainProgram(SymbolTable table, int tableIndex) => Require(new List<RequireDelegate>()
         {
             RequireSubProgram,
-            SymbolDelegates[Token.Dot]
+            SymbolDelegates[TokenType.Dot]
         }, "MainProgram", table, tableIndex);
 
         private static RequireDelegateResult RequireSubProgram(SymbolTable table, int tableIndex) => Require(new List<List<RequireDelegate>>()
@@ -144,14 +144,14 @@ namespace code0k_cc
             var item = new ParserTable.Item() { Type = "ConstDeclaration" };
             try
             {
-                item.Items.Add(this.RequireSymbol(Token.Const));
+                item.Items.Add(this.RequireSymbol(TokenType.Const));
                 item.Items.Add(this.RequireConstDefinition());
                 while (true)
                 {
                     var anotherBackup = this.SymbolTableIndex;
                     try
                     {
-                        var item1 = this.RequireSymbol(Token.Comma);
+                        var item1 = this.RequireSymbol(TokenType.Comma);
                         var item2 = this.RequireConstDefinition();
                         item.Items.Add(item1);
                         item.Items.Add(item2);
@@ -162,7 +162,7 @@ namespace code0k_cc
                         break;
                     }
                 }
-                item.Items.Add(this.RequireSymbol(Token.Semicolon));
+                item.Items.Add(this.RequireSymbol(TokenType.Semicolon));
                 return item;
             }
             catch (ParseException e)
@@ -178,9 +178,9 @@ namespace code0k_cc
             var item = new ParserTable.Item() { Type = "ConstDefinition" };
             try
             {
-                item.Items.Add(this.RequireSymbol(Token.Identifier));
-                item.Items.Add(this.RequireSymbol(Token.EqualTo));
-                item.Items.Add(this.RequireSymbol(Token.Number));
+                item.Items.Add(this.RequireSymbol(TokenType.Identifier));
+                item.Items.Add(this.RequireSymbol(TokenType.EqualTo));
+                item.Items.Add(this.RequireSymbol(TokenType.Number));
 
                 return item;
             }
@@ -196,15 +196,15 @@ namespace code0k_cc
             var item = new ParserTable.Item() { Type = "VarDeclaration" };
             try
             {
-                item.Items.Add(this.RequireSymbol(Token.Var));
-                item.Items.Add(this.RequireSymbol(Token.Identifier));
+                item.Items.Add(this.RequireSymbol(TokenType.Var));
+                item.Items.Add(this.RequireSymbol(TokenType.Identifier));
                 while (true)
                 {
                     var anotherBackup = this.SymbolTableIndex;
                     try
                     {
-                        var item1 = this.RequireSymbol(Token.Comma);
-                        var item2 = this.RequireSymbol(Token.Identifier);
+                        var item1 = this.RequireSymbol(TokenType.Comma);
+                        var item2 = this.RequireSymbol(TokenType.Identifier);
                         item.Items.Add(item1);
                         item.Items.Add(item2);
                     }
@@ -215,7 +215,7 @@ namespace code0k_cc
                         break;
                     }
                 }
-                item.Items.Add(this.RequireSymbol(Token.Semicolon));
+                item.Items.Add(this.RequireSymbol(TokenType.Semicolon));
                 return item;
             }
             catch (ParseException e)
@@ -233,7 +233,7 @@ namespace code0k_cc
             {
                 item.Items.Add(this.RequireProcedureHeader());
                 item.Items.Add(this.RequireSubProgram());
-                item.Items.Add(this.RequireSymbol(Token.Semicolon));
+                item.Items.Add(this.RequireSymbol(TokenType.Semicolon));
                 try
                 {
                     item.Items.Add(this.RequireProcedureDeclaration());
@@ -257,9 +257,9 @@ namespace code0k_cc
             var item = new ParserTable.Item() { Type = "ProcedureHeader" };
             try
             {
-                item.Items.Add(this.RequireSymbol(Token.Procedure));
-                item.Items.Add(this.RequireSymbol(Token.Identifier));
-                item.Items.Add(this.RequireSymbol(Token.Semicolon));
+                item.Items.Add(this.RequireSymbol(TokenType.Procedure));
+                item.Items.Add(this.RequireSymbol(TokenType.Identifier));
+                item.Items.Add(this.RequireSymbol(TokenType.Semicolon));
                 return item;
             }
             catch (ParseException e)
@@ -329,8 +329,8 @@ namespace code0k_cc
             var item = new ParserTable.Item() { Type = "AssignStatement" };
             try
             {
-                item.Items.Add(this.RequireSymbol(Token.Identifier));
-                item.Items.Add(this.RequireSymbol(Token.Assign));
+                item.Items.Add(this.RequireSymbol(TokenType.Identifier));
+                item.Items.Add(this.RequireSymbol(TokenType.Assign));
                 item.Items.Add(this.RequireExpression());
                 return item;
             }
@@ -346,14 +346,14 @@ namespace code0k_cc
             var item = new ParserTable.Item() { Type = "CompoundStatement" };
             try
             {
-                item.Items.Add(this.RequireSymbol(Token.Begin));
+                item.Items.Add(this.RequireSymbol(TokenType.Begin));
                 item.Items.Add(this.RequireStatement());
                 while (true)
                 {
                     var anotherBackup = this.SymbolTableIndex;
                     try
                     {
-                        var item1 = this.RequireSymbol(Token.Semicolon);
+                        var item1 = this.RequireSymbol(TokenType.Semicolon);
                         var item2 = this.RequireStatement();
                         item.Items.Add(item1);
                         item.Items.Add(item2);
@@ -365,7 +365,7 @@ namespace code0k_cc
                     }
                 }
 
-                item.Items.Add(this.RequireSymbol(Token.End));
+                item.Items.Add(this.RequireSymbol(TokenType.End));
                 return item;
             }
             catch (ParseException e)
@@ -384,7 +384,7 @@ namespace code0k_cc
                 var anotherBackup = this.SymbolTableIndex;
                 try
                 {
-                    var item1 = this.RequireSymbol(Token.Odd);
+                    var item1 = this.RequireSymbol(TokenType.Odd);
                     var item2 = this.RequireExpression();
                     item.Items.Add(item1);
                     item.Items.Add(item2);
@@ -422,13 +422,13 @@ namespace code0k_cc
 
                         try
                         {
-                            item.Items.Add(this.RequireSymbol(Token.Plus));
+                            item.Items.Add(this.RequireSymbol(TokenType.Plus));
                         }
                         catch (ParseException)
                         {
                             try
                             {
-                                item.Items.Add(this.RequireSymbol(Token.Minus));
+                                item.Items.Add(this.RequireSymbol(TokenType.Minus));
                             }
                             catch (ParseException e)
                             {
@@ -503,19 +503,19 @@ namespace code0k_cc
             {
                 try
                 {
-                    item.Items.Add(this.RequireSymbol(Token.Identifier));
+                    item.Items.Add(this.RequireSymbol(TokenType.Identifier));
                 }
                 catch (ParseException)
                 {
                     try
                     {
-                        item.Items.Add(this.RequireSymbol(Token.Number));
+                        item.Items.Add(this.RequireSymbol(TokenType.Number));
                     }
                     catch (ParseException)
                     {
-                        item.Items.Add(this.RequireSymbol(Token.LeftBracket));
+                        item.Items.Add(this.RequireSymbol(TokenType.LeftBracket));
                         item.Items.Add(this.RequireExpression());
-                        item.Items.Add(this.RequireSymbol(Token.RightBracket));
+                        item.Items.Add(this.RequireSymbol(TokenType.RightBracket));
                     }
                 }
                 return item;
@@ -535,11 +535,11 @@ namespace code0k_cc
             {
                 try
                 {
-                    item.Items.Add(this.RequireSymbol(Token.Plus));
+                    item.Items.Add(this.RequireSymbol(TokenType.Plus));
                 }
                 catch (ParseException)
                 {
-                    item.Items.Add(this.RequireSymbol(Token.Minus));
+                    item.Items.Add(this.RequireSymbol(TokenType.Minus));
                 }
                 return item;
             }
@@ -558,11 +558,11 @@ namespace code0k_cc
             {
                 try
                 {
-                    item.Items.Add(this.RequireSymbol(Token.Times));
+                    item.Items.Add(this.RequireSymbol(TokenType.Times));
                 }
                 catch (ParseException)
                 {
-                    item.Items.Add(this.RequireSymbol(Token.Divide));
+                    item.Items.Add(this.RequireSymbol(TokenType.Divide));
                 }
                 return item;
             }
@@ -580,42 +580,42 @@ namespace code0k_cc
             {
                 try
                 {
-                    return this.RequireSymbol(Token.EqualTo);
+                    return this.RequireSymbol(TokenType.EqualTo);
 
                 }
                 catch (ParseException) { }
 
                 try
                 {
-                    return this.RequireSymbol(Token.NotEqualTo);
+                    return this.RequireSymbol(TokenType.NotEqualTo);
 
                 }
                 catch (ParseException) { }
 
                 try
                 {
-                    return this.RequireSymbol(Token.LessThan);
+                    return this.RequireSymbol(TokenType.LessThan);
 
                 }
                 catch (ParseException) { }
 
                 try
                 {
-                    return this.RequireSymbol(Token.GreaterThan);
+                    return this.RequireSymbol(TokenType.GreaterThan);
 
                 }
                 catch (ParseException) { }
 
                 try
                 {
-                    return this.RequireSymbol(Token.LessEqualThan);
+                    return this.RequireSymbol(TokenType.LessEqualThan);
 
                 }
                 catch (ParseException) { }
 
                 try
                 {
-                    return this.RequireSymbol(Token.GreaterEqualThan);
+                    return this.RequireSymbol(TokenType.GreaterEqualThan);
 
                 }
                 catch (ParseException) { }
@@ -634,9 +634,9 @@ namespace code0k_cc
             var item = new ParserTable.Item() { Type = "IfStatement" };
             try
             {
-                item.Items.Add(this.RequireSymbol(Token.If));
+                item.Items.Add(this.RequireSymbol(TokenType.If));
                 item.Items.Add(this.RequireCondition());
-                item.Items.Add(this.RequireSymbol(Token.Then));
+                item.Items.Add(this.RequireSymbol(TokenType.Then));
                 item.Items.Add(this.RequireStatement());
                 return item;
             }
@@ -653,8 +653,8 @@ namespace code0k_cc
             var item = new ParserTable.Item() { Type = "CallStatement" };
             try
             {
-                item.Items.Add(this.RequireSymbol(Token.Call));
-                item.Items.Add(this.RequireSymbol(Token.Identifier));
+                item.Items.Add(this.RequireSymbol(TokenType.Call));
+                item.Items.Add(this.RequireSymbol(TokenType.Identifier));
                 return item;
             }
             catch (ParseException e)
@@ -670,9 +670,9 @@ namespace code0k_cc
             var item = new ParserTable.Item() { Type = "WhileStatement" };
             try
             {
-                item.Items.Add(this.RequireSymbol(Token.While));
+                item.Items.Add(this.RequireSymbol(TokenType.While));
                 item.Items.Add(this.RequireCondition());
-                item.Items.Add(this.RequireSymbol(Token.Do));
+                item.Items.Add(this.RequireSymbol(TokenType.Do));
                 item.Items.Add(this.RequireStatement());
                 return item;
             }
@@ -688,16 +688,16 @@ namespace code0k_cc
             var item = new ParserTable.Item() { Type = "ReadStatement" };
             try
             {
-                item.Items.Add(this.RequireSymbol(Token.Read));
-                item.Items.Add(this.RequireSymbol(Token.LeftBracket));
-                item.Items.Add(this.RequireSymbol(Token.Identifier));
+                item.Items.Add(this.RequireSymbol(TokenType.Read));
+                item.Items.Add(this.RequireSymbol(TokenType.LeftBracket));
+                item.Items.Add(this.RequireSymbol(TokenType.Identifier));
                 while (true)
                 {
                     var anotherBackup = this.SymbolTableIndex;
                     try
                     {
-                        var item1 = this.RequireSymbol(Token.Comma);
-                        var item2 = this.RequireSymbol(Token.Identifier);
+                        var item1 = this.RequireSymbol(TokenType.Comma);
+                        var item2 = this.RequireSymbol(TokenType.Identifier);
                         item.Items.Add(item1);
                         item.Items.Add(item2);
                     }
@@ -707,7 +707,7 @@ namespace code0k_cc
                         break;
                     }
                 }
-                item.Items.Add(this.RequireSymbol(Token.RightBracket));
+                item.Items.Add(this.RequireSymbol(TokenType.RightBracket));
                 return item;
             }
             catch (ParseException e)
@@ -723,15 +723,15 @@ namespace code0k_cc
             var item = new ParserTable.Item() { Type = "WriteStatement" };
             try
             {
-                item.Items.Add(this.RequireSymbol(Token.Write));
-                item.Items.Add(this.RequireSymbol(Token.LeftBracket));
+                item.Items.Add(this.RequireSymbol(TokenType.Write));
+                item.Items.Add(this.RequireSymbol(TokenType.LeftBracket));
                 item.Items.Add(this.RequireExpression());
                 while (true)
                 {
                     var anotherBackup = this.SymbolTableIndex;
                     try
                     {
-                        var item1 = this.RequireSymbol(Token.Comma);
+                        var item1 = this.RequireSymbol(TokenType.Comma);
                         var item2 = this.RequireExpression();
                         item.Items.Add(item1);
                         item.Items.Add(item2);
@@ -743,7 +743,7 @@ namespace code0k_cc
                     }
                 }
 
-                item.Items.Add(this.RequireSymbol(Token.RightBracket));
+                item.Items.Add(this.RequireSymbol(TokenType.RightBracket));
                 return item;
             }
             catch (ParseException e)

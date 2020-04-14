@@ -4,9 +4,11 @@ using System.Text;
 
 namespace code0k_cc
 {
-    class Token
+    enum ParseUnitType
     {
-        public TokenType TokenType;
-        public String Value;
+        Single,
+        SingleOptional,
+        Multiple,
+        MultipleOptional
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace code0k_cc
 { 
-        public enum TokenType
+        public enum TokenTypeType
         {
             /// <summary>
             /// 关键字，需要空格分隔

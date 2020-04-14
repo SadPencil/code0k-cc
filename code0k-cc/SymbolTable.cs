@@ -9,10 +9,10 @@ namespace code0k_cc
     {
         public class Item {
             public String Name;
-            public Token Symbol;
+            public TokenType Symbol;
             public Int32 Address;
 
-            public Item(String name, Token symbol, Int32 address)
+            public Item(String name, TokenType symbol, Int32 address)
             {
                 this.Name = name;
                 this.Symbol = symbol;
@@ -22,7 +22,7 @@ namespace code0k_cc
         public List<Item> List = new List<Item>();
         private Dictionary<string, Item> variables { get; } = new Dictionary<string, Item>();
         private int nextAddress = 0;
-        private readonly List<Token> symbols = Token.GetAll();
+        private readonly List<TokenType> symbols = TokenType.GetAll();
 
         public SymbolTable() { }
 
@@ -44,7 +44,7 @@ namespace code0k_cc
             foreach (var symbol in this.symbols) {
                 
                 if (symbol.Match(word)) {
-                    if (symbol == Token.Identifier)
+                    if (symbol == TokenType.Identifier)
                     {
                         bool existed =  this.variables.TryGetValue(word, out var variable);
                         if (!existed)

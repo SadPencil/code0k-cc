@@ -4,9 +4,10 @@ using System.Text;
 
 namespace code0k_cc
 {
-    class Token
+    enum ParseUnitChildType
     {
-        public TokenType TokenType;
-        public String Value;
+        LeafNode,
+        FirstChild,
+        AllChild
     }
 }
