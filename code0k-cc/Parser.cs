@@ -33,14 +33,15 @@ namespace code0k_cc
             ParseUnit StatementBody = new ParseUnit();
             ParseUnit Statement = new ParseUnit();
 
+            ParseUnit Descriptions = new ParseUnit();
             ParseUnit AssignStatement = new ParseUnit();
             ParseUnit LeftValue = new ParseUnit();
-            ParseUnit AssignMark = new ParseUnit();
             ParseUnit RightValue = new ParseUnit();
 
             ParseUnit DefinitionStatement = new ParseUnit();
             ParseUnit CallStatement = new ParseUnit();
             ParseUnit IfStatement = new ParseUnit();
+            ParseUnit OptionalElseStatement = new ParseUnit();
             ParseUnit ForStatement = new ParseUnit();
             ParseUnit WhileStatement = new ParseUnit();
             ParseUnit CompoundStatement = new ParseUnit();
@@ -123,7 +124,110 @@ namespace code0k_cc
             };
 
             DefinitionStatement.Name = "Definition Statement";
-            //todo
+            DefinitionStatement.Type = ParseUnitType.Single;
+            DefinitionStatement.ChildType = ParseUnitChildType.AllChild;
+            DefinitionStatement.Children = new List<ParseUnit>()
+            {
+                Descriptions,
+                TokenUnits[TokenType.Identifier],
+                AssignStatement
+            };
+
+            Descriptions.Name = "Definition Description";
+            Descriptions.Type = ParseUnitType.MultipleOptional;
+            Descriptions.ChildType = ParseUnitChildType.FirstChild;
+            Descriptions.Children = new List<ParseUnit>()
+            {
+                TokenUnits[TokenType.Input],
+                TokenUnits[TokenType.NizkInput],
+                TokenUnits[TokenType.Output],
+                //TokenUnits[TokenType.Var],
+                TokenUnits[TokenType.Const]
+            };
+
+            CallStatement.Name = "Call Statement";
+            CallStatement.Type = ParseUnitType.Single;
+            CallStatement.ChildType = ParseUnitChildType.AllChild;
+            CallStatement.Children = new List<ParseUnit>()
+            {
+                TokenUnits[TokenType.Identifier],
+                TokenUnits[TokenType.LeftBracket],
+                FunctionArguments,
+                TokenUnits[TokenType.RightBracket]
+            };
+
+            IfStatement.Name = "If Statement";
+            IfStatement.Type = ParseUnitType.Single;
+            IfStatement.ChildType = ParseUnitChildType.AllChild;
+            IfStatement.Children = new List<ParseUnit>()
+            {
+                TokenUnits[TokenType.If],
+                TokenUnits[TokenType.LeftBracket],
+                RightValue,
+                TokenUnits[TokenType.RightBracket],
+                TokenUnits[TokenType.Begin],
+                StatementBody,
+                TokenUnits[TokenType.End],
+                OptionalElseStatement
+            };
+
+            OptionalElseStatement.Name = "Else Statement";
+            OptionalElseStatement.Type = ParseUnitType.SingleOptional;
+            OptionalElseStatement.ChildType = ParseUnitChildType.AllChild;
+            OptionalElseStatement.Children = new List<ParseUnit>()
+            {
+                TokenUnits[TokenType.Else],
+                TokenUnits[TokenType.Begin],
+                StatementBody,
+                TokenUnits[TokenType.End],
+            };
+
+            ForStatement.Name = "For Statement";
+            ForStatement.Type = ParseUnitType.Single;
+            ForStatement.ChildType = ParseUnitChildType.AllChild;
+            ForStatement.Children = new List<ParseUnit>()
+            {
+                TokenUnits[TokenType.For],
+                LeftValue,
+                TokenUnits[TokenType.Assign],
+                RightValue,
+                TokenUnits[TokenType.To],
+                RightValue,
+                TokenUnits[TokenType.Do],
+                TokenUnits[TokenType.Begin],
+                StatementBody,
+                TokenUnits[TokenType.End],
+            };
+
+            WhileStatement.Name = "While Statement";
+            WhileStatement.Type = ParseUnitType.Single;
+            WhileStatement.ChildType = ParseUnitChildType.AllChild;
+            WhileStatement.Children = new List<ParseUnit>()
+            {
+                TokenUnits[TokenType.While],
+                TokenUnits[TokenType.LeftBracket],
+                RightValue,
+                TokenUnits[TokenType.RightBracket],
+                TokenUnits[TokenType.Max],
+                TokenUnits[TokenType.LeftBracket],
+                RightValue,
+                TokenUnits[TokenType.RightBracket],
+                TokenUnits[TokenType.Begin],
+                StatementBody,
+                TokenUnits[TokenType.End],
+            };
+
+            CompoundStatement.Name = "Compound Statement";
+            CompoundStatement.Type = ParseUnitType.Single;
+            CompoundStatement.ChildType = ParseUnitChildType.AllChild;
+            CompoundStatement.Children = new List<ParseUnit>()
+            {
+                TokenUnits[TokenType.Begin],
+                StatementBody,
+                TokenUnits[TokenType.End],
+            };
+
+            //todo AssignStatement LeftValue RightValue
 
 
             return MainProgram;

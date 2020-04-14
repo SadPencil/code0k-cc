@@ -59,6 +59,7 @@ namespace code0k_cc
 
         public static readonly TokenType If = new TokenType(TokenTypeType.Keyword, "if", "if");
         public static readonly TokenType Then = new TokenType(TokenTypeType.Keyword, "then", "then");
+        public static readonly TokenType Else = new TokenType(TokenTypeType.Keyword, "else", "else");
 
         //public static readonly Symbol Read = new Symbol(Type.Keyword, "read", "read");
         //public static readonly Symbol Write = new Symbol(Type.Keyword, "write", "write");
@@ -125,6 +126,7 @@ namespace code0k_cc
 
             yield return If;
             yield return Then;
+            yield return Else;
 
             yield return While;
             yield return Do;
