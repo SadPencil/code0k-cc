@@ -7,13 +7,13 @@ using System.Linq;
 namespace code0k_cc
 {
     static class Lex
-    { 
-        static IEnumerable<Token> Analyze(Stream stream)
+    {
+        internal static IEnumerable<Token> Analyze(Stream stream)
         {
             return Analyze(stream, new UTF8Encoding(false));
         }
 
-        static IEnumerable<Token> Analyze(Stream stream, Encoding encoding)
+        internal static IEnumerable<Token> Analyze(Stream stream, Encoding encoding)
         {
             StreamReader reader = new StreamReader(stream, encoding);
             StringBuilder word = new StringBuilder();
@@ -71,8 +71,9 @@ namespace code0k_cc
                             if ((!nextCharType.IsLetterOrDigitOrUnderscore))
                             {
                                 // consider '&' and '&&'
-                                if (GetTokenType(word.ToString())!=null) {
-                                    if (GetTokenType(word.ToString() + nextChar)!=null)
+                                if (GetTokenType(word.ToString()) != null)
+                                {
+                                    if (GetTokenType(word.ToString() + nextChar) != null)
                                     {
                                         choiceEnum.ReadAppend = true;
                                     }
@@ -100,7 +101,8 @@ namespace code0k_cc
                 {
                     yield return GetToken(word.ToString());
                     word.Clear();
-                }else if (choiceEnum.ReadReturn)
+                }
+                else if (choiceEnum.ReadReturn)
                 {
                     reader.Read();
                     yield return GetToken(word.ToString());

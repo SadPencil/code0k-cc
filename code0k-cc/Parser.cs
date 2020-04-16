@@ -13,7 +13,7 @@ namespace code0k_cc
     {
         private static ParseUnit RootParseUnit { get; } = GetRootParseUnit();
 
-        static ParseInstance Parse(in IEnumerable<Token> tokens)
+        internal static ParseInstance Parse(in IEnumerable<Token> tokens)
         {
             IReadOnlyList<Token> tokenList = tokens.ToList();
             var ret = _Parse(RootParseUnit, tokenList, 0);
