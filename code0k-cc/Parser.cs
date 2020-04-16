@@ -107,15 +107,13 @@ namespace code0k_cc
             const int OPERATOR_PRECEDENCE_LEVEL = 18;
             ParseUnit[] Expressions = new ParseUnit[OPERATOR_PRECEDENCE_LEVEL];
             ParseUnit[] Operators = new ParseUnit[OPERATOR_PRECEDENCE_LEVEL];
-            ParseUnit[] ExpressionsHelper1 = new ParseUnit[OPERATOR_PRECEDENCE_LEVEL];
-            ParseUnit[] ExpressionsHelper2 = new ParseUnit[OPERATOR_PRECEDENCE_LEVEL];
+            ParseUnit[] ExpressionsHelper = new ParseUnit[OPERATOR_PRECEDENCE_LEVEL]; 
 
             foreach (var i in Enumerable.Range(0, OPERATOR_PRECEDENCE_LEVEL))
             {
                 Expressions[i] = new ParseUnit();
                 Operators[i] = new ParseUnit();
-                ExpressionsHelper1[i] = new ParseUnit();
-                ExpressionsHelper2[i] = new ParseUnit();
+                ExpressionsHelper[i] = new ParseUnit(); 
             }
 
             // write the parse unit
@@ -371,9 +369,9 @@ namespace code0k_cc
                 Operators[i].Type = ParseUnitType.Single;
                 Operators[i].ChildType = ParseUnitChildType.OneChild;
 
-                ExpressionsHelper1[i].Name = "Expression Level " + i.ToString(CultureInfo.InvariantCulture);
-                ExpressionsHelper1[i].Type = ParseUnitType.SingleOptional;
-                ExpressionsHelper1[i].ChildType = ParseUnitChildType.AllChild;
+                ExpressionsHelper[i].Name = "Expression Level " + i.ToString(CultureInfo.InvariantCulture);
+                ExpressionsHelper[i].Type = ParseUnitType.SingleOptional;
+                ExpressionsHelper[i].ChildType = ParseUnitChildType.AllChild;
             }
 
             // most of them are associated left-to-right
@@ -402,10 +400,10 @@ namespace code0k_cc
             // (where ε stands for null)
             //
             // In this situation, A is Expression[2], α is Operator[2] and β is Expression[1]
-            // R is ExpressionHelper1[2]
+            // R is ExpressionHelper[2]
 
-            Expressions[2].Children = new List<ParseUnit>() { Expressions[1], ExpressionsHelper1[2] };
-            ExpressionsHelper1[2].Children = new List<ParseUnit>() { Operators[2], ExpressionsHelper1[2] };
+            Expressions[2].Children = new List<ParseUnit>() { Expressions[1], ExpressionsHelper[2] };
+            ExpressionsHelper[2].Children = new List<ParseUnit>() { Operators[2], ExpressionsHelper[2] };
 
             Operators[2].Children = new List<ParseUnit>() { FunctionCall, ArraySubscripting, MemberAccess };
 
@@ -466,15 +464,15 @@ namespace code0k_cc
 
 
             // level-3 (RTL): Unary plus and minus, Logical NOT and bitwise NOT
-            ExpressionsHelper1[3].Type = ParseUnitType.Single;
-            ExpressionsHelper1[3].Children = new List<ParseUnit>()
+            ExpressionsHelper[3].Type = ParseUnitType.Single;
+            ExpressionsHelper[3].Children = new List<ParseUnit>()
             {
                 Operators[3],
                 Expressions[3],
             };
             Expressions[3].Children = new List<ParseUnit>()
             {
-                ExpressionsHelper1[3],
+                ExpressionsHelper[3],
                 Expressions[2]
             };
             Operators[3].Children = new List<ParseUnit>() { TokenUnits[TokenType.Plus], TokenUnits[TokenType.Minus], TokenUnits[TokenType.BooleanNot], TokenUnits[TokenType.BitwiseNot] };
@@ -498,11 +496,11 @@ namespace code0k_cc
             // (where ε stands for null)
             //
             // In this situation, A is Expression[5], α is Operators[5] and Expressions[4], β is Expressions[4],
-            // R is ExpressionHelper1[5]
+            // R is ExpressionHelper[5]
             {
                 const int i = 5;
-                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper1[i] };
-                ExpressionsHelper1[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper1[i] };
+                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper[i] };
+                ExpressionsHelper[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper[i] };
 
                 Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.Times], TokenUnits[TokenType.Divide], TokenUnits[TokenType.Mod] };
             }
@@ -511,8 +509,8 @@ namespace code0k_cc
             // note: eliminate left recursion
             {
                 const int i = 6;
-                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper1[i] };
-                ExpressionsHelper1[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper1[i] };
+                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper[i] };
+                ExpressionsHelper[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper[i] };
 
                 Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.Plus], TokenUnits[TokenType.Minus] };
             }
@@ -522,8 +520,8 @@ namespace code0k_cc
             // note: eliminate left recursion
             {
                 const int i = 7;
-                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper1[i] };
-                ExpressionsHelper1[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper1[i] };
+                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper[i] };
+                ExpressionsHelper[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper[i] };
 
                 Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.BitwiseLeftShiftUnsigned], TokenUnits[TokenType.BitwiseRightShiftUnsigned], TokenUnits[TokenType.BitwiseLeftShiftSigned], TokenUnits[TokenType.BitwiseRightShiftSigned] };
             }
@@ -536,8 +534,8 @@ namespace code0k_cc
             // level-9: <   <= 	>   >=
             {
                 const int i = 9;
-                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper1[i] };
-                ExpressionsHelper1[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper1[i] };
+                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper[i] };
+                ExpressionsHelper[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper[i] };
 
                 Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.LessThan], TokenUnits[TokenType.LessEqualThan], TokenUnits[TokenType.GreaterThan], TokenUnits[TokenType.GreaterEqualThan] };
             }
@@ -546,8 +544,8 @@ namespace code0k_cc
             // level-10:  ==   != 
             {
                 const int i = 10;
-                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper1[i] };
-                ExpressionsHelper1[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper1[i] };
+                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper[i] };
+                ExpressionsHelper[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper[i] };
 
                 Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.EqualTo], TokenUnits[TokenType.NotEqualTo] };
             }
@@ -556,8 +554,8 @@ namespace code0k_cc
             // level-11: Bitwise AND
             {
                 const int i = 11;
-                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper1[i] };
-                ExpressionsHelper1[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper1[i] };
+                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper[i] };
+                ExpressionsHelper[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper[i] };
 
                 Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.BitwiseAnd] };
             }
@@ -566,8 +564,8 @@ namespace code0k_cc
             // level-12: Bitwise XOR
             {
                 const int i = 12;
-                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper1[i] };
-                ExpressionsHelper1[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper1[i] };
+                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper[i] };
+                ExpressionsHelper[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper[i] };
 
                 Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.BitwiseXor] };
             }
@@ -576,8 +574,8 @@ namespace code0k_cc
             // level-13: Bitwise OR 
             {
                 const int i = 13;
-                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper1[i] };
-                ExpressionsHelper1[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper1[i] };
+                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper[i] };
+                ExpressionsHelper[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper[i] };
 
                 Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.BitwiseOr] };
             }
@@ -586,8 +584,8 @@ namespace code0k_cc
             // level-14: Logical AND
             {
                 const int i = 14;
-                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper1[i] };
-                ExpressionsHelper1[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper1[i] };
+                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper[i] };
+                ExpressionsHelper[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper[i] };
 
                 Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.BooleanAnd] };
             }
@@ -596,8 +594,8 @@ namespace code0k_cc
             // level-15 (not existed on C/C++): Logical XOR
             {
                 const int i = 15;
-                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper1[i] };
-                ExpressionsHelper1[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper1[i] };
+                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper[i] };
+                ExpressionsHelper[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper[i] };
 
                 Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.BooleanXor] };
             }
@@ -606,16 +604,16 @@ namespace code0k_cc
             // level-16 (corresponding 15): Logical OR
             {
                 const int i = 16;
-                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper1[i] };
-                ExpressionsHelper1[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper1[i] };
+                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper[i] };
+                ExpressionsHelper[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper[i] };
 
                 Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.BooleanOr] };
             }
 
 
             // level-17 (RTL) (corresponding 16): assign =
-            ExpressionsHelper1[17].Type = ParseUnitType.Single;
-            ExpressionsHelper1[17].Children = new List<ParseUnit>()
+            ExpressionsHelper[17].Type = ParseUnitType.Single;
+            ExpressionsHelper[17].Children = new List<ParseUnit>()
             {
                 Expressions[16],
                 Operators[17],
@@ -623,7 +621,7 @@ namespace code0k_cc
             };
             Expressions[17].Children = new List<ParseUnit>()
             {
-                ExpressionsHelper1[17],
+                ExpressionsHelper[17],
                 Expressions[16]
             };
             Operators[17].Children = new List<ParseUnit>() { TokenUnits[TokenType.Assign] };
