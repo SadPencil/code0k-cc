@@ -34,7 +34,7 @@ namespace code0k_cc
         {
 
             {
-                if (depth > 50)
+                if (depth > 100)
                 {
                     throw new Exception("stop");
                 }
@@ -47,7 +47,10 @@ namespace code0k_cc
                 Console.Write(unit.Name);
 
                 Console.Write("\t");
-                Console.WriteLine(tokenList.ElementAtOrDefault(pos)?.Value);
+                Console.Write(tokenList.ElementAtOrDefault(pos)?.Value);
+                Console.Write(" ");
+                Console.Write(pos);
+                Console.WriteLine();
             }
 
 
@@ -571,7 +574,7 @@ namespace code0k_cc
 
             BracketExpression.Name = "Bracket Expression";
             BracketExpression.Type = ParseUnitType.Single;
-            BracketExpression.ChildType = ParseUnitChildType.OneChild;
+            BracketExpression.ChildType = ParseUnitChildType.AllChild;
             BracketExpression.Children = new List<ParseUnit>()
             {
                 TokenUnits[TokenType.LeftBracket],
