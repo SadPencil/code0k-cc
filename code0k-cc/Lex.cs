@@ -21,8 +21,6 @@ namespace code0k_cc
             while (true)
             {
                 Int32 nextCharInt = reader.Peek();
-                Console.WriteLine(nextCharInt);
-                Console.WriteLine((char) nextCharInt);
                 if (nextCharInt == -1) // EOL
                 {
                     if (word.Length > 0)

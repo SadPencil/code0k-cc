@@ -19,6 +19,7 @@ namespace code0k_cc
             var ret = _Parse(RootParseUnit, tokenList, 0);
             if (ret.Success)
             {
+                // todo check whether ret.Position == tokenList.Count
                 return ret.ResultInstance;
             }
             else
@@ -34,37 +35,61 @@ namespace code0k_cc
             if (unit.ChildType == ParseUnitChildType.LeafNode)
             {
                 // match the token
-                if (tokenList[pos].TokenType == unit.LeafNodeTokenType)
+                if (pos < tokenList.Count)
                 {
-                    // matched
-                    var ret = new ParseResult()
+                    if (tokenList[pos].TokenType == unit.LeafNodeTokenType)
                     {
-                        Position = pos + 1,
-                        Success = true,
-                        ResultInstance = new ParseInstance()
+                        // matched
+                        var ret = new ParseResult()
                         {
-                            Children = null,
-                            ParseUnit = unit,
-                            Token = tokenList[pos]
-                        }
-                    };
-                    return ret;
+                            Position = pos + 1,
+                            Success = true,
+                            ResultInstance = new ParseInstance()
+                            {
+                                Children = null,
+                                ParseUnit = unit,
+                                Token = tokenList[pos]
+                            }
+                        };
+                        return ret;
+                    }
                 }
-                else
+
+                // failed
                 {
-                    // failed
-                    var ret = new ParseResult()
+                    if (unit.Type == ParseUnitType.SingleOptional)
                     {
-                        Position = pos,
-                        Success = false,
-                        ResultInstance = new ParseInstance()
+                        // match null
+                        var ret = new ParseResult()
                         {
-                            Children = null,
-                            ParseUnit = unit,
-                            Token = null
-                        }
-                    };
-                    return ret;
+                            Position = pos,
+                            Success = true,
+                            ResultInstance = null
+                        };
+                        return ret;
+                    }
+                    else if (unit.Type == ParseUnitType.Single)
+                    {
+                        // failed
+                        var ret = new ParseResult()
+                        {
+                            Position = pos,
+                            Success = false,
+                            ResultInstance = new ParseInstance()
+                            {
+                                Children = null,
+                                ParseUnit = unit,
+                                Token = null
+                            }
+                        };
+                        return ret;
+                    }
+                    else
+                    {
+                        throw new Exception("Assert failed!");
+                    }
+
+
                 }
             }
             else if (unit.ChildType == ParseUnitChildType.AllChild)
@@ -224,6 +249,7 @@ namespace code0k_cc
 
             ParseUnit MainProgram = new ParseUnit();
             ParseUnit MainProgramItem = new ParseUnit();
+            ParseUnit MainProgramLoop = new ParseUnit();
 
             ParseUnit FunctionDeclaration = new ParseUnit();
             ParseUnit FunctionImplementation = new ParseUnit();
@@ -276,7 +302,7 @@ namespace code0k_cc
             MainProgram.Children = new List<ParseUnit>()
             {
                 MainProgramItem,
-                MainProgram,
+                MainProgramLoop,
             };
 
             MainProgramItem.Name = "Main Program Item";
@@ -289,6 +315,15 @@ namespace code0k_cc
                 DefinitionStatement,
             };
 
+            MainProgramLoop.Name = "Main Program Loop";
+            MainProgramLoop.Type = ParseUnitType.SingleOptional;
+            MainProgramLoop.ChildType = ParseUnitChildType.AllChild;
+            MainProgramLoop.Children = new List<ParseUnit>()
+            {
+                MainProgramItem,
+                MainProgramLoop
+            };
+
             FunctionDeclaration.Name = "Function Declaration";
             FunctionDeclaration.Type = ParseUnitType.Single;
             FunctionDeclaration.ChildType = ParseUnitChildType.AllChild;
@@ -298,8 +333,9 @@ namespace code0k_cc
                 TokenUnits[TokenType.Identifier],
                 TokenUnits[TokenType.LeftBracket],
                 FunctionDeclarationArguments,
-                TokenUnits[TokenType.RightBracket]
-            };
+                TokenUnits[TokenType.RightBracket],
+                TokenUnits[TokenType.Semicolon]
+        };
 
             TypeUnit.Name = "Type Name";
             TypeUnit.Type = ParseUnitType.Single;
@@ -307,7 +343,7 @@ namespace code0k_cc
             TypeUnit.Children = new List<ParseUnit>()
             {
                 TokenUnits[TokenType.Identifier]
-            };
+    };
 
             FunctionImplementation.Name = "Function Implementation";
             FunctionImplementation.Type = ParseUnitType.Single;
@@ -320,7 +356,7 @@ namespace code0k_cc
                 FunctionDeclarationArguments,
                 TokenUnits[TokenType.RightBracket],
                 CompoundStatement
-            };
+};
 
             FunctionDeclarationArguments.Name = "Function Arguments";
             FunctionDeclarationArguments.Type = ParseUnitType.SingleOptional;
