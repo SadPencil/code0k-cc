@@ -1,15 +1,43 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace code0k_cc
 {
     class Parser
     {
-        private static ParseUnit ParseUnit { get; } = GetRootParseUnit();
+        private static ParseUnit RootParseUnit { get; } = GetRootParseUnit();
 
+        static ParseInstance Parse(IEnumerable<Token> tokens)
+        {
+            IReadOnlyList<Token> tokenList = tokens.ToList();
+            var ret = _Parse(RootParseUnit, tokenList, 0);
+            if (ret.Success)
+            {
+                return ret.ResultInstance;
+            }
+            else
+            {
+                throw new Exception("Failed at Parsing <InstanceName>, near <TokenName> at around <LocationInSourceCode>");
+                //todo
+            }
+
+        }
+
+        private static ParseResult _Parse(ParseUnit unit, IReadOnlyList<Token> tokenList, int pos)
+        {
+            var ret = new ParseResult() { Position = pos, ResultInstance = new ParseInstance() { ParseUnit = unit }, Success = false };
+
+            int matchCount = 0;
+
+            // try match
+
+
+        }
 
         private static ParseUnit GetRootParseUnit()
         {
@@ -197,7 +225,7 @@ namespace code0k_cc
                 TokenUnits[TokenType.Output],
                 TokenUnits[TokenType.Const],
                 TokenUnits[TokenType.Ref],
-            }; 
+            };
 
             IfStatement.Name = "If Statement";
             IfStatement.Type = ParseUnitType.Single;

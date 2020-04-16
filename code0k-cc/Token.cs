@@ -8,5 +8,6 @@ namespace code0k_cc
     {
         public TokenType TokenType;
         public String Value;
+        public long LocationInSourceCode;
     }
 }

@@ -8,12 +8,12 @@ namespace code0k_cc
 {
     static class Lex
     { 
-        static IEnumerable<Token> Next(Stream stream)
+        static IEnumerable<Token> Analyze(Stream stream)
         {
-            return Next(stream, new UTF8Encoding(false));
+            return Analyze(stream, new UTF8Encoding(false));
         }
 
-        static IEnumerable<Token> Next(Stream stream, Encoding encoding)
+        static IEnumerable<Token> Analyze(Stream stream, Encoding encoding)
         {
             StreamReader reader = new StreamReader(stream, encoding);
             StringBuilder word = new StringBuilder();
