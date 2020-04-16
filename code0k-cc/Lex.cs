@@ -38,13 +38,17 @@ namespace code0k_cc
                 );
 
                 // ugly because C# doesn't support inline enum
-                var choiceEnum = (ReadAppend: false, ReadReturn: false, PeekReturn: false);
+                var choiceEnum = (ReadAppend: false, ReadReturn: false, PeekReturn: false, ReadIdle: false);
 
                 if (word.Length == 0)
                 {
                     if (!nextCharType.IsWhiteSpace)
                     {
                         choiceEnum.ReadAppend = true;
+                    }
+                    else
+                    {
+                        choiceEnum.ReadIdle = true;
                     }
                 }
                 else
@@ -112,6 +116,10 @@ namespace code0k_cc
                 {
                     reader.Read();
                     word.Append(nextChar);
+                }
+                else if (choiceEnum.ReadIdle)
+                {
+                    reader.Read();
                 }
                 else
                 {
