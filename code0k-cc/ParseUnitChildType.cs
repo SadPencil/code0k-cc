@@ -7,7 +7,7 @@ namespace code0k_cc
     enum ParseUnitChildType
     {
         LeafNode,
-        FirstChild,
+        OneChild,
         AllChild
     }
 }

@@ -8,7 +8,5 @@ namespace code0k_cc
     { 
         Single,
         SingleOptional,
-        Multiple,
-        MultipleOptional,
     }
 }
