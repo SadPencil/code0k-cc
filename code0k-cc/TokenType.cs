@@ -43,7 +43,7 @@ namespace code0k_cc
         public static readonly TokenType NizkInput = new TokenType(TokenTypeType.Keyword, "nizkinput", "nizkinput");
         public static readonly TokenType Const = new TokenType(TokenTypeType.Keyword, "const", "const");
         public static readonly TokenType Var = new TokenType(TokenTypeType.Keyword, "var", "var");
-
+        public static readonly TokenType Ref = new TokenType(TokenTypeType.Keyword, "ref", "ref");
         //public static readonly Symbol Int = new Symbol(Type.Keyword, "int(32|64|128|256|512)", "int");
         //public static readonly Symbol UInt = new Symbol(Type.Keyword, "uint(32|64|128|256|512)", "uint");
 
@@ -71,8 +71,13 @@ namespace code0k_cc
         public static readonly TokenType To = new TokenType(TokenTypeType.Keyword, "to", "to");
         public static readonly TokenType DownTo = new TokenType(TokenTypeType.Keyword, "downto", "downto");
 
+        public static readonly TokenType Break = new TokenType(TokenTypeType.Keyword, "break", "break");
+        public static readonly TokenType Continue = new TokenType(TokenTypeType.Keyword, "continue", "continue");
+
         public static readonly TokenType LeftBracket = new TokenType(TokenTypeType.NonLetterKeyword, "\\(", "(");
         public static readonly TokenType RightBracket = new TokenType(TokenTypeType.NonLetterKeyword, "\\)", ")");
+        public static readonly TokenType LeftSquareBracket = new TokenType(TokenTypeType.NonLetterKeyword, "\\[", "[");
+        public static readonly TokenType RightSquareBracket = new TokenType(TokenTypeType.NonLetterKeyword, "\\]", "]");
 
         public static readonly TokenType Comma = new TokenType(TokenTypeType.NonLetterKeyword, "\\,", ",");
         public static readonly TokenType Semicolon = new TokenType(TokenTypeType.NonLetterKeyword, "\\;", ";");
@@ -102,8 +107,7 @@ namespace code0k_cc
 
         public static readonly TokenType Identifier = new TokenType(TokenTypeType.Identifier, "[_a-zA-z][_a-zA-z0-9]{0,200}", "identifier");
 
-        public static readonly TokenType UnsignedNumber = new TokenType(TokenTypeType.Number, "(0|[1-9][0-9]{0,200})u", "unsignednumber");
-        public static readonly TokenType SignedNumber = new TokenType(TokenTypeType.Number, "(0|[1-9][0-9]{0,200})", "signednumber");
+        public static readonly TokenType Number = new TokenType(TokenTypeType.Number, "([0-9][0-9_a-zA-z\\.]{0,200}", "number");
 
         //todo: add hex number support
         //todo: add fixed number support
@@ -116,6 +120,7 @@ namespace code0k_cc
             yield return NizkInput;
             yield return Const;
             yield return Var;
+            yield return Ref;
 
             yield return Call;
             yield return Procedure;
@@ -135,6 +140,9 @@ namespace code0k_cc
             yield return For;
             yield return To;
             yield return DownTo;
+
+            yield return Break;
+            yield return Continue;
 
             yield return LeftBracket;
             yield return RightBracket;
@@ -164,7 +172,7 @@ namespace code0k_cc
 
             // note that the order matters
             yield return UnsignedNumber;
-            yield return SignedNumber;
+            yield return Number;
             yield return Identifier;
         }
 

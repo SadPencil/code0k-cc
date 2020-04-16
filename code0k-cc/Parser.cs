@@ -24,19 +24,20 @@ namespace code0k_cc
             }
 
             ParseUnit MainProgram = new ParseUnit();
-            ParseUnit Function = new ParseUnit();
+            ParseUnit FunctionDeclaration = new ParseUnit();
+            ParseUnit FunctionImplementation = new ParseUnit();
 
-            ParseUnit FunctionArguments = new ParseUnit();
+            ParseUnit FunctionDeclarationArguments = new ParseUnit();
             ParseUnit FunctionArgumentUnit = new ParseUnit();
             ParseUnit FunctionArgumentLastUnit = new ParseUnit();
+
+            ParseUnit FunctionCall = new ParseUnit();
 
             ParseUnit StatementBody = new ParseUnit();
             ParseUnit Statement = new ParseUnit();
 
             ParseUnit Descriptions = new ParseUnit();
             ParseUnit AssignStatement = new ParseUnit();
-            ParseUnit LeftValue = new ParseUnit();
-            ParseUnit RightValue = new ParseUnit();
 
             ParseUnit DefinitionStatement = new ParseUnit();
             ParseUnit CallStatement = new ParseUnit();
@@ -46,8 +47,17 @@ namespace code0k_cc
             ParseUnit WhileStatement = new ParseUnit();
             ParseUnit CompoundStatement = new ParseUnit();
 
-            ParseUnit NullUnit = new ParseUnit();
 
+            ParseUnit LeftValue = new ParseUnit();
+            ParseUnit RightValue = new ParseUnit();
+
+            ParseUnit ArrayGetter = new ParseUnit();
+            ParseUnit Property = new ParseUnit();
+            ParseUnit UnaryOperator = new ParseUnit();
+            ParseUnit BinaryOperator = new ParseUnit();
+            ParseUnit Expression = new ParseUnit();
+            ParseUnit UnaryExpression = new ParseUnit();
+            ParseUnit BinaryExpression = new ParseUnit();
 
             // write the parse unit
             MainProgram.Name = "Main Program";
@@ -55,35 +65,48 @@ namespace code0k_cc
             MainProgram.ChildType = ParseUnitChildType.FirstChild;
             MainProgram.Children = new List<ParseUnit>()
             {
-                Function,
+                FunctionImplementation,
+                FunctionDeclaration,
                 DefinitionStatement
             };
 
-            Function.Name = "Function";
-            Function.Type = ParseUnitType.Single;
-            Function.ChildType = ParseUnitChildType.AllChild;
-            Function.Children = new List<ParseUnit>()
+            FunctionDeclaration.Name = "Function Declaration";
+            FunctionDeclaration.Type = ParseUnitType.Single;
+            FunctionImplementation.ChildType = ParseUnitChildType.AllChild;
+            FunctionImplementation.Children = new List<ParseUnit>()
             {
                 TokenUnits[TokenType.Identifier],
                 TokenUnits[TokenType.Identifier],
                 TokenUnits[TokenType.LeftBracket],
-                FunctionArguments,
+                FunctionDeclarationArguments,
+                TokenUnits[TokenType.RightBracket]
+            };
+
+            FunctionImplementation.Name = "Function Implementation";
+            FunctionImplementation.Type = ParseUnitType.Single;
+            FunctionImplementation.ChildType = ParseUnitChildType.AllChild;
+            FunctionImplementation.Children = new List<ParseUnit>()
+            {
+                TokenUnits[TokenType.Identifier],
+                TokenUnits[TokenType.Identifier],
+                TokenUnits[TokenType.LeftBracket],
+                FunctionDeclarationArguments,
                 TokenUnits[TokenType.RightBracket],
                 TokenUnits[TokenType.Begin],
                 StatementBody,
                 TokenUnits[TokenType.End]
             };
 
-            FunctionArguments.Name = "Function Arguments";
-            FunctionArguments.Type = ParseUnitType.SingleOptional;
-            FunctionArguments.ChildType = ParseUnitChildType.AllChild;
-            FunctionArguments.Children = new List<ParseUnit>()
+            FunctionDeclarationArguments.Name = "Function Arguments";
+            FunctionDeclarationArguments.Type = ParseUnitType.SingleOptional;
+            FunctionDeclarationArguments.ChildType = ParseUnitChildType.AllChild;
+            FunctionDeclarationArguments.Children = new List<ParseUnit>()
             {
                 FunctionArgumentUnit,
                 FunctionArgumentLastUnit
             };
 
-            FunctionArgumentUnit.Name = "Function Argument";
+            FunctionArgumentUnit.Name = "Function Argument Unit";
             FunctionArgumentUnit.Type = ParseUnitType.MultipleOptional;
             FunctionArgumentUnit.ChildType = ParseUnitChildType.AllChild;
             FunctionArgumentUnit.Children = new List<ParseUnit>()
@@ -92,12 +115,52 @@ namespace code0k_cc
                 TokenUnits[TokenType.Comma]
             };
 
-            FunctionArgumentLastUnit.Name = "Function Argument";
+            FunctionArgumentLastUnit.Name = "Function Argument Unit";
             FunctionArgumentLastUnit.Type = ParseUnitType.Single;
             FunctionArgumentLastUnit.ChildType = ParseUnitChildType.AllChild;
             FunctionArgumentLastUnit.Children = new List<ParseUnit>()
             {
                 TokenUnits[TokenType.Identifier]
+            };
+
+            FunctionCall.Name = "Function Call";
+            FunctionCall.Type = ParseUnitType.Single;
+            FunctionCall.ChildType = ParseUnitChildType.AllChild;
+            FunctionCall.Children = new List<ParseUnit>()
+            {
+                LeftValue,
+                TokenUnits[TokenType.LeftBracket],
+                new ParseUnit()
+                {
+                    Name = "Function Call Argument",
+                    Type = ParseUnitType.SingleOptional,
+                    ChildType = ParseUnitChildType.AllChild,
+                    Children = new List<ParseUnit>()
+                    {
+                        new ParseUnit()
+                        {
+                            Name = "Function Call Argument Unit",
+                            Type = ParseUnitType.MultipleOptional,
+                            ChildType = ParseUnitChildType.AllChild,
+                            Children = new List<ParseUnit>()
+                            {
+                                RightValue,
+                                TokenUnits[TokenType.Comma]
+                            }
+                        },
+                        new ParseUnit()
+                        {
+                            Name = "Function Call Argument Unit",
+                            Type = ParseUnitType.Single,
+                            ChildType = ParseUnitChildType.AllChild,
+                            Children =  new List<ParseUnit>()
+                            {
+                                RightValue
+                            }
+                        }
+                    }
+                },
+                TokenUnits[TokenType.RightBracket]
             };
 
             StatementBody.Name = "Statement Body";
@@ -150,10 +213,7 @@ namespace code0k_cc
             CallStatement.ChildType = ParseUnitChildType.AllChild;
             CallStatement.Children = new List<ParseUnit>()
             {
-                TokenUnits[TokenType.Identifier],
-                TokenUnits[TokenType.LeftBracket],
-                FunctionArguments,
-                TokenUnits[TokenType.RightBracket]
+                FunctionCall
             };
 
             IfStatement.Name = "If Statement";
@@ -227,7 +287,73 @@ namespace code0k_cc
                 TokenUnits[TokenType.End],
             };
 
-            //todo AssignStatement LeftValue RightValue
+            LeftValue.Name = "Left Value";
+            LeftValue.Type = ParseUnitType.Single;
+            LeftValue.ChildType = ParseUnitChildType.AllChild;
+            LeftValue.Children = new List<ParseUnit>()
+            {
+                TokenUnits[TokenType.Identifier],
+                new ParseUnit()
+                {
+                    Name="Left Value",
+                    Type = ParseUnitType.MultipleOptional,
+                    ChildType = ParseUnitChildType.FirstChild,
+                    Children =  new List<ParseUnit>()
+                    {
+                        Property,
+                        ArrayGetter
+                    }
+                }
+            };
+
+            ArrayGetter.Name = "Array Getter";
+            ArrayGetter.Type = ParseUnitType.Single;
+            ArrayGetter.ChildType = ParseUnitChildType.AllChild;
+            ArrayGetter.Children = new List<ParseUnit>()
+            {
+                TokenUnits[TokenType.LeftSquareBracket],
+                RightValue,
+                TokenUnits[TokenType.RightSquareBracket]
+            };
+
+            Property.Name = "Property";
+            Property.Type = ParseUnitType.Single;
+            Property.ChildType = ParseUnitChildType.AllChild;
+            Property.Children = new List<ParseUnit>()
+            {
+                TokenUnits[TokenType.Dot],
+                TokenUnits[TokenType.Identifier]
+            };
+
+            AssignStatement.Name = "Assign Statement";
+            AssignStatement.Type = ParseUnitType.Single;
+            AssignStatement.ChildType = ParseUnitChildType.AllChild;
+            AssignStatement.Children = new List<ParseUnit>()
+            {
+                LeftValue,
+                TokenUnits[TokenType.Assign],
+                RightValue
+            };
+
+            RightValue.Name = "Right Value";
+            RightValue.Type = ParseUnitType.Single;
+            RightValue.ChildType = ParseUnitChildType.FirstChild;
+            RightValue.Children = new List<ParseUnit>()
+            {
+                Expression
+            };
+
+            Expression.Name = "Expression";
+            Expression.Type = ParseUnitType.SingleOptional;
+            Expression.ChildType = ParseUnitChildType.FirstChild;
+            Expression.Children = new List<ParseUnit>()
+            {
+                BinaryExpression,
+                UnaryExpression,
+                FunctionCall,
+                TokenUnits[TokenType.Number],
+                LeftValue
+            };
 
 
             return MainProgram;
