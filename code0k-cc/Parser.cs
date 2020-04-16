@@ -92,8 +92,8 @@ namespace code0k_cc
 
             FunctionDeclaration.Name = "Function Declaration";
             FunctionDeclaration.Type = ParseUnitType.Single;
-            FunctionImplementation.ChildType = ParseUnitChildType.AllChild;
-            FunctionImplementation.Children = new List<ParseUnit>()
+            FunctionDeclaration.ChildType = ParseUnitChildType.AllChild;
+            FunctionDeclaration.Children = new List<ParseUnit>()
             {
                 TypeUnit,
                 TokenUnits[TokenType.Identifier],
