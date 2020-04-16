@@ -8,7 +8,7 @@ namespace code0k_cc
     {
         public ParseUnitType Type;
         public ParseUnitChildType ChildType;
-        public List<ParseUnit> Children;
+        public IReadOnlyList<ParseUnit> Children;
         public TokenType LeafNodeTokenType;
         public string Name;
     }

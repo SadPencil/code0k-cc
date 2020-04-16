@@ -13,7 +13,7 @@ namespace code0k_cc
 
         private static ParseUnit GetRootParseUnit()
         {
-            Dictionary<TokenType, ParseUnit> TokenUnits = new Dictionary<TokenType, ParseUnit>();
+            var TokenUnits = new Dictionary<TokenType, ParseUnit>();
             foreach (var tokenType in TokenType.GetAll())
             {
                 TokenUnits.Add(tokenType, new ParseUnit()
@@ -25,6 +25,22 @@ namespace code0k_cc
                 });
             }
 
+            ParseUnit NeverMatchUnit = new ParseUnit()
+            {
+                Name = "Never Match Unit",
+                Type = ParseUnitType.Single,
+                ChildType = ParseUnitChildType.FirstChild,
+                Children = new List<ParseUnit>() { }
+            };
+
+            ParseUnit NullMatchUnit = new ParseUnit()
+            {
+                Name = "Null Match Unit",
+                Type = ParseUnitType.Single,
+                ChildType = ParseUnitChildType.AllChild,
+                Children = new List<ParseUnit>() { }
+            };
+
             ParseUnit MainProgram = new ParseUnit();
             ParseUnit FunctionDeclaration = new ParseUnit();
             ParseUnit FunctionImplementation = new ParseUnit();
@@ -33,7 +49,6 @@ namespace code0k_cc
             ParseUnit FunctionArgumentUnit = new ParseUnit();
             ParseUnit FunctionArgumentLastUnit = new ParseUnit();
 
-            ParseUnit FunctionCall = new ParseUnit();
 
             ParseUnit StatementBody = new ParseUnit();
             ParseUnit Statement = new ParseUnit();
@@ -48,22 +63,27 @@ namespace code0k_cc
             ParseUnit ForStatement = new ParseUnit();
             ParseUnit WhileStatement = new ParseUnit();
             ParseUnit CompoundStatement = new ParseUnit();
-            
+
             ParseUnit LeftValue = new ParseUnit();
             ParseUnit RightValue = new ParseUnit();
 
+            ParseUnit FunctionCallSuffix = new ParseUnit();
             ParseUnit ArraySubscripting = new ParseUnit();
-            ParseUnit Property = new ParseUnit(); 
+            ParseUnit MemberAccess = new ParseUnit();
 
             ParseUnit Expression = new ParseUnit();
 
-            const int EXPRESSION_PRECEDENCE_LEVEL = 16;
-            ParseUnit[] Expressions = new ParseUnit[EXPRESSION_PRECEDENCE_LEVEL];
+            const int OPERATOR_PRECEDENCE_LEVEL = 18;
+            ParseUnit[] Expressions = new ParseUnit[OPERATOR_PRECEDENCE_LEVEL];
+            ParseUnit[] Operators = new ParseUnit[OPERATOR_PRECEDENCE_LEVEL];
 
-            foreach (var i in Enumerable.Range(0, EXPRESSION_PRECEDENCE_LEVEL))
+            foreach (var i in Enumerable.Range(0, OPERATOR_PRECEDENCE_LEVEL))
             {
                 Expressions[i] = new ParseUnit();
+                Operators[i] = new ParseUnit();
             }
+            // no operator for level 0. this item should never be used
+            Operators[0] = null;
 
             // write the parse unit
             MainProgram.Name = "Main Program";
@@ -98,9 +118,7 @@ namespace code0k_cc
                 TokenUnits[TokenType.LeftBracket],
                 FunctionDeclarationArguments,
                 TokenUnits[TokenType.RightBracket],
-                TokenUnits[TokenType.Begin],
-                StatementBody,
-                TokenUnits[TokenType.End]
+                CompoundStatement
             };
 
             FunctionDeclarationArguments.Name = "Function Arguments";
@@ -129,12 +147,11 @@ namespace code0k_cc
                 TokenUnits[TokenType.Identifier]
             };
 
-            FunctionCall.Name = "Function Call";
-            FunctionCall.Type = ParseUnitType.Single;
-            FunctionCall.ChildType = ParseUnitChildType.AllChild;
-            FunctionCall.Children = new List<ParseUnit>()
+            FunctionCallSuffix.Name = "Function Call Suffix";
+            FunctionCallSuffix.Type = ParseUnitType.Single;
+            FunctionCallSuffix.ChildType = ParseUnitChildType.AllChild;
+            FunctionCallSuffix.Children = new List<ParseUnit>()
             {
-                LeftValue,
                 TokenUnits[TokenType.LeftBracket],
                 new ParseUnit()
                 {
@@ -210,8 +227,8 @@ namespace code0k_cc
                 TokenUnits[TokenType.Input],
                 TokenUnits[TokenType.NizkInput],
                 TokenUnits[TokenType.Output],
-                //TokenUnits[TokenType.Var],
-                TokenUnits[TokenType.Const]
+                TokenUnits[TokenType.Const],
+                TokenUnits[TokenType.Ref],
             };
 
             CallStatement.Name = "Call Statement";
@@ -230,9 +247,7 @@ namespace code0k_cc
                 TokenUnits[TokenType.If],
                 RightValue,
                 TokenUnits[TokenType.Then],
-                TokenUnits[TokenType.Begin],
-                StatementBody,
-                TokenUnits[TokenType.End],
+                CompoundStatement,
                 OptionalElseStatement
             };
 
@@ -242,9 +257,7 @@ namespace code0k_cc
             OptionalElseStatement.Children = new List<ParseUnit>()
             {
                 TokenUnits[TokenType.Else],
-                TokenUnits[TokenType.Begin],
-                StatementBody,
-                TokenUnits[TokenType.End],
+                CompoundStatement
             };
 
             ForStatement.Name = "For Statement";
@@ -259,9 +272,7 @@ namespace code0k_cc
                 TokenUnits[TokenType.To],
                 RightValue,
                 TokenUnits[TokenType.Do],
-                TokenUnits[TokenType.Begin],
-                StatementBody,
-                TokenUnits[TokenType.End],
+                CompoundStatement
             };
 
             WhileStatement.Name = "While Statement";
@@ -274,9 +285,7 @@ namespace code0k_cc
                 TokenUnits[TokenType.Max],
                 RightValue,
                 TokenUnits[TokenType.Do],
-                TokenUnits[TokenType.Begin],
-                StatementBody,
-                TokenUnits[TokenType.End],
+                CompoundStatement
             };
 
             CompoundStatement.Name = "Compound Statement";
@@ -302,7 +311,7 @@ namespace code0k_cc
                     ChildType = ParseUnitChildType.FirstChild,
                     Children =  new List<ParseUnit>()
                     {
-                        Property,
+                        MemberAccess,
                         ArraySubscripting
                     }
                 }
@@ -318,10 +327,10 @@ namespace code0k_cc
                 TokenUnits[TokenType.RightSquareBracket]
             };
 
-            Property.Name = "Property";
-            Property.Type = ParseUnitType.Single;
-            Property.ChildType = ParseUnitChildType.AllChild;
-            Property.Children = new List<ParseUnit>()
+            MemberAccess.Name = "Member Access";
+            MemberAccess.Type = ParseUnitType.Single;
+            MemberAccess.ChildType = ParseUnitChildType.AllChild;
+            MemberAccess.Children = new List<ParseUnit>()
             {
                 TokenUnits[TokenType.Dot],
                 TokenUnits[TokenType.Identifier]
@@ -349,7 +358,7 @@ namespace code0k_cc
             // https://en.cppreference.com/w/c/language/operator_precedence
             // Accessed at 2020-04-16
 
-            // so I will follow the number from 1 to 15
+            // so I will follow the number from 1 to 17
             // although some of the operators are not implemented by now
             // these number are still reserved
             // Expression[0] means the identifier or number
@@ -359,65 +368,286 @@ namespace code0k_cc
             Expression.ChildType = ParseUnitChildType.FirstChild;
             Expression.Children = new List<ParseUnit>()
             {
-                Expressions[EXPRESSION_PRECEDENCE_LEVEL - 1]
+                Expressions[OPERATOR_PRECEDENCE_LEVEL - 1]
             };
 
-            // most of them are associated left-to-right
-            foreach (var i in Enumerable.Range(1, EXPRESSION_PRECEDENCE_LEVEL - 1))
+            foreach (var i in Enumerable.Range(0, OPERATOR_PRECEDENCE_LEVEL))
             {
                 Expressions[i].Name = "Expression Level " + i.ToString(CultureInfo.InvariantCulture);
                 Expressions[i].Type = ParseUnitType.Single;
                 Expressions[i].ChildType = ParseUnitChildType.FirstChild;
-                Expressions[i].Children = new List<ParseUnit>()
-                {
-                    Expressions[i] 
-                    Expressions[i-1]
-                };
             }
 
-            //Expression.Name = "Expression";
-            //Expression.Type = ParseUnitType.SingleOptional;
-            //Expression.ChildType = ParseUnitChildType.FirstChild;
-            //Expression.Children = new List<ParseUnit>()
-            //{
-            //    UnaryExpression,
-            //    BinaryExpression,
-            //    FunctionCall,
-            //    TokenUnits[TokenType.Number],
-            //    LeftValue
-            //};
-            //todo
 
+            // most of them are associated left-to-right
+            // except for level 3 and level 16, which are right-to-left
 
+            // level 0: Identifier or number
+            Expressions[0].Children = new List<ParseUnit>() { TokenUnits[TokenType.Identifier], TokenUnits[TokenType.Number] };
+            // level 1: not used
+            Expressions[1].Children = new List<ParseUnit>() { Expressions[0] };
+            // level 2: Function call, Subscript, Member access
+            Expressions[2].Children = new List<ParseUnit>()
+            {
+                new ParseUnit()
+                {
+                    Name = "Expression Level 2",
+                    Type = ParseUnitType.Single,
+                    ChildType = ParseUnitChildType.AllChild,
+                    Children = new List<ParseUnit>()
+                    {
+                        Expressions[2],
+                        Operators[2],
+                    }
+                },
+                Expressions[1]
+            };
+            Operators[2].Children = new List<ParseUnit>() { FunctionCallSuffix, ArraySubscripting, MemberAccess };
+            // level-3 (RTL): Unary plus and minus, Logical NOT and bitwise NOT
+            Expressions[3].Children = new List<ParseUnit>()
+            {
+                new ParseUnit()
+                {
+                    Name = "Expression Level 3",
+                    Type = ParseUnitType.Single,
+                    ChildType = ParseUnitChildType.AllChild,
+                    Children = new List<ParseUnit>()
+                    {
+                        Operators[3],
+                        Expressions[3],
+                    }
+                },
+                Expressions[2]
+            };
+            Operators[3].Children = new List<ParseUnit>() { TokenUnits[TokenType.Plus], TokenUnits[TokenType.Minus], TokenUnits[TokenType.BooleanNot], TokenUnits[TokenType.BitwiseNot] };
+            // level-4: not used
+            Expressions[4].Children = new List<ParseUnit>() { Expressions[3] };
+            // level-5: Multiplication, division, remainder
+            Expressions[5].Children = new List<ParseUnit>()
+            {
+                new ParseUnit()
+                {
+                    Name = "Expression Level 5",
+                    Type = ParseUnitType.Single,
+                    ChildType = ParseUnitChildType.AllChild,
+                    Children = new List<ParseUnit>()
+                    {
+                        Expressions[5],
+                        Operators[5],
+                        Expressions[4]
+                    }
+                },
+                Expressions[4]
+            };
+            Operators[5].Children = new List<ParseUnit>() { TokenUnits[TokenType.Times], TokenUnits[TokenType.Divide], TokenUnits[TokenType.Mod] };
+            // level-6: plus, minus
+            Expressions[6].Children = new List<ParseUnit>()
+            {
+                new ParseUnit()
+                {
+                    Name = "Expression Level 6",
+                    Type = ParseUnitType.Single,
+                    ChildType = ParseUnitChildType.AllChild,
+                    Children = new List<ParseUnit>()
+                    {
+                        Expressions[6],
+                        Operators[6],
+                        Expressions[5]
+                    }
+                },
+                Expressions[5]
+            };
+            Operators[6].Children = new List<ParseUnit>() { TokenUnits[TokenType.Plus], TokenUnits[TokenType.Minus] };
+            // level-7:  Bitwise left shift and right shift 
+            Expressions[7].Children = new List<ParseUnit>()
+            {
+                new ParseUnit()
+                {
+                    Name = "Expression Level 7",
+                    Type = ParseUnitType.Single,
+                    ChildType = ParseUnitChildType.AllChild,
+                    Children = new List<ParseUnit>()
+                    {
+                        Expressions[7],
+                        Operators[7],
+                        Expressions[6]
+                    }
+                },
+                Expressions[6]
+            };
+            Operators[7].Children = new List<ParseUnit>() { TokenUnits[TokenType.BitwiseLeftShiftUnsigned], TokenUnits[TokenType.BitwiseRightShiftUnsigned], TokenUnits[TokenType.BitwiseLeftShiftSigned], TokenUnits[TokenType.BitwiseRightShiftSigned] };
+            // level-8: not used
+            Expressions[8].Children = new List<ParseUnit>() { Expressions[7] };
+            // level-9: <   <= 	>   >=
+            Expressions[9].Children = new List<ParseUnit>()
+            {
+                new ParseUnit()
+                {
+                    Name = "Expression Level 9",
+                    Type = ParseUnitType.Single,
+                    ChildType = ParseUnitChildType.AllChild,
+                    Children = new List<ParseUnit>()
+                    {
+                        Expressions[9],
+                        Operators[9],
+                        Expressions[8]
+                    }
+                },
+                Expressions[8]
+            };
+            Operators[9].Children = new List<ParseUnit>() { TokenUnits[TokenType.LessThan], TokenUnits[TokenType.LessEqualThan], TokenUnits[TokenType.GreaterThan], TokenUnits[TokenType.GreaterEqualThan] };
+            // level-10:  ==   != 
+            Expressions[10].Children = new List<ParseUnit>()
+            {
+                new ParseUnit()
+                {
+                    Name = "Expression Level 10",
+                    Type = ParseUnitType.Single,
+                    ChildType = ParseUnitChildType.AllChild,
+                    Children = new List<ParseUnit>()
+                    {
+                        Expressions[10],
+                        Operators[10],
+                        Expressions[9]
+                    }
+                },
+                Expressions[9]
+            };
+            Operators[10].Children = new List<ParseUnit>() { TokenUnits[TokenType.EqualTo], TokenUnits[TokenType.NotEqualTo] };
+            // level-11: Bitwise AND
+            Expressions[11].Children = new List<ParseUnit>()
+            {
+                new ParseUnit()
+                {
+                    Name = "Expression Level 11",
+                    Type = ParseUnitType.Single,
+                    ChildType = ParseUnitChildType.AllChild,
+                    Children = new List<ParseUnit>()
+                    {
+                        Expressions[11],
+                        Operators[11],
+                        Expressions[10]
+                    }
+                },
+                Expressions[10]
+            };
+            Operators[11].Children = new List<ParseUnit>() { TokenUnits[TokenType.BitwiseAnd] };
+            // level-12: Bitwise XOR
+            Expressions[12].Children = new List<ParseUnit>()
+            {
+                new ParseUnit()
+                {
+                    Name = "Expression Level 12",
+                    Type = ParseUnitType.Single,
+                    ChildType = ParseUnitChildType.AllChild,
+                    Children = new List<ParseUnit>()
+                    {
+                        Expressions[12],
+                        Operators[12],
+                        Expressions[11]
+                    }
+                },
+                Expressions[11]
+            };
+            Operators[12].Children = new List<ParseUnit>() { TokenUnits[TokenType.BitwiseXor] };
+            // level-13: Bitwise OR 
+            Expressions[13].Children = new List<ParseUnit>()
+            {
+                new ParseUnit()
+                {
+                    Name = "Expression Level 13",
+                    Type = ParseUnitType.Single,
+                    ChildType = ParseUnitChildType.AllChild,
+                    Children = new List<ParseUnit>()
+                    {
+                        Expressions[13],
+                        Operators[13],
+                        Expressions[12]
+                    }
+                },
+                Expressions[12]
+            };
+            Operators[13].Children = new List<ParseUnit>() { TokenUnits[TokenType.BitwiseOr] };
+            // level-14: Logical AND
+            Expressions[14].Children = new List<ParseUnit>()
+            {
+                new ParseUnit()
+                {
+                    Name = "Expression Level 14",
+                    Type = ParseUnitType.Single,
+                    ChildType = ParseUnitChildType.AllChild,
+                    Children = new List<ParseUnit>()
+                    {
+                        Expressions[14],
+                        Operators[14],
+                        Expressions[13]
+                    }
+                },
+                Expressions[13]
+            };
+            Operators[14].Children = new List<ParseUnit>() { TokenUnits[TokenType.BooleanAnd] };
+            // level-15 (not existed on C/C++): Logical XOR
+            Expressions[15].Children = new List<ParseUnit>()
+            {
+                new ParseUnit()
+                {
+                    Name = "Expression Level 15",
+                    Type = ParseUnitType.Single,
+                    ChildType = ParseUnitChildType.AllChild,
+                    Children = new List<ParseUnit>()
+                    {
+                        Expressions[15],
+                        Operators[15],
+                        Expressions[14]
+                    }
+                },
+                Expressions[14]
+            };
+            Operators[15].Children = new List<ParseUnit>() { TokenUnits[TokenType.BooleanXor] };
+            // level-16 (corresponding 15): Logical OR
+            Expressions[16].Children = new List<ParseUnit>()
+            {
+                new ParseUnit()
+                {
+                    Name = "Expression Level 16",
+                    Type = ParseUnitType.Single,
+                    ChildType = ParseUnitChildType.AllChild,
+                    Children = new List<ParseUnit>()
+                    {
+                        Expressions[16],
+                        Operators[16],
+                        Expressions[15]
+                    }
+                },
+                Expressions[15]
+            };
+            Operators[16].Children = new List<ParseUnit>() { TokenUnits[TokenType.BooleanOr] };
+            // level-17 (corresponding 16): assign =
+            Expressions[17].Children = new List<ParseUnit>()
+            {
+                new ParseUnit()
+                {
+                    Name = "Expression Level 17",
+                    Type = ParseUnitType.Single,
+                    ChildType = ParseUnitChildType.AllChild,
+                    Children = new List<ParseUnit>()
+                    {
+                        Expressions[17],
+                        Operators[17],
+                        Expressions[16]
+                    }
+                },
+                Expressions[16]
+            };
+            Operators[17].Children = new List<ParseUnit>() { TokenUnits[TokenType.Assign] };
 
-            //BinaryExpression.Name = "Binary Expression";
-            //BinaryExpression.Type = ParseUnitType.Single;
-            //BinaryExpression.ChildType = ParseUnitChildType.AllChild;
-            //BinaryExpression.Children = new List<ParseUnit>()
-            //{
-            //    TokenUnits[TokenType.LeftBracket],
-            //    Expression,
-            //    BinaryOperator,
-            //    Expression,
-            //    TokenUnits[TokenType.RightBracket]
-            //};
-
-            //UnaryExpression.Name = "Unary Expression";
-            //UnaryExpression.Type = ParseUnitType.Single;
-            //UnaryExpression.ChildType = ParseUnitChildType.AllChild;
-            //UnaryExpression.Children = new List<ParseUnit>()
-            //{
-            //    TokenUnits[TokenType.LeftBracket],
-            //    UnaryOperator,
-            //    Expression,
-            //    TokenUnits[TokenType.RightBracket]
-            //};
-
-            //BinaryOperator.Name = "Binary Operator";
-            //BinaryOperator.Type = ParseUnitType.Single;
-            //BinaryOperator.ChildType = ParseUnitChildType.FirstChild;
-
-            //todo
+            // level-18 (corresponding 17): not used
+            if (OPERATOR_PRECEDENCE_LEVEL != 18)
+            {
+                throw  new Exception("Assert failed!");
+            } 
+             
+             
 
             return MainProgram;
 
