@@ -48,8 +48,9 @@ namespace code0k_cc
 
                 Console.Write("\t");
                 Console.Write(tokenList.ElementAtOrDefault(pos)?.Value);
-                Console.Write(" ");
-                Console.Write(pos);
+                Console.Write(" [");
+                Console.Write(pos); 
+                Console.Write("]");
                 Console.WriteLine();
             }
 
@@ -273,6 +274,8 @@ namespace code0k_cc
             ParseUnit MainProgramItem = new ParseUnit();
             ParseUnit MainProgramLoop = new ParseUnit();
 
+            ParseUnit GlobalDefinitionStatement = new ParseUnit();
+
             ParseUnit FunctionDeclaration = new ParseUnit();
             ParseUnit FunctionImplementation = new ParseUnit();
 
@@ -436,6 +439,15 @@ namespace code0k_cc
                 WhileStatement,
                 Expression,
                 CompoundStatement,
+            };
+
+            GlobalDefinitionStatement.Name = "Global Definition Statement";
+            GlobalDefinitionStatement.Type = ParseUnitType.Single;
+            GlobalDefinitionStatement.ChildType = ParseUnitChildType.AllChild;
+            GlobalDefinitionStatement.Children = new List<ParseUnit>()
+            {
+                DefinitionStatement,
+                TokenUnits[TokenType.Semicolon],
             };
 
             DefinitionStatement.Name = "Definition Statement";
