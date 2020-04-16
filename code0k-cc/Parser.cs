@@ -48,25 +48,19 @@ namespace code0k_cc
             ParseUnit FunctionDeclarationArguments = new ParseUnit();
             ParseUnit FunctionArgumentUnit = new ParseUnit();
             ParseUnit FunctionArgumentLastUnit = new ParseUnit();
-
-
+            
             ParseUnit StatementBody = new ParseUnit();
             ParseUnit Statement = new ParseUnit();
 
-            ParseUnit Descriptions = new ParseUnit();
-            ParseUnit AssignStatement = new ParseUnit();
+            ParseUnit DescriptionTokens = new ParseUnit(); 
 
-            ParseUnit DefinitionStatement = new ParseUnit();
-            ParseUnit CallStatement = new ParseUnit();
+            ParseUnit DefinitionStatement = new ParseUnit(); 
             ParseUnit IfStatement = new ParseUnit();
             ParseUnit OptionalElseStatement = new ParseUnit();
             ParseUnit ForStatement = new ParseUnit();
             ParseUnit WhileStatement = new ParseUnit();
             ParseUnit CompoundStatement = new ParseUnit();
-
-            ParseUnit LeftValue = new ParseUnit();
-            ParseUnit RightValue = new ParseUnit();
-
+             
             ParseUnit FunctionCallSuffix = new ParseUnit();
             ParseUnit ArraySubscripting = new ParseUnit();
             ParseUnit MemberAccess = new ParseUnit();
@@ -81,9 +75,7 @@ namespace code0k_cc
             {
                 Expressions[i] = new ParseUnit();
                 Operators[i] = new ParseUnit();
-            }
-            // no operator for level 0. this item should never be used
-            Operators[0] = null;
+            } 
 
             // write the parse unit
             MainProgram.Name = "Main Program";
@@ -214,15 +206,15 @@ namespace code0k_cc
             DefinitionStatement.ChildType = ParseUnitChildType.AllChild;
             DefinitionStatement.Children = new List<ParseUnit>()
             {
-                Descriptions,
+                DescriptionTokens,
                 TokenUnits[TokenType.Identifier],
                 AssignStatement
             };
 
-            Descriptions.Name = "Definition Description";
-            Descriptions.Type = ParseUnitType.MultipleOptional;
-            Descriptions.ChildType = ParseUnitChildType.FirstChild;
-            Descriptions.Children = new List<ParseUnit>()
+            DescriptionTokens.Name = "Definition Description";
+            DescriptionTokens.Type = ParseUnitType.MultipleOptional;
+            DescriptionTokens.ChildType = ParseUnitChildType.FirstChild;
+            DescriptionTokens.Children = new List<ParseUnit>()
             {
                 TokenUnits[TokenType.Input],
                 TokenUnits[TokenType.NizkInput],
@@ -334,17 +326,7 @@ namespace code0k_cc
             {
                 TokenUnits[TokenType.Dot],
                 TokenUnits[TokenType.Identifier]
-            };
-
-            AssignStatement.Name = "Assign Statement";
-            AssignStatement.Type = ParseUnitType.Single;
-            AssignStatement.ChildType = ParseUnitChildType.AllChild;
-            AssignStatement.Children = new List<ParseUnit>()
-            {
-                LeftValue,
-                TokenUnits[TokenType.Assign],
-                RightValue
-            };
+            }; 
 
             RightValue.Name = "Right Value";
             RightValue.Type = ParseUnitType.Single;
@@ -376,8 +358,10 @@ namespace code0k_cc
                 Expressions[i].Name = "Expression Level " + i.ToString(CultureInfo.InvariantCulture);
                 Expressions[i].Type = ParseUnitType.Single;
                 Expressions[i].ChildType = ParseUnitChildType.FirstChild;
+                Operators[i].Name= "Operator Level " + i.ToString(CultureInfo.InvariantCulture);
+                Operators[i].Type = ParseUnitType.Single;
+                Operators[i].ChildType = ParseUnitChildType.FirstChild;
             }
-
 
             // most of them are associated left-to-right
             // except for level 3 and level 16, which are right-to-left
@@ -622,7 +606,7 @@ namespace code0k_cc
                 Expressions[15]
             };
             Operators[16].Children = new List<ParseUnit>() { TokenUnits[TokenType.BooleanOr] };
-            // level-17 (corresponding 16): assign =
+            // level-17 (RTL) (corresponding 16): assign =
             Expressions[17].Children = new List<ParseUnit>()
             {
                 new ParseUnit()
@@ -632,9 +616,9 @@ namespace code0k_cc
                     ChildType = ParseUnitChildType.AllChild,
                     Children = new List<ParseUnit>()
                     {
-                        Expressions[17],
+                        Expressions[16],
                         Operators[17],
-                        Expressions[16]
+                        Expressions[17]
                     }
                 },
                 Expressions[16]
