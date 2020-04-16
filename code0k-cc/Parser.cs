@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -12,7 +13,7 @@ namespace code0k_cc
     {
         private static ParseUnit RootParseUnit { get; } = GetRootParseUnit();
 
-        static ParseInstance Parse(IEnumerable<Token> tokens)
+        static ParseInstance Parse(in IEnumerable<Token> tokens)
         {
             IReadOnlyList<Token> tokenList = tokens.ToList();
             var ret = _Parse(RootParseUnit, tokenList, 0);
@@ -28,15 +29,167 @@ namespace code0k_cc
 
         }
 
-        private static ParseResult _Parse(ParseUnit unit, IReadOnlyList<Token> tokenList, int pos)
+        private static ParseResult _Parse(in ParseUnit unit, in IReadOnlyList<Token> tokenList, in int pos)
         {
-            var ret = new ParseResult() { Position = pos, ResultInstance = new ParseInstance() { ParseUnit = unit }, Success = false };
+            if (unit.ChildType == ParseUnitChildType.LeafNode)
+            {
+                // match the token
+                if (tokenList[pos].TokenType == unit.LeafNodeTokenType)
+                {
+                    // matched
+                    var ret = new ParseResult()
+                    {
+                        Position = pos + 1,
+                        Success = true,
+                        ResultInstance = new ParseInstance()
+                        {
+                            Children = null,
+                            ParseUnit = unit,
+                            Token = tokenList[pos]
+                        }
+                    };
+                    return ret;
+                }
+                else
+                {
+                    // failed
+                    var ret = new ParseResult()
+                    {
+                        Position = pos,
+                        Success = false,
+                        ResultInstance = new ParseInstance()
+                        {
+                            Children = null,
+                            ParseUnit = unit,
+                            Token = null
+                        }
+                    };
+                    return ret;
+                }
+            }
+            else if (unit.ChildType == ParseUnitChildType.AllChild)
+            {
+                ParseResult badResult = null;
+                int newPos = pos;
+                List<ParseInstance> children = new List<ParseInstance>();
+                foreach (var unitChild in unit.Children)
+                {
+                    var ret = _Parse(unitChild, tokenList, newPos);
+                    if (!ret.Success)
+                    {
+                        badResult = ret;
+                        break;
+                    }
+                    else
+                    {
+                        newPos = ret.Position;
+                        children.Add(ret.ResultInstance);
+                    }
+                }
 
-            int matchCount = 0;
+                if (badResult != null)
+                {
+                    // on failure
+                    if (unit.Type == ParseUnitType.SingleOptional)
+                    {
+                        // match null
+                        var ret = new ParseResult()
+                        {
+                            Position = pos,
+                            Success = true,
+                            ResultInstance = null
+                        };
+                        return ret;
+                    }
+                    else if (unit.Type == ParseUnitType.Single)
+                    {
+                        // failed
+                        return badResult;
+                    }
+                    else
+                    {
+                        throw new Exception("Assert failed!");
+                    }
+                }
+                else
+                {
+                    // on success
+                    var ret = new ParseResult()
+                    {
+                        Position = newPos,
+                        Success = true,
+                        ResultInstance = new ParseInstance()
+                        {
+                            Children = children,
+                            ParseUnit = unit,
+                            Token = null
+                        }
+                    };
+                    return ret;
+                }
 
-            // try match
+            }
+            else if (unit.ChildType == ParseUnitChildType.OneChild)
+            {
+                ParseResult goodResult = null;
+                ParseResult lastResult = null;
+                foreach (var unitChild in unit.Children)
+                {
+                    lastResult = _Parse(unitChild, tokenList, pos);
+                    if (lastResult.Success)
+                    {
+                        goodResult = lastResult;
+                        break;
+                    }
+                }
+
+                if (goodResult == null)
+                {
+                    // not matched
+                    if (unit.Type == ParseUnitType.SingleOptional)
+                    {
+                        // match null
+                        var ret = new ParseResult()
+                        {
+                            Position = pos,
+                            Success = true,
+                            ResultInstance = null
+                        };
+                        return ret;
+                    }
+                    else if (unit.Type == ParseUnitType.Single)
+                    {
+                        // failed
+                        return lastResult;
+                    }
+                    else
+                    {
+                        throw new Exception("Assert failed!");
+                    }
+                }
+                else
+                {
+                    // matched
+                    var ret = new ParseResult()
+                    {
+                        Position = goodResult.Position,
+                        Success = true,
+                        ResultInstance = new ParseInstance()
+                        {
+                            Children = new List<ParseInstance>() { goodResult.ResultInstance },
+                            ParseUnit = unit,
+                            Token = null
+                        }
+                    };
+                    return ret;
+                }
 
 
+            }
+            else
+            {
+                throw new Exception("Assert failed!");
+            }
         }
 
         private static ParseUnit GetRootParseUnit()
@@ -107,13 +260,13 @@ namespace code0k_cc
             const int OPERATOR_PRECEDENCE_LEVEL = 18;
             ParseUnit[] Expressions = new ParseUnit[OPERATOR_PRECEDENCE_LEVEL];
             ParseUnit[] Operators = new ParseUnit[OPERATOR_PRECEDENCE_LEVEL];
-            ParseUnit[] ExpressionsHelper = new ParseUnit[OPERATOR_PRECEDENCE_LEVEL]; 
+            ParseUnit[] ExpressionsHelper = new ParseUnit[OPERATOR_PRECEDENCE_LEVEL];
 
             foreach (var i in Enumerable.Range(0, OPERATOR_PRECEDENCE_LEVEL))
             {
                 Expressions[i] = new ParseUnit();
                 Operators[i] = new ParseUnit();
-                ExpressionsHelper[i] = new ParseUnit(); 
+                ExpressionsHelper[i] = new ParseUnit();
             }
 
             // write the parse unit
@@ -625,6 +778,7 @@ namespace code0k_cc
                 Expressions[16]
             };
             Operators[17].Children = new List<ParseUnit>() { TokenUnits[TokenType.Assign] };
+
 
             // level-18 (corresponding 17): not used
             if (OPERATOR_PRECEDENCE_LEVEL != 18)

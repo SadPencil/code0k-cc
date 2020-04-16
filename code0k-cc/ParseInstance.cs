@@ -8,6 +8,6 @@ namespace code0k_cc
     {
         public ParseUnit ParseUnit = null;
         public Token Token = null;
-        public ParseInstance Child = null;
+        public IReadOnlyList<ParseInstance> Children;
     }
 }
