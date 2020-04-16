@@ -112,7 +112,7 @@ namespace code0k_cc
         public static readonly TokenType BitwiseRightShiftUnsigned = new TokenType("\\>\\>\\>", ">>>", new TokenTypeProperty() { IsBinaryOperator = true });
 
         public static readonly TokenType Identifier = new TokenType("[_a-zA-z][_a-zA-z0-9]{0,200}", "identifier");
-        public static readonly TokenType Number = new TokenType("([0-9][0-9_a-zA-z\\.]{0,200}", "number");
+        public static readonly TokenType Number = new TokenType("[0-9][0-9_a-zA-z\\.]{0,200}", "number");
 
 
         public static IEnumerable<TokenType> GetAll()
