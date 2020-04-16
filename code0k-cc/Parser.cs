@@ -483,8 +483,6 @@ namespace code0k_cc
             // level-4: not used
             Expressions[4].Children = new List<ParseUnit>() { Expressions[3] };
 
-            //todo eliminate left recursion? is that right?
-
             // level-5: Multiplication, division, remainder
             //
             // note: eliminate left recursion
@@ -498,207 +496,122 @@ namespace code0k_cc
             // R -> αR | ε
             // (where ε stands for null)
             //
-            // In this situation, 
-            //
-            Expressions[5].Children = new List<ParseUnit>()
+            // In this situation, A is Expression[5], α is Operators[5] and Expressions[4], β is Expressions[4],
+            // R is ExpressionHelper1[5]
             {
-                new ParseUnit()
-                {
-                    Name = "Expression Level 5",
-                    Type = ParseUnitType.Single,
-                    ChildType = ParseUnitChildType.AllChild,
-                    Children = new List<ParseUnit>()
-                    {
-                        Expressions[5],
-                        Operators[5],
-                        Expressions[4]
-                    }
-                },
-                Expressions[4]
-            };
-            Operators[5].Children = new List<ParseUnit>() { TokenUnits[TokenType.Times], TokenUnits[TokenType.Divide], TokenUnits[TokenType.Mod] };
+                const int i = 5;
+                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper1[i] };
+                ExpressionsHelper1[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper1[i] };
+
+                Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.Times], TokenUnits[TokenType.Divide], TokenUnits[TokenType.Mod] };
+            }
+
             // level-6: plus, minus
-            Expressions[6].Children = new List<ParseUnit>()
+            // note: eliminate left recursion
             {
-                new ParseUnit()
-                {
-                    Name = "Expression Level 6",
-                    Type = ParseUnitType.Single,
-                    ChildType = ParseUnitChildType.AllChild,
-                    Children = new List<ParseUnit>()
-                    {
-                        Expressions[6],
-                        Operators[6],
-                        Expressions[5]
-                    }
-                },
-                Expressions[5]
-            };
-            Operators[6].Children = new List<ParseUnit>() { TokenUnits[TokenType.Plus], TokenUnits[TokenType.Minus] };
+                const int i = 6;
+                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper1[i] };
+                ExpressionsHelper1[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper1[i] };
+
+                Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.Plus], TokenUnits[TokenType.Minus] };
+            }
+
+
             // level-7:  Bitwise left shift and right shift 
-            Expressions[7].Children = new List<ParseUnit>()
+            // note: eliminate left recursion
             {
-                new ParseUnit()
-                {
-                    Name = "Expression Level 7",
-                    Type = ParseUnitType.Single,
-                    ChildType = ParseUnitChildType.AllChild,
-                    Children = new List<ParseUnit>()
-                    {
-                        Expressions[7],
-                        Operators[7],
-                        Expressions[6]
-                    }
-                },
-                Expressions[6]
-            };
-            Operators[7].Children = new List<ParseUnit>() { TokenUnits[TokenType.BitwiseLeftShiftUnsigned], TokenUnits[TokenType.BitwiseRightShiftUnsigned], TokenUnits[TokenType.BitwiseLeftShiftSigned], TokenUnits[TokenType.BitwiseRightShiftSigned] };
+                const int i = 7;
+                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper1[i] };
+                ExpressionsHelper1[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper1[i] };
+
+                Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.BitwiseLeftShiftUnsigned], TokenUnits[TokenType.BitwiseRightShiftUnsigned], TokenUnits[TokenType.BitwiseLeftShiftSigned], TokenUnits[TokenType.BitwiseRightShiftSigned] };
+            }
+
+
             // level-8: not used
             Expressions[8].Children = new List<ParseUnit>() { Expressions[7] };
+
+
             // level-9: <   <= 	>   >=
-            Expressions[9].Children = new List<ParseUnit>()
             {
-                new ParseUnit()
-                {
-                    Name = "Expression Level 9",
-                    Type = ParseUnitType.Single,
-                    ChildType = ParseUnitChildType.AllChild,
-                    Children = new List<ParseUnit>()
-                    {
-                        Expressions[9],
-                        Operators[9],
-                        Expressions[8]
-                    }
-                },
-                Expressions[8]
-            };
-            Operators[9].Children = new List<ParseUnit>() { TokenUnits[TokenType.LessThan], TokenUnits[TokenType.LessEqualThan], TokenUnits[TokenType.GreaterThan], TokenUnits[TokenType.GreaterEqualThan] };
+                const int i = 9;
+                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper1[i] };
+                ExpressionsHelper1[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper1[i] };
+
+                Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.LessThan], TokenUnits[TokenType.LessEqualThan], TokenUnits[TokenType.GreaterThan], TokenUnits[TokenType.GreaterEqualThan] };
+            }
+
+
             // level-10:  ==   != 
-            Expressions[10].Children = new List<ParseUnit>()
             {
-                new ParseUnit()
-                {
-                    Name = "Expression Level 10",
-                    Type = ParseUnitType.Single,
-                    ChildType = ParseUnitChildType.AllChild,
-                    Children = new List<ParseUnit>()
-                    {
-                        Expressions[10],
-                        Operators[10],
-                        Expressions[9]
-                    }
-                },
-                Expressions[9]
-            };
-            Operators[10].Children = new List<ParseUnit>() { TokenUnits[TokenType.EqualTo], TokenUnits[TokenType.NotEqualTo] };
+                const int i = 10;
+                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper1[i] };
+                ExpressionsHelper1[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper1[i] };
+
+                Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.EqualTo], TokenUnits[TokenType.NotEqualTo] };
+            }
+
+
             // level-11: Bitwise AND
-            Expressions[11].Children = new List<ParseUnit>()
             {
-                new ParseUnit()
-                {
-                    Name = "Expression Level 11",
-                    Type = ParseUnitType.Single,
-                    ChildType = ParseUnitChildType.AllChild,
-                    Children = new List<ParseUnit>()
-                    {
-                        Expressions[11],
-                        Operators[11],
-                        Expressions[10]
-                    }
-                },
-                Expressions[10]
-            };
-            Operators[11].Children = new List<ParseUnit>() { TokenUnits[TokenType.BitwiseAnd] };
+                const int i = 11;
+                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper1[i] };
+                ExpressionsHelper1[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper1[i] };
+
+                Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.BitwiseAnd] };
+            }
+
+
             // level-12: Bitwise XOR
-            Expressions[12].Children = new List<ParseUnit>()
             {
-                new ParseUnit()
-                {
-                    Name = "Expression Level 12",
-                    Type = ParseUnitType.Single,
-                    ChildType = ParseUnitChildType.AllChild,
-                    Children = new List<ParseUnit>()
-                    {
-                        Expressions[12],
-                        Operators[12],
-                        Expressions[11]
-                    }
-                },
-                Expressions[11]
-            };
-            Operators[12].Children = new List<ParseUnit>() { TokenUnits[TokenType.BitwiseXor] };
+                const int i = 12;
+                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper1[i] };
+                ExpressionsHelper1[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper1[i] };
+
+                Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.BitwiseXor] };
+            }
+
+
             // level-13: Bitwise OR 
-            Expressions[13].Children = new List<ParseUnit>()
             {
-                new ParseUnit()
-                {
-                    Name = "Expression Level 13",
-                    Type = ParseUnitType.Single,
-                    ChildType = ParseUnitChildType.AllChild,
-                    Children = new List<ParseUnit>()
-                    {
-                        Expressions[13],
-                        Operators[13],
-                        Expressions[12]
-                    }
-                },
-                Expressions[12]
-            };
-            Operators[13].Children = new List<ParseUnit>() { TokenUnits[TokenType.BitwiseOr] };
+                const int i = 13;
+                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper1[i] };
+                ExpressionsHelper1[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper1[i] };
+
+                Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.BitwiseOr] };
+            }
+
+
             // level-14: Logical AND
-            Expressions[14].Children = new List<ParseUnit>()
             {
-                new ParseUnit()
-                {
-                    Name = "Expression Level 14",
-                    Type = ParseUnitType.Single,
-                    ChildType = ParseUnitChildType.AllChild,
-                    Children = new List<ParseUnit>()
-                    {
-                        Expressions[14],
-                        Operators[14],
-                        Expressions[13]
-                    }
-                },
-                Expressions[13]
-            };
-            Operators[14].Children = new List<ParseUnit>() { TokenUnits[TokenType.BooleanAnd] };
+                const int i = 14;
+                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper1[i] };
+                ExpressionsHelper1[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper1[i] };
+
+                Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.BooleanAnd] };
+            }
+
+
             // level-15 (not existed on C/C++): Logical XOR
-            Expressions[15].Children = new List<ParseUnit>()
             {
-                new ParseUnit()
-                {
-                    Name = "Expression Level 15",
-                    Type = ParseUnitType.Single,
-                    ChildType = ParseUnitChildType.AllChild,
-                    Children = new List<ParseUnit>()
-                    {
-                        Expressions[15],
-                        Operators[15],
-                        Expressions[14]
-                    }
-                },
-                Expressions[14]
-            };
-            Operators[15].Children = new List<ParseUnit>() { TokenUnits[TokenType.BooleanXor] };
+                const int i = 15;
+                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper1[i] };
+                ExpressionsHelper1[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper1[i] };
+
+                Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.BooleanXor] };
+            }
+
+
             // level-16 (corresponding 15): Logical OR
-            Expressions[16].Children = new List<ParseUnit>()
             {
-                new ParseUnit()
-                {
-                    Name = "Expression Level 16",
-                    Type = ParseUnitType.Single,
-                    ChildType = ParseUnitChildType.AllChild,
-                    Children = new List<ParseUnit>()
-                    {
-                        Expressions[16],
-                        Operators[16],
-                        Expressions[15]
-                    }
-                },
-                Expressions[15]
-            };
-            Operators[16].Children = new List<ParseUnit>() { TokenUnits[TokenType.BooleanOr] };
+                const int i = 16;
+                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper1[i] };
+                ExpressionsHelper1[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper1[i] };
+
+                Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.BooleanOr] };
+            } 
+
+
             // level-17 (RTL) (corresponding 16): assign =
             Expressions[17].Children = new List<ParseUnit>()
             {
