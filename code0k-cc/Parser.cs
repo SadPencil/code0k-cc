@@ -38,6 +38,7 @@ namespace code0k_cc
                 {
                     throw new Exception("stop");
                 }
+                Console.Write("\t" + depth);
                 for (int kkk = 0; kkk < depth; ++kkk)
                 {
                     Console.Write(" ");
@@ -839,6 +840,7 @@ namespace code0k_cc
                 Operators[17],
                 Expressions[17]
             };
+            Expressions[17].ChildType = ParseUnitChildType.OneChild;
             Expressions[17].Children = new List<ParseUnit>()
             {
                 ExpressionsHelper[17],
