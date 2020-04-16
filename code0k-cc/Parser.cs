@@ -69,7 +69,7 @@ namespace code0k_cc
                 Children = new List<ParseUnit>() { }
             };
 
-            ParseUnit MainProgram = new ParseUnit(); 
+            ParseUnit MainProgram = new ParseUnit();
             ParseUnit MainProgramItem = new ParseUnit();
 
             ParseUnit FunctionDeclaration = new ParseUnit();
@@ -79,7 +79,7 @@ namespace code0k_cc
 
             ParseUnit FunctionDeclarationArguments = new ParseUnit();
             ParseUnit FunctionArgumentLoop = new ParseUnit();
-            ParseUnit FunctionArgumentUnit = new ParseUnit(); 
+            ParseUnit FunctionArgumentUnit = new ParseUnit();
 
             ParseUnit StatementBody = new ParseUnit();
             ParseUnit Statement = new ParseUnit();
@@ -102,15 +102,20 @@ namespace code0k_cc
             ParseUnit MemberAccess = new ParseUnit();
 
             ParseUnit Expression = new ParseUnit();
+            ParseUnit BracketExpression = new ParseUnit();
 
             const int OPERATOR_PRECEDENCE_LEVEL = 18;
             ParseUnit[] Expressions = new ParseUnit[OPERATOR_PRECEDENCE_LEVEL];
             ParseUnit[] Operators = new ParseUnit[OPERATOR_PRECEDENCE_LEVEL];
+            ParseUnit[] ExpressionsHelper1 = new ParseUnit[OPERATOR_PRECEDENCE_LEVEL];
+            ParseUnit[] ExpressionsHelper2 = new ParseUnit[OPERATOR_PRECEDENCE_LEVEL];
 
             foreach (var i in Enumerable.Range(0, OPERATOR_PRECEDENCE_LEVEL))
             {
                 Expressions[i] = new ParseUnit();
                 Operators[i] = new ParseUnit();
+                ExpressionsHelper1[i] = new ParseUnit();
+                ExpressionsHelper2[i] = new ParseUnit();
             }
 
             // write the parse unit
@@ -131,7 +136,7 @@ namespace code0k_cc
                 FunctionImplementation,
                 FunctionDeclaration,
                 DefinitionStatement,
-            };  
+            };
 
             FunctionDeclaration.Name = "Function Declaration";
             FunctionDeclaration.Type = ParseUnitType.Single;
@@ -336,7 +341,7 @@ namespace code0k_cc
             // so I will follow the number from 1 to 17
             // although some of the operators are not implemented by now
             // these number are still reserved
-            // Expression[0] means the identifier or number
+            // Expression[0] means the identifier or number or bracket
 
             Expression.Name = "Expression";
             Expression.Type = ParseUnitType.Single;
@@ -346,39 +351,61 @@ namespace code0k_cc
                 Expressions[OPERATOR_PRECEDENCE_LEVEL - 1]
             };
 
+            BracketExpression.Name = "Bracket Expression";
+            BracketExpression.Type = ParseUnitType.Single;
+            BracketExpression.ChildType = ParseUnitChildType.OneChild;
+            BracketExpression.Children = new List<ParseUnit>()
+            {
+                TokenUnits[TokenType.LeftBracket],
+                Expression,
+                TokenUnits[TokenType.RightBracket]
+            };
+
             foreach (var i in Enumerable.Range(0, OPERATOR_PRECEDENCE_LEVEL))
             {
                 Expressions[i].Name = "Expression Level " + i.ToString(CultureInfo.InvariantCulture);
                 Expressions[i].Type = ParseUnitType.Single;
-                Expressions[i].ChildType = ParseUnitChildType.OneChild;
+                Expressions[i].ChildType = ParseUnitChildType.AllChild;
+
                 Operators[i].Name = "Operator Level " + i.ToString(CultureInfo.InvariantCulture);
                 Operators[i].Type = ParseUnitType.Single;
                 Operators[i].ChildType = ParseUnitChildType.OneChild;
+
+                ExpressionsHelper1[i].Name = "Expression Level " + i.ToString(CultureInfo.InvariantCulture);
+                ExpressionsHelper1[i].Type = ParseUnitType.SingleOptional;
+                ExpressionsHelper1[i].ChildType = ParseUnitChildType.AllChild;
+                ExpressionsHelper2[i].Name = "Expression Level " + i.ToString(CultureInfo.InvariantCulture);
+                ExpressionsHelper2[i].Type = ParseUnitType.SingleOptional;
+                ExpressionsHelper2[i].ChildType = ParseUnitChildType.AllChild;
             }
 
             // most of them are associated left-to-right
             // except for level 3 and level 16, which are right-to-left
 
             // level 0: Identifier or number
-            Expressions[0].Children = new List<ParseUnit>() { TokenUnits[TokenType.Identifier], TokenUnits[TokenType.Number] };
+            Expressions[0].Children = new List<ParseUnit>() { Operators[0] };
+            Operators[0].Children = new List<ParseUnit>() { TokenUnits[TokenType.Identifier], TokenUnits[TokenType.Number], BracketExpression };
             // level 1: not used
             Expressions[1].Children = new List<ParseUnit>() { Expressions[0] };
             // level 2: Function call, Subscript, Member access
-            Expressions[2].Children = new List<ParseUnit>()
-            {
-                new ParseUnit()
-                {
-                    Name = "Expression Level 2",
-                    Type = ParseUnitType.Single,
-                    ChildType = ParseUnitChildType.AllChild,
-                    Children = new List<ParseUnit>()
-                    {
-                        Expressions[2],
-                        Operators[2],
-                    }
-                },
-                Expressions[1]
-            };
+            //
+            // note: eliminate left recursion
+            // Example:
+            //
+            // A -> Aα | β
+            // 
+            // will be converted to
+            // 
+            // A -> βR
+            // R -> αR | ε
+            // (where ε stands for null)
+            //
+            // In this situation, A is Expression[2], α is Operator[2] and β is Expression[1]
+            // R is ExpressionHelper1[2]
+
+            Expressions[2].Children = new List<ParseUnit>() { Expressions[1], ExpressionsHelper1[2] };
+            ExpressionsHelper1[2].Children = new List<ParseUnit>() { Operators[2], ExpressionsHelper1[2] };
+
             Operators[2].Children = new List<ParseUnit>() { FunctionCall, ArraySubscripting, MemberAccess };
 
             FunctionCall.Name = "Function Call";
@@ -389,36 +416,6 @@ namespace code0k_cc
                 TokenUnits[TokenType.LeftBracket],
                 FunctionCallArgument,
                 TokenUnits[TokenType.RightBracket],
-                //new ParseUnit()
-                //{
-                //    Name = "Function Call Argument",
-                //    Type = ParseUnitType.SingleOptional,
-                //    ChildType = ParseUnitChildType.AllChild,
-                //    Children = new List<ParseUnit>()
-                //    {
-                //        new ParseUnit()
-                //        {
-                //            Name = "Function Call Argument Unit",
-                //            Type = ParseUnitType.MultipleOptional,
-                //            ChildType = ParseUnitChildType.AllChild,
-                //            Children = new List<ParseUnit>()
-                //            {
-                //                Expression,
-                //                TokenUnits[TokenType.Comma]
-                //            }
-                //        },
-                //        new ParseUnit()
-                //        {
-                //            Name = "Function Call Argument Unit",
-                //            Type = ParseUnitType.Single,
-                //            ChildType = ParseUnitChildType.AllChild,
-                //            Children =  new List<ParseUnit>()
-                //            {
-                //                Expression
-                //            }
-                //        }
-                //    }
-                //},
             };
             FunctionCallArgument.Name = "Function Call Argument";
             FunctionCallArgument.Type = ParseUnitType.SingleOptional;
@@ -435,7 +432,7 @@ namespace code0k_cc
             FunctionCallArgumentLoop.Children = new List<ParseUnit>()
             {
                 TokenUnits[TokenType.Comma],
-                FunctionCallArgument, 
+                FunctionCallArgument,
             };
 
             FunctionCallArgumentItem.Name = "Function Call Argument Item";
@@ -485,7 +482,24 @@ namespace code0k_cc
             Operators[3].Children = new List<ParseUnit>() { TokenUnits[TokenType.Plus], TokenUnits[TokenType.Minus], TokenUnits[TokenType.BooleanNot], TokenUnits[TokenType.BitwiseNot] };
             // level-4: not used
             Expressions[4].Children = new List<ParseUnit>() { Expressions[3] };
+
+            //todo eliminate left recursion? is that right?
+
             // level-5: Multiplication, division, remainder
+            //
+            // note: eliminate left recursion
+            // Example:
+            //
+            // A -> Aα | β
+            // 
+            // will be converted to
+            // 
+            // A -> βR
+            // R -> αR | ε
+            // (where ε stands for null)
+            //
+            // In this situation, 
+            //
             Expressions[5].Children = new List<ParseUnit>()
             {
                 new ParseUnit()
