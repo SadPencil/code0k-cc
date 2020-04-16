@@ -51,8 +51,6 @@ namespace code0k_cc
         public static readonly TokenType Ref = new TokenType("ref", "ref", new TokenTypeProperty() { IsDescriptionWord = true });
 
         public static readonly TokenType Call = new TokenType("call", "call");
-        public static readonly TokenType Begin = new TokenType("{", "{");
-        public static readonly TokenType End = new TokenType("}", "}");
         public static readonly TokenType Return = new TokenType("return", "return");
 
         public static readonly TokenType If = new TokenType("if", "if");
@@ -72,6 +70,8 @@ namespace code0k_cc
         public static readonly TokenType Break = new TokenType("break", "break");
         public static readonly TokenType Continue = new TokenType("continue", "continue");
 
+        public static readonly TokenType Begin = new TokenType("{", "{");
+        public static readonly TokenType End = new TokenType("}", "}");
         public static readonly TokenType LeftBracket = new TokenType("\\(", "(");
         public static readonly TokenType RightBracket = new TokenType("\\)", ")");
         public static readonly TokenType LeftSquareBracket = new TokenType("\\[", "[");
@@ -103,8 +103,13 @@ namespace code0k_cc
 
         public static readonly TokenType BooleanAnd = new TokenType("\\&\\&", "&&", new TokenTypeProperty() { IsBinaryOperator = true });
         public static readonly TokenType BooleanOr = new TokenType("\\|\\|", "||", new TokenTypeProperty() { IsBinaryOperator = true });
+        public static readonly TokenType BooleanXor = new TokenType("\\^\\^", "^^", new TokenTypeProperty() { IsBinaryOperator = true });
         public static readonly TokenType BooleanNot = new TokenType("\\!", "!", new TokenTypeProperty() { IsUnaryOperator = true });
-        //todo boolean xor? 
+
+        public static readonly TokenType BitwiseLeftShiftSigned = new TokenType("\\<\\<", "<<", new TokenTypeProperty() { IsBinaryOperator = true });
+        public static readonly TokenType BitwiseLeftShiftUnsigned = new TokenType("\\<\\<\\<", "<<<", new TokenTypeProperty() { IsBinaryOperator = true });
+        public static readonly TokenType BitwiseRightShiftSigned = new TokenType("\\>\\>", ">>", new TokenTypeProperty() { IsBinaryOperator = true });
+        public static readonly TokenType BitwiseRightShiftUnsigned = new TokenType("\\>\\>\\>", ">>>", new TokenTypeProperty() { IsBinaryOperator = true });
 
         public static readonly TokenType Identifier = new TokenType("[_a-zA-z][_a-zA-z0-9]{0,200}", "identifier");
         public static readonly TokenType Number = new TokenType("([0-9][0-9_a-zA-z\\.]{0,200}", "number");
@@ -120,8 +125,6 @@ namespace code0k_cc
             yield return Ref;
 
             yield return Call;
-            yield return Begin;
-            yield return End;
             yield return Return;
 
             yield return If;
@@ -139,8 +142,12 @@ namespace code0k_cc
             yield return Break;
             yield return Continue;
 
+            yield return Begin;
+            yield return End;
             yield return LeftBracket;
             yield return RightBracket;
+            yield return LeftSquareBracket;
+            yield return RightSquareBracket;
 
             yield return Dot;
             yield return Colon;
@@ -168,7 +175,13 @@ namespace code0k_cc
 
             yield return BooleanAnd;
             yield return BooleanOr;
+            yield return BooleanXor;
             yield return BooleanNot;
+
+            yield return BitwiseLeftShiftSigned;
+            yield return BitwiseRightShiftSigned;
+            yield return BitwiseLeftShiftUnsigned;
+            yield return BitwiseRightShiftUnsigned;
 
             // note that the order matters 
             yield return Number;
