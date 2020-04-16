@@ -45,22 +45,24 @@ namespace code0k_cc
             ParseUnit FunctionDeclaration = new ParseUnit();
             ParseUnit FunctionImplementation = new ParseUnit();
 
+            ParseUnit TypeUnit = new ParseUnit();
+
             ParseUnit FunctionDeclarationArguments = new ParseUnit();
             ParseUnit FunctionArgumentUnit = new ParseUnit();
             ParseUnit FunctionArgumentLastUnit = new ParseUnit();
-            
+
             ParseUnit StatementBody = new ParseUnit();
             ParseUnit Statement = new ParseUnit();
 
-            ParseUnit DescriptionTokens = new ParseUnit(); 
+            ParseUnit DescriptionTokens = new ParseUnit();
 
-            ParseUnit DefinitionStatement = new ParseUnit(); 
+            ParseUnit DefinitionStatement = new ParseUnit();
             ParseUnit IfStatement = new ParseUnit();
             ParseUnit OptionalElseStatement = new ParseUnit();
             ParseUnit ForStatement = new ParseUnit();
             ParseUnit WhileStatement = new ParseUnit();
             ParseUnit CompoundStatement = new ParseUnit();
-             
+
             ParseUnit FunctionCallSuffix = new ParseUnit();
             ParseUnit ArraySubscripting = new ParseUnit();
             ParseUnit MemberAccess = new ParseUnit();
@@ -75,7 +77,7 @@ namespace code0k_cc
             {
                 Expressions[i] = new ParseUnit();
                 Operators[i] = new ParseUnit();
-            } 
+            }
 
             // write the parse unit
             MainProgram.Name = "Main Program";
@@ -93,11 +95,19 @@ namespace code0k_cc
             FunctionImplementation.ChildType = ParseUnitChildType.AllChild;
             FunctionImplementation.Children = new List<ParseUnit>()
             {
-                TokenUnits[TokenType.Identifier],
+                TypeUnit,
                 TokenUnits[TokenType.Identifier],
                 TokenUnits[TokenType.LeftBracket],
                 FunctionDeclarationArguments,
                 TokenUnits[TokenType.RightBracket]
+            };
+
+            TypeUnit.Name = "Type Name";
+            TypeUnit.Type = ParseUnitType.Single;
+            TypeUnit.ChildType = ParseUnitChildType.AllChild;
+            TypeUnit.Children = new List<ParseUnit>()
+            {
+                TokenUnits[TokenType.Identifier]
             };
 
             FunctionImplementation.Name = "Function Implementation";
@@ -105,7 +115,7 @@ namespace code0k_cc
             FunctionImplementation.ChildType = ParseUnitChildType.AllChild;
             FunctionImplementation.Children = new List<ParseUnit>()
             {
-                TokenUnits[TokenType.Identifier],
+                TypeUnit,
                 TokenUnits[TokenType.Identifier],
                 TokenUnits[TokenType.LeftBracket],
                 FunctionDeclarationArguments,
@@ -127,6 +137,8 @@ namespace code0k_cc
             FunctionArgumentUnit.ChildType = ParseUnitChildType.AllChild;
             FunctionArgumentUnit.Children = new List<ParseUnit>()
             {
+                DescriptionTokens,
+                TypeUnit,
                 TokenUnits[TokenType.Identifier],
                 TokenUnits[TokenType.Comma]
             };
@@ -136,46 +148,9 @@ namespace code0k_cc
             FunctionArgumentLastUnit.ChildType = ParseUnitChildType.AllChild;
             FunctionArgumentLastUnit.Children = new List<ParseUnit>()
             {
+                DescriptionTokens,
+                TypeUnit,
                 TokenUnits[TokenType.Identifier]
-            };
-
-            FunctionCallSuffix.Name = "Function Call Suffix";
-            FunctionCallSuffix.Type = ParseUnitType.Single;
-            FunctionCallSuffix.ChildType = ParseUnitChildType.AllChild;
-            FunctionCallSuffix.Children = new List<ParseUnit>()
-            {
-                TokenUnits[TokenType.LeftBracket],
-                new ParseUnit()
-                {
-                    Name = "Function Call Argument",
-                    Type = ParseUnitType.SingleOptional,
-                    ChildType = ParseUnitChildType.AllChild,
-                    Children = new List<ParseUnit>()
-                    {
-                        new ParseUnit()
-                        {
-                            Name = "Function Call Argument Unit",
-                            Type = ParseUnitType.MultipleOptional,
-                            ChildType = ParseUnitChildType.AllChild,
-                            Children = new List<ParseUnit>()
-                            {
-                                RightValue,
-                                TokenUnits[TokenType.Comma]
-                            }
-                        },
-                        new ParseUnit()
-                        {
-                            Name = "Function Call Argument Unit",
-                            Type = ParseUnitType.Single,
-                            ChildType = ParseUnitChildType.AllChild,
-                            Children =  new List<ParseUnit>()
-                            {
-                                RightValue
-                            }
-                        }
-                    }
-                },
-                TokenUnits[TokenType.RightBracket]
             };
 
             StatementBody.Name = "Statement Body";
@@ -193,12 +168,11 @@ namespace code0k_cc
             Statement.Children = new List<ParseUnit>()
             {
                 DefinitionStatement,
-                AssignStatement,
-                CallStatement,
                 IfStatement,
                 ForStatement,
                 WhileStatement,
-                CompoundStatement
+                CompoundStatement,
+                Expression
             };
 
             DefinitionStatement.Name = "Definition Statement";
@@ -207,8 +181,10 @@ namespace code0k_cc
             DefinitionStatement.Children = new List<ParseUnit>()
             {
                 DescriptionTokens,
-                TokenUnits[TokenType.Identifier],
-                AssignStatement
+                TypeUnit,
+                Expression,
+                TokenUnits[TokenType.Assign],
+                Expression
             };
 
             DescriptionTokens.Name = "Definition Description";
@@ -221,15 +197,7 @@ namespace code0k_cc
                 TokenUnits[TokenType.Output],
                 TokenUnits[TokenType.Const],
                 TokenUnits[TokenType.Ref],
-            };
-
-            CallStatement.Name = "Call Statement";
-            CallStatement.Type = ParseUnitType.Single;
-            CallStatement.ChildType = ParseUnitChildType.AllChild;
-            CallStatement.Children = new List<ParseUnit>()
-            {
-                FunctionCall
-            };
+            }; 
 
             IfStatement.Name = "If Statement";
             IfStatement.Type = ParseUnitType.Single;
@@ -237,7 +205,7 @@ namespace code0k_cc
             IfStatement.Children = new List<ParseUnit>()
             {
                 TokenUnits[TokenType.If],
-                RightValue,
+                Expression,
                 TokenUnits[TokenType.Then],
                 CompoundStatement,
                 OptionalElseStatement
@@ -258,11 +226,11 @@ namespace code0k_cc
             ForStatement.Children = new List<ParseUnit>()
             {
                 TokenUnits[TokenType.For],
-                LeftValue,
+                Expression,
                 TokenUnits[TokenType.Assign],
-                RightValue,
+                Expression,
                 TokenUnits[TokenType.To],
-                RightValue,
+                Expression,
                 TokenUnits[TokenType.Do],
                 CompoundStatement
             };
@@ -273,9 +241,9 @@ namespace code0k_cc
             WhileStatement.Children = new List<ParseUnit>()
             {
                 TokenUnits[TokenType.While],
-                RightValue,
+                Expression,
                 TokenUnits[TokenType.Max],
-                RightValue,
+                Expression,
                 TokenUnits[TokenType.Do],
                 CompoundStatement
             };
@@ -290,51 +258,24 @@ namespace code0k_cc
                 TokenUnits[TokenType.End],
             };
 
-            LeftValue.Name = "Left Value";
-            LeftValue.Type = ParseUnitType.Single;
-            LeftValue.ChildType = ParseUnitChildType.AllChild;
-            LeftValue.Children = new List<ParseUnit>()
-            {
-                TokenUnits[TokenType.Identifier],
-                new ParseUnit()
-                {
-                    Name="Left Value",
-                    Type = ParseUnitType.MultipleOptional,
-                    ChildType = ParseUnitChildType.FirstChild,
-                    Children =  new List<ParseUnit>()
-                    {
-                        MemberAccess,
-                        ArraySubscripting
-                    }
-                }
-            };
-
-            ArraySubscripting.Name = "Array Subscripting";
-            ArraySubscripting.Type = ParseUnitType.Single;
-            ArraySubscripting.ChildType = ParseUnitChildType.AllChild;
-            ArraySubscripting.Children = new List<ParseUnit>()
-            {
-                TokenUnits[TokenType.LeftSquareBracket],
-                RightValue,
-                TokenUnits[TokenType.RightSquareBracket]
-            };
-
-            MemberAccess.Name = "Member Access";
-            MemberAccess.Type = ParseUnitType.Single;
-            MemberAccess.ChildType = ParseUnitChildType.AllChild;
-            MemberAccess.Children = new List<ParseUnit>()
-            {
-                TokenUnits[TokenType.Dot],
-                TokenUnits[TokenType.Identifier]
-            }; 
-
-            RightValue.Name = "Right Value";
-            RightValue.Type = ParseUnitType.Single;
-            RightValue.ChildType = ParseUnitChildType.FirstChild;
-            RightValue.Children = new List<ParseUnit>()
-            {
-                Expression
-            };
+            //LeftValue.Name = "Left Value";
+            //LeftValue.Type = ParseUnitType.Single;
+            //LeftValue.ChildType = ParseUnitChildType.AllChild;
+            //LeftValue.Children = new List<ParseUnit>()
+            //{
+            //    TokenUnits[TokenType.Identifier],
+            //    new ParseUnit()
+            //    {
+            //        Name="Left Value",
+            //        Type = ParseUnitType.MultipleOptional,
+            //        ChildType = ParseUnitChildType.FirstChild,
+            //        Children =  new List<ParseUnit>()
+            //        {
+            //            MemberAccess,
+            //            ArraySubscripting
+            //        }
+            //    }
+            //};
 
             // the expression part is written according to the following precedence
             // https://en.cppreference.com/w/c/language/operator_precedence
@@ -358,7 +299,7 @@ namespace code0k_cc
                 Expressions[i].Name = "Expression Level " + i.ToString(CultureInfo.InvariantCulture);
                 Expressions[i].Type = ParseUnitType.Single;
                 Expressions[i].ChildType = ParseUnitChildType.FirstChild;
-                Operators[i].Name= "Operator Level " + i.ToString(CultureInfo.InvariantCulture);
+                Operators[i].Name = "Operator Level " + i.ToString(CultureInfo.InvariantCulture);
                 Operators[i].Type = ParseUnitType.Single;
                 Operators[i].ChildType = ParseUnitChildType.FirstChild;
             }
@@ -387,6 +328,66 @@ namespace code0k_cc
                 Expressions[1]
             };
             Operators[2].Children = new List<ParseUnit>() { FunctionCallSuffix, ArraySubscripting, MemberAccess };
+
+            FunctionCallSuffix.Name = "Function Call Suffix";
+            FunctionCallSuffix.Type = ParseUnitType.Single;
+            FunctionCallSuffix.ChildType = ParseUnitChildType.AllChild;
+            FunctionCallSuffix.Children = new List<ParseUnit>()
+            {
+                TokenUnits[TokenType.LeftBracket],
+                new ParseUnit()
+                {
+                    Name = "Function Call Argument",
+                    Type = ParseUnitType.SingleOptional,
+                    ChildType = ParseUnitChildType.AllChild,
+                    Children = new List<ParseUnit>()
+                    {
+                        new ParseUnit()
+                        {
+                            Name = "Function Call Argument Unit",
+                            Type = ParseUnitType.MultipleOptional,
+                            ChildType = ParseUnitChildType.AllChild,
+                            Children = new List<ParseUnit>()
+                            {
+                                Expression,
+                                TokenUnits[TokenType.Comma]
+                            }
+                        },
+                        new ParseUnit()
+                        {
+                            Name = "Function Call Argument Unit",
+                            Type = ParseUnitType.Single,
+                            ChildType = ParseUnitChildType.AllChild,
+                            Children =  new List<ParseUnit>()
+                            {
+                                Expression
+                            }
+                        }
+                    }
+                },
+                TokenUnits[TokenType.RightBracket]
+            };
+
+            ArraySubscripting.Name = "Array Subscripting";
+            ArraySubscripting.Type = ParseUnitType.Single;
+            ArraySubscripting.ChildType = ParseUnitChildType.AllChild;
+            ArraySubscripting.Children = new List<ParseUnit>()
+            {
+                TokenUnits[TokenType.LeftSquareBracket],
+                Expression,
+                TokenUnits[TokenType.RightSquareBracket]
+            };
+
+            MemberAccess.Name = "Member Access";
+            MemberAccess.Type = ParseUnitType.Single;
+            MemberAccess.ChildType = ParseUnitChildType.AllChild;
+            MemberAccess.Children = new List<ParseUnit>()
+            {
+                TokenUnits[TokenType.Dot],
+                Expressions[2]
+            };
+
+
             // level-3 (RTL): Unary plus and minus, Logical NOT and bitwise NOT
             Expressions[3].Children = new List<ParseUnit>()
             {
@@ -628,10 +629,10 @@ namespace code0k_cc
             // level-18 (corresponding 17): not used
             if (OPERATOR_PRECEDENCE_LEVEL != 18)
             {
-                throw  new Exception("Assert failed!");
-            } 
-             
-             
+                throw new Exception("Assert failed!");
+            }
+
+
 
             return MainProgram;
 
