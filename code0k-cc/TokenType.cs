@@ -9,11 +9,11 @@ namespace code0k_cc
     class TokenType
     {
 
-        public readonly TokenTypeType Type;
+        public readonly TokenTypeProperty Property;
         /// <summary>
         /// 匹配的正则表达式
         /// </summary>
-        private readonly string pattern;
+        private readonly string Pattern;
 
         /// <summary>
         /// 友好的名称
@@ -25,92 +25,89 @@ namespace code0k_cc
             return this.Name;
         }
 
-        private TokenType(TokenTypeType type, string pattern, string name)
+        private TokenType(string pattern, string name) : this(pattern, name, new TokenTypeProperty()) { }
+        private TokenType(string pattern, string name, TokenTypeProperty property)
         {
-            this.Type = type;
-            this.pattern = pattern;
+            if (property == null)
+            {
+                property = new TokenTypeProperty();
+            }
+            this.Property = property;
+            this.Pattern = pattern;
             this.Name = name;
         }
 
         public bool Match(string str)
         {
-            var pattern = @"^" + this.pattern + @"$";
+            var pattern = @"^" + this.Pattern + @"$";
             return Regex.IsMatch(str, pattern);
         }
 
-        public static readonly TokenType Input = new TokenType(TokenTypeType.Keyword, "input", "input");
-        public static readonly TokenType Output = new TokenType(TokenTypeType.Keyword, "output", "output");
-        public static readonly TokenType NizkInput = new TokenType(TokenTypeType.Keyword, "nizkinput", "nizkinput");
-        public static readonly TokenType Const = new TokenType(TokenTypeType.Keyword, "const", "const");
-        public static readonly TokenType Var = new TokenType(TokenTypeType.Keyword, "var", "var");
-        public static readonly TokenType Ref = new TokenType(TokenTypeType.Keyword, "ref", "ref");
-        //public static readonly Symbol Int = new Symbol(Type.Keyword, "int(32|64|128|256|512)", "int");
-        //public static readonly Symbol UInt = new Symbol(Type.Keyword, "uint(32|64|128|256|512)", "uint");
+        public static readonly TokenType Input = new TokenType("input", "input", new TokenTypeProperty() { IsDescriptionWord = true });
+        public static readonly TokenType Output = new TokenType("output", "output", new TokenTypeProperty() { IsDescriptionWord = true });
+        public static readonly TokenType NizkInput = new TokenType("nizkinput", "nizkinput", new TokenTypeProperty() { IsDescriptionWord = true });
+        public static readonly TokenType Const = new TokenType("const", "const", new TokenTypeProperty() { IsDescriptionWord = true });
+        public static readonly TokenType Var = new TokenType("var", "var", new TokenTypeProperty() { IsDescriptionWord = true });
+        public static readonly TokenType Ref = new TokenType("ref", "ref", new TokenTypeProperty() { IsDescriptionWord = true });
 
-        // todo: support fixed point number
-        // public static readonly Symbol Fixed = new Symbol(Type.Keyword, "fixed(64|128|256)", "fixed");
+        public static readonly TokenType Call = new TokenType("call", "call");
+        public static readonly TokenType Begin = new TokenType("{", "{");
+        public static readonly TokenType End = new TokenType("}", "}");
+        public static readonly TokenType Return = new TokenType("return", "return");
 
-        public static readonly TokenType Call = new TokenType(TokenTypeType.Keyword, "call", "call");
-        public static readonly TokenType Procedure = new TokenType(TokenTypeType.Keyword, "procedure", "procedure");
-        public static readonly TokenType Function = new TokenType(TokenTypeType.Keyword, "function", "function");
-        public static readonly TokenType Begin = new TokenType(TokenTypeType.NonLetterKeyword, "{", "{");
-        public static readonly TokenType End = new TokenType(TokenTypeType.NonLetterKeyword, "}", "}");
-        public static readonly TokenType Return = new TokenType(TokenTypeType.Keyword, "return", "return");
-
-        public static readonly TokenType If = new TokenType(TokenTypeType.Keyword, "if", "if");
-        public static readonly TokenType Then = new TokenType(TokenTypeType.Keyword, "then", "then");
-        public static readonly TokenType Else = new TokenType(TokenTypeType.Keyword, "else", "else");
+        public static readonly TokenType If = new TokenType("if", "if");
+        public static readonly TokenType Then = new TokenType("then", "then");
+        public static readonly TokenType Else = new TokenType("else", "else");
 
         //public static readonly Symbol Read = new Symbol(Type.Keyword, "read", "read");
         //public static readonly Symbol Write = new Symbol(Type.Keyword, "write", "write");
 
-        public static readonly TokenType While = new TokenType(TokenTypeType.Keyword, "while", "while");
-        public static readonly TokenType Do = new TokenType(TokenTypeType.Keyword, "do", "do");
-        public static readonly TokenType Max = new TokenType(TokenTypeType.Keyword, "max", "max");
-        public static readonly TokenType For = new TokenType(TokenTypeType.Keyword, "for", "for");
-        public static readonly TokenType To = new TokenType(TokenTypeType.Keyword, "to", "to");
-        public static readonly TokenType DownTo = new TokenType(TokenTypeType.Keyword, "downto", "downto");
+        public static readonly TokenType While = new TokenType("while", "while");
+        public static readonly TokenType Do = new TokenType("do", "do");
+        public static readonly TokenType Max = new TokenType("max", "max");
+        public static readonly TokenType For = new TokenType("for", "for");
+        public static readonly TokenType To = new TokenType("to", "to");
+        public static readonly TokenType DownTo = new TokenType("downto", "downto");
 
-        public static readonly TokenType Break = new TokenType(TokenTypeType.Keyword, "break", "break");
-        public static readonly TokenType Continue = new TokenType(TokenTypeType.Keyword, "continue", "continue");
+        public static readonly TokenType Break = new TokenType("break", "break");
+        public static readonly TokenType Continue = new TokenType("continue", "continue");
 
-        public static readonly TokenType LeftBracket = new TokenType(TokenTypeType.NonLetterKeyword, "\\(", "(");
-        public static readonly TokenType RightBracket = new TokenType(TokenTypeType.NonLetterKeyword, "\\)", ")");
-        public static readonly TokenType LeftSquareBracket = new TokenType(TokenTypeType.NonLetterKeyword, "\\[", "[");
-        public static readonly TokenType RightSquareBracket = new TokenType(TokenTypeType.NonLetterKeyword, "\\]", "]");
+        public static readonly TokenType LeftBracket = new TokenType("\\(", "(");
+        public static readonly TokenType RightBracket = new TokenType("\\)", ")");
+        public static readonly TokenType LeftSquareBracket = new TokenType("\\[", "[");
+        public static readonly TokenType RightSquareBracket = new TokenType("\\]", "]");
 
-        public static readonly TokenType Comma = new TokenType(TokenTypeType.NonLetterKeyword, "\\,", ",");
-        public static readonly TokenType Semicolon = new TokenType(TokenTypeType.NonLetterKeyword, "\\;", ";");
-        public static readonly TokenType Assign = new TokenType(TokenTypeType.NonLetterKeyword, "\\:\\=", ":=");
+        public static readonly TokenType Dot = new TokenType("\\.", ".");
+        public static readonly TokenType Colon = new TokenType("\\:", ":");
+        public static readonly TokenType Comma = new TokenType("\\,", ",");
+        public static readonly TokenType Semicolon = new TokenType("\\;", ";");
+        public static readonly TokenType Assign = new TokenType("\\=", "=");
 
-        public static readonly TokenType Plus = new TokenType(TokenTypeType.NonLetterKeyword, "\\+", "+");
-        public static readonly TokenType Minus = new TokenType(TokenTypeType.NonLetterKeyword, "\\-", "-");
-        public static readonly TokenType Times = new TokenType(TokenTypeType.NonLetterKeyword, "\\*", "*");
+        public static readonly TokenType Plus = new TokenType("\\+", "+", new TokenTypeProperty() { IsUnaryOperator = true, IsBinaryOperator = true });
+        public static readonly TokenType Minus = new TokenType("\\-", "-", new TokenTypeProperty() { IsUnaryOperator = true, IsBinaryOperator = true });
+        public static readonly TokenType Times = new TokenType("\\*", "*", new TokenTypeProperty() { IsBinaryOperator = true });
+        public static readonly TokenType Divide = new TokenType("\\\\", "\\", new TokenTypeProperty() { IsBinaryOperator = true });
+        public static readonly TokenType Mod = new TokenType("\\%", "%", new TokenTypeProperty() { IsBinaryOperator = true });
 
-        //todo: add support for division
-        public static readonly TokenType Divide = new TokenType(TokenTypeType.Keyword, "div", "div");
-        public static readonly TokenType Mod = new TokenType(TokenTypeType.Keyword, "mod", "mod");
+        public static readonly TokenType EqualTo = new TokenType("\\=\\=", "==", new TokenTypeProperty() { IsBinaryOperator = true });
+        public static readonly TokenType LessThan = new TokenType("\\<", "<", new TokenTypeProperty() { IsBinaryOperator = true });
+        public static readonly TokenType GreaterThan = new TokenType("\\>", ">", new TokenTypeProperty() { IsBinaryOperator = true });
+        public static readonly TokenType LessEqualThan = new TokenType("\\<\\=", "<=", new TokenTypeProperty() { IsBinaryOperator = true });
+        public static readonly TokenType GreaterEqualThan = new TokenType("\\>\\=", ">=", new TokenTypeProperty() { IsBinaryOperator = true });
+        public static readonly TokenType NotEqualTo = new TokenType("\\!\\=", "!=", new TokenTypeProperty() { IsBinaryOperator = true });
 
-        public static readonly TokenType EqualTo = new TokenType(TokenTypeType.NonLetterKeyword, "(\\=|\\==)", "=");
-        public static readonly TokenType LessThan = new TokenType(TokenTypeType.NonLetterKeyword, "\\<", "<");
-        public static readonly TokenType GreaterThan = new TokenType(TokenTypeType.NonLetterKeyword, "\\>", ">");
-        public static readonly TokenType LessEqualThan = new TokenType(TokenTypeType.NonLetterKeyword, "\\<\\=", "<=");
-        public static readonly TokenType GreaterEqualThan = new TokenType(TokenTypeType.NonLetterKeyword, "\\>\\=", ">=");
-        public static readonly TokenType NotEqualTo = new TokenType(TokenTypeType.NonLetterKeyword, "(\\#|\\!\\=)", "#");
+        public static readonly TokenType BitwiseAnd = new TokenType("\\&", "&", new TokenTypeProperty() { IsBinaryOperator = true });
+        public static readonly TokenType BitwiseOr = new TokenType("\\|", "|", new TokenTypeProperty() { IsBinaryOperator = true });
+        public static readonly TokenType BitwiseXor = new TokenType("\\^", "^", new TokenTypeProperty() { IsBinaryOperator = true });
+        public static readonly TokenType BitwiseNot = new TokenType("\\~", "~", new TokenTypeProperty() { IsUnaryOperator = true });
 
-        //todo: add bitwise operation
+        public static readonly TokenType BooleanAnd = new TokenType("\\&\\&", "&&", new TokenTypeProperty() { IsBinaryOperator = true });
+        public static readonly TokenType BooleanOr = new TokenType("\\|\\|", "||", new TokenTypeProperty() { IsBinaryOperator = true });
+        public static readonly TokenType BooleanNot = new TokenType("\\!", "!", new TokenTypeProperty() { IsUnaryOperator = true });
+        //todo boolean xor? 
 
-        public static readonly TokenType Dot = new TokenType(TokenTypeType.NonLetterKeyword, "\\.", ".");
-        public static readonly TokenType Colon = new TokenType(TokenTypeType.NonLetterKeyword, "\\:", ":");
-
-        public static readonly TokenType Odd = new TokenType(TokenTypeType.Keyword, "odd", "odd");
-
-        public static readonly TokenType Identifier = new TokenType(TokenTypeType.Identifier, "[_a-zA-z][_a-zA-z0-9]{0,200}", "identifier");
-
-        public static readonly TokenType Number = new TokenType(TokenTypeType.Number, "([0-9][0-9_a-zA-z\\.]{0,200}", "number");
-
-        //todo: add hex number support
-        //todo: add fixed number support
+        public static readonly TokenType Identifier = new TokenType("[_a-zA-z][_a-zA-z0-9]{0,200}", "identifier");
+        public static readonly TokenType Number = new TokenType("([0-9][0-9_a-zA-z\\.]{0,200}", "number");
 
 
         public static IEnumerable<TokenType> GetAll()
@@ -123,8 +120,6 @@ namespace code0k_cc
             yield return Ref;
 
             yield return Call;
-            yield return Procedure;
-            yield return Function;
             yield return Begin;
             yield return End;
             yield return Return;
@@ -147,6 +142,8 @@ namespace code0k_cc
             yield return LeftBracket;
             yield return RightBracket;
 
+            yield return Dot;
+            yield return Colon;
             yield return Comma;
             yield return Semicolon;
             yield return Assign;
@@ -154,7 +151,6 @@ namespace code0k_cc
             yield return Plus;
             yield return Minus;
             yield return Times;
-
             yield return Divide;
             yield return Mod;
 
@@ -165,13 +161,16 @@ namespace code0k_cc
             yield return GreaterEqualThan;
             yield return NotEqualTo;
 
-            yield return Dot;
-            yield return Colon;
+            yield return BitwiseAnd;
+            yield return BitwiseOr;
+            yield return BitwiseXor;
+            yield return BitwiseNot;
 
-            yield return Odd;
+            yield return BooleanAnd;
+            yield return BooleanOr;
+            yield return BooleanNot;
 
-            // note that the order matters
-            yield return UnsignedNumber;
+            // note that the order matters 
             yield return Number;
             yield return Identifier;
         }

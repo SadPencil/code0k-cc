@@ -86,7 +86,7 @@ namespace code0k_cc
             {
                 var item = new ParserTable.Item
                 {
-                    Type = next.Symbol.Type.ToString(),
+                    Type = next.Symbol.Property.ToString(),
                     Value = next.Name
                 };
 

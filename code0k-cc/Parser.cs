@@ -221,10 +221,9 @@ namespace code0k_cc
             IfStatement.ChildType = ParseUnitChildType.AllChild;
             IfStatement.Children = new List<ParseUnit>()
             {
-                TokenUnits[TokenType.If],
-                TokenUnits[TokenType.LeftBracket],
+                TokenUnits[TokenType.If], 
                 RightValue,
-                TokenUnits[TokenType.RightBracket],
+                TokenUnits[TokenType.Then],
                 TokenUnits[TokenType.Begin],
                 StatementBody,
                 TokenUnits[TokenType.End],
@@ -265,13 +264,10 @@ namespace code0k_cc
             WhileStatement.Children = new List<ParseUnit>()
             {
                 TokenUnits[TokenType.While],
-                TokenUnits[TokenType.LeftBracket],
                 RightValue,
-                TokenUnits[TokenType.RightBracket],
                 TokenUnits[TokenType.Max],
-                TokenUnits[TokenType.LeftBracket],
                 RightValue,
-                TokenUnits[TokenType.RightBracket],
+                TokenUnits[TokenType.Do],
                 TokenUnits[TokenType.Begin],
                 StatementBody,
                 TokenUnits[TokenType.End],
@@ -355,6 +351,34 @@ namespace code0k_cc
                 LeftValue
             };
 
+            BinaryExpression.Name = "Binary Expression";
+            BinaryExpression.Type = ParseUnitType.Single;
+            BinaryExpression.ChildType = ParseUnitChildType.AllChild;
+            BinaryExpression.Children = new List<ParseUnit>()
+            {
+                TokenUnits[TokenType.LeftBracket],
+                Expression,
+                BinaryOperator,
+                Expression,
+                TokenUnits[TokenType.RightBracket]
+            };
+
+            UnaryExpression.Name = "Unary Expression";
+            UnaryExpression.Type = ParseUnitType.Single;
+            UnaryExpression.ChildType = ParseUnitChildType.AllChild;
+            UnaryExpression.Children = new List<ParseUnit>()
+            {
+                TokenUnits[TokenType.LeftBracket],
+                UnaryOperator,
+                Expression,
+                TokenUnits[TokenType.RightBracket]
+            };
+
+            BinaryOperator.Name = "Binary Operator";
+            BinaryOperator.Type = ParseUnitType.Single;
+            BinaryOperator.ChildType = ParseUnitChildType.FirstChild;
+
+            //todo
 
             return MainProgram;
 
