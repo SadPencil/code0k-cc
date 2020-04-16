@@ -16,7 +16,7 @@ namespace code0k_cc
         internal static ParseInstance Parse(in IEnumerable<Token> tokens)
         {
             IReadOnlyList<Token> tokenList = tokens.ToList();
-            var ret = _Parse(RootParseUnit, tokenList, 0);
+            var ret = _Parse(RootParseUnit, tokenList, 0, 0);
             if (ret.Success)
             {
                 // todo check whether ret.Position == tokenList.Count
@@ -30,8 +30,26 @@ namespace code0k_cc
 
         }
 
-        private static ParseResult _Parse(in ParseUnit unit, in IReadOnlyList<Token> tokenList, in int pos)
+        private static ParseResult _Parse(in ParseUnit unit, in IReadOnlyList<Token> tokenList, in int pos, in int depth)
         {
+
+            {
+                if (depth > 50)
+                {
+                    throw new Exception("stop");
+                }
+                for (int kkk = 0; kkk < depth; ++kkk)
+                {
+                    Console.Write(" ");
+                }
+
+                Console.Write(unit.Name);
+
+                Console.Write("\t");
+                Console.WriteLine(tokenList.ElementAtOrDefault(pos)?.Value);
+            }
+
+
             if (unit.ChildType == ParseUnitChildType.LeafNode)
             {
                 // match the token
@@ -99,7 +117,7 @@ namespace code0k_cc
                 List<ParseInstance> children = new List<ParseInstance>();
                 foreach (var unitChild in unit.Children)
                 {
-                    var ret = _Parse(unitChild, tokenList, newPos);
+                    var ret = _Parse(unitChild, tokenList, newPos, depth + 1);
                     if (!ret.Success)
                     {
                         badResult = ret;
@@ -160,7 +178,7 @@ namespace code0k_cc
                 ParseResult lastResult = null;
                 foreach (var unitChild in unit.Children)
                 {
-                    lastResult = _Parse(unitChild, tokenList, pos);
+                    lastResult = _Parse(unitChild, tokenList, pos, depth + 1);
                     if (lastResult.Success)
                     {
                         goodResult = lastResult;
@@ -256,6 +274,10 @@ namespace code0k_cc
 
             ParseUnit TypeUnit = new ParseUnit();
 
+            ParseUnit LeftValue = new ParseUnit();
+            ParseUnit LeftValueSuffixLoop = new ParseUnit();
+            ParseUnit LeftValueSuffixItem = new ParseUnit();
+
             ParseUnit FunctionDeclarationArguments = new ParseUnit();
             ParseUnit FunctionArgumentLoop = new ParseUnit();
             ParseUnit FunctionArgumentUnit = new ParseUnit();
@@ -272,6 +294,8 @@ namespace code0k_cc
             ParseUnit ForStatement = new ParseUnit();
             ParseUnit WhileStatement = new ParseUnit();
             ParseUnit CompoundStatement = new ParseUnit();
+
+            //todo return break continue
 
             ParseUnit FunctionCall = new ParseUnit();
             ParseUnit FunctionCallArgument = new ParseUnit();
@@ -417,7 +441,7 @@ namespace code0k_cc
             {
                 DescriptionTokens,
                 TypeUnit,
-                Expression,
+                LeftValue,
                 TokenUnits[TokenType.Assign],
                 Expression
             };
@@ -502,24 +526,30 @@ namespace code0k_cc
                 TokenUnits[TokenType.End],
             };
 
-            //LeftValue.Name = "Left Value";
-            //LeftValue.Type = ParseUnitType.Single;
-            //LeftValue.ChildType = ParseUnitChildType.AllChild;
-            //LeftValue.Children = new List<ParseUnit>()
-            //{
-            //    TokenUnits[TokenType.Identifier],
-            //    new ParseUnit()
-            //    {
-            //        Name="Left Value",
-            //        Type = ParseUnitType.MultipleOptional,
-            //        ChildType = ParseUnitChildType.OneChild,
-            //        Children =  new List<ParseUnit>()
-            //        {
-            //            MemberAccess,
-            //            ArraySubscripting
-            //        }
-            //    }
-            //};
+            LeftValue.Name = "Left Value";
+            LeftValue.Type = ParseUnitType.Single;
+            LeftValue.ChildType = ParseUnitChildType.AllChild;
+            LeftValue.Children = new List<ParseUnit>()
+            {
+                TokenUnits[TokenType.Identifier],
+                LeftValueSuffixLoop,
+            };
+            LeftValueSuffixLoop.Name = "Left Value Suffix";
+            LeftValueSuffixLoop.Type = ParseUnitType.SingleOptional;
+            LeftValueSuffixLoop.ChildType = ParseUnitChildType.AllChild;
+            LeftValueSuffixLoop.Children = new List<ParseUnit>()
+            {
+                LeftValueSuffixItem,
+                LeftValueSuffixLoop,
+            };
+            LeftValueSuffixItem.Name = "Left Value Suffix";
+            LeftValueSuffixItem.Type = ParseUnitType.Single;
+            LeftValueSuffixItem.ChildType = ParseUnitChildType.OneChild;
+            LeftValueSuffixItem.Children = new List<ParseUnit>()
+            {
+                ArraySubscripting,
+                MemberAccess,
+            };
 
             // the expression part is written according to the following precedence
             // https://en.cppreference.com/w/c/language/operator_precedence
@@ -629,7 +659,7 @@ namespace code0k_cc
             FunctionCallArgumentItem.ChildType = ParseUnitChildType.AllChild;
             FunctionCallArgumentItem.Children = new List<ParseUnit>()
             {
-                Expression
+                Expression,
             };
 
             ArraySubscripting.Name = "Array Subscripting";
@@ -639,7 +669,7 @@ namespace code0k_cc
             {
                 TokenUnits[TokenType.LeftSquareBracket],
                 Expression,
-                TokenUnits[TokenType.RightSquareBracket]
+                TokenUnits[TokenType.RightSquareBracket],
             };
 
             MemberAccess.Name = "Member Access";
@@ -648,7 +678,7 @@ namespace code0k_cc
             MemberAccess.Children = new List<ParseUnit>()
             {
                 TokenUnits[TokenType.Dot],
-                Expressions[2]
+                LeftValue,
             };
 
 
@@ -659,10 +689,11 @@ namespace code0k_cc
                 Operators[3],
                 Expressions[3],
             };
+            Expressions[3].ChildType = ParseUnitChildType.OneChild;
             Expressions[3].Children = new List<ParseUnit>()
             {
                 ExpressionsHelper[3],
-                Expressions[2]
+                Expressions[2],
             };
             Operators[3].Children = new List<ParseUnit>() { TokenUnits[TokenType.Plus], TokenUnits[TokenType.Minus], TokenUnits[TokenType.BooleanNot], TokenUnits[TokenType.BitwiseNot] };
 
