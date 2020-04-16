@@ -374,9 +374,6 @@ namespace code0k_cc
                 ExpressionsHelper1[i].Name = "Expression Level " + i.ToString(CultureInfo.InvariantCulture);
                 ExpressionsHelper1[i].Type = ParseUnitType.SingleOptional;
                 ExpressionsHelper1[i].ChildType = ParseUnitChildType.AllChild;
-                ExpressionsHelper2[i].Name = "Expression Level " + i.ToString(CultureInfo.InvariantCulture);
-                ExpressionsHelper2[i].Type = ParseUnitType.SingleOptional;
-                ExpressionsHelper2[i].ChildType = ParseUnitChildType.AllChild;
             }
 
             // most of them are associated left-to-right
@@ -385,8 +382,12 @@ namespace code0k_cc
             // level 0: Identifier or number
             Expressions[0].Children = new List<ParseUnit>() { Operators[0] };
             Operators[0].Children = new List<ParseUnit>() { TokenUnits[TokenType.Identifier], TokenUnits[TokenType.Number], BracketExpression };
+
+
             // level 1: not used
             Expressions[1].Children = new List<ParseUnit>() { Expressions[0] };
+
+
             // level 2: Function call, Subscript, Member access
             //
             // note: eliminate left recursion
@@ -417,6 +418,7 @@ namespace code0k_cc
                 FunctionCallArgument,
                 TokenUnits[TokenType.RightBracket],
             };
+
             FunctionCallArgument.Name = "Function Call Argument";
             FunctionCallArgument.Type = ParseUnitType.SingleOptional;
             FunctionCallArgument.ChildType = ParseUnitChildType.AllChild;
@@ -464,24 +466,23 @@ namespace code0k_cc
 
 
             // level-3 (RTL): Unary plus and minus, Logical NOT and bitwise NOT
+            ExpressionsHelper1[3].Type = ParseUnitType.Single;
+            ExpressionsHelper1[3].Children = new List<ParseUnit>()
+            {
+                Operators[3],
+                Expressions[3],
+            };
             Expressions[3].Children = new List<ParseUnit>()
             {
-                new ParseUnit()
-                {
-                    Name = "Expression Level 3",
-                    Type = ParseUnitType.Single,
-                    ChildType = ParseUnitChildType.AllChild,
-                    Children = new List<ParseUnit>()
-                    {
-                        Operators[3],
-                        Expressions[3],
-                    }
-                },
+                ExpressionsHelper1[3],
                 Expressions[2]
             };
             Operators[3].Children = new List<ParseUnit>() { TokenUnits[TokenType.Plus], TokenUnits[TokenType.Minus], TokenUnits[TokenType.BooleanNot], TokenUnits[TokenType.BitwiseNot] };
+
+
             // level-4: not used
             Expressions[4].Children = new List<ParseUnit>() { Expressions[3] };
+
 
             // level-5: Multiplication, division, remainder
             //
@@ -609,24 +610,20 @@ namespace code0k_cc
                 ExpressionsHelper1[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper1[i] };
 
                 Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.BooleanOr] };
-            } 
+            }
 
 
             // level-17 (RTL) (corresponding 16): assign =
+            ExpressionsHelper1[17].Type = ParseUnitType.Single;
+            ExpressionsHelper1[17].Children = new List<ParseUnit>()
+            {
+                Expressions[16],
+                Operators[17],
+                Expressions[17]
+            };
             Expressions[17].Children = new List<ParseUnit>()
             {
-                new ParseUnit()
-                {
-                    Name = "Expression Level 17",
-                    Type = ParseUnitType.Single,
-                    ChildType = ParseUnitChildType.AllChild,
-                    Children = new List<ParseUnit>()
-                    {
-                        Expressions[16],
-                        Operators[17],
-                        Expressions[17]
-                    }
-                },
+                ExpressionsHelper1[17],
                 Expressions[16]
             };
             Operators[17].Children = new List<ParseUnit>() { TokenUnits[TokenType.Assign] };
@@ -636,8 +633,6 @@ namespace code0k_cc
             {
                 throw new Exception("Assert failed!");
             }
-
-
 
             return MainProgram;
 
