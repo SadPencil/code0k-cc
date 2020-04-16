@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using System.Text;
 
 namespace code0k_cc
@@ -46,18 +48,22 @@ namespace code0k_cc
             ParseUnit ForStatement = new ParseUnit();
             ParseUnit WhileStatement = new ParseUnit();
             ParseUnit CompoundStatement = new ParseUnit();
-
-
+            
             ParseUnit LeftValue = new ParseUnit();
             ParseUnit RightValue = new ParseUnit();
 
-            ParseUnit ArrayGetter = new ParseUnit();
-            ParseUnit Property = new ParseUnit();
-            ParseUnit UnaryOperator = new ParseUnit();
-            ParseUnit BinaryOperator = new ParseUnit();
+            ParseUnit ArraySubscripting = new ParseUnit();
+            ParseUnit Property = new ParseUnit(); 
+
             ParseUnit Expression = new ParseUnit();
-            ParseUnit UnaryExpression = new ParseUnit();
-            ParseUnit BinaryExpression = new ParseUnit();
+
+            const int EXPRESSION_PRECEDENCE_LEVEL = 16;
+            ParseUnit[] Expressions = new ParseUnit[EXPRESSION_PRECEDENCE_LEVEL];
+
+            foreach (var i in Enumerable.Range(0, EXPRESSION_PRECEDENCE_LEVEL))
+            {
+                Expressions[i] = new ParseUnit();
+            }
 
             // write the parse unit
             MainProgram.Name = "Main Program";
@@ -221,7 +227,7 @@ namespace code0k_cc
             IfStatement.ChildType = ParseUnitChildType.AllChild;
             IfStatement.Children = new List<ParseUnit>()
             {
-                TokenUnits[TokenType.If], 
+                TokenUnits[TokenType.If],
                 RightValue,
                 TokenUnits[TokenType.Then],
                 TokenUnits[TokenType.Begin],
@@ -297,15 +303,15 @@ namespace code0k_cc
                     Children =  new List<ParseUnit>()
                     {
                         Property,
-                        ArrayGetter
+                        ArraySubscripting
                     }
                 }
             };
 
-            ArrayGetter.Name = "Array Getter";
-            ArrayGetter.Type = ParseUnitType.Single;
-            ArrayGetter.ChildType = ParseUnitChildType.AllChild;
-            ArrayGetter.Children = new List<ParseUnit>()
+            ArraySubscripting.Name = "Array Subscripting";
+            ArraySubscripting.Type = ParseUnitType.Single;
+            ArraySubscripting.ChildType = ParseUnitChildType.AllChild;
+            ArraySubscripting.Children = new List<ParseUnit>()
             {
                 TokenUnits[TokenType.LeftSquareBracket],
                 RightValue,
@@ -339,44 +345,77 @@ namespace code0k_cc
                 Expression
             };
 
+            // the expression part is written according to the following precedence
+            // https://en.cppreference.com/w/c/language/operator_precedence
+            // Accessed at 2020-04-16
+
+            // so I will follow the number from 1 to 15
+            // although some of the operators are not implemented by now
+            // these number are still reserved
+            // Expression[0] means the identifier or number
+
             Expression.Name = "Expression";
-            Expression.Type = ParseUnitType.SingleOptional;
+            Expression.Type = ParseUnitType.Single;
             Expression.ChildType = ParseUnitChildType.FirstChild;
             Expression.Children = new List<ParseUnit>()
             {
-                BinaryExpression,
-                UnaryExpression,
-                FunctionCall,
-                TokenUnits[TokenType.Number],
-                LeftValue
+                Expressions[EXPRESSION_PRECEDENCE_LEVEL - 1]
             };
 
-            BinaryExpression.Name = "Binary Expression";
-            BinaryExpression.Type = ParseUnitType.Single;
-            BinaryExpression.ChildType = ParseUnitChildType.AllChild;
-            BinaryExpression.Children = new List<ParseUnit>()
+            // most of them are associated left-to-right
+            foreach (var i in Enumerable.Range(1, EXPRESSION_PRECEDENCE_LEVEL - 1))
             {
-                TokenUnits[TokenType.LeftBracket],
-                Expression,
-                BinaryOperator,
-                Expression,
-                TokenUnits[TokenType.RightBracket]
-            };
+                Expressions[i].Name = "Expression Level " + i.ToString(CultureInfo.InvariantCulture);
+                Expressions[i].Type = ParseUnitType.Single;
+                Expressions[i].ChildType = ParseUnitChildType.FirstChild;
+                Expressions[i].Children = new List<ParseUnit>()
+                {
+                    Expressions[i] 
+                    Expressions[i-1]
+                };
+            }
 
-            UnaryExpression.Name = "Unary Expression";
-            UnaryExpression.Type = ParseUnitType.Single;
-            UnaryExpression.ChildType = ParseUnitChildType.AllChild;
-            UnaryExpression.Children = new List<ParseUnit>()
-            {
-                TokenUnits[TokenType.LeftBracket],
-                UnaryOperator,
-                Expression,
-                TokenUnits[TokenType.RightBracket]
-            };
+            //Expression.Name = "Expression";
+            //Expression.Type = ParseUnitType.SingleOptional;
+            //Expression.ChildType = ParseUnitChildType.FirstChild;
+            //Expression.Children = new List<ParseUnit>()
+            //{
+            //    UnaryExpression,
+            //    BinaryExpression,
+            //    FunctionCall,
+            //    TokenUnits[TokenType.Number],
+            //    LeftValue
+            //};
+            //todo
 
-            BinaryOperator.Name = "Binary Operator";
-            BinaryOperator.Type = ParseUnitType.Single;
-            BinaryOperator.ChildType = ParseUnitChildType.FirstChild;
+
+
+            //BinaryExpression.Name = "Binary Expression";
+            //BinaryExpression.Type = ParseUnitType.Single;
+            //BinaryExpression.ChildType = ParseUnitChildType.AllChild;
+            //BinaryExpression.Children = new List<ParseUnit>()
+            //{
+            //    TokenUnits[TokenType.LeftBracket],
+            //    Expression,
+            //    BinaryOperator,
+            //    Expression,
+            //    TokenUnits[TokenType.RightBracket]
+            //};
+
+            //UnaryExpression.Name = "Unary Expression";
+            //UnaryExpression.Type = ParseUnitType.Single;
+            //UnaryExpression.ChildType = ParseUnitChildType.AllChild;
+            //UnaryExpression.Children = new List<ParseUnit>()
+            //{
+            //    TokenUnits[TokenType.LeftBracket],
+            //    UnaryOperator,
+            //    Expression,
+            //    TokenUnits[TokenType.RightBracket]
+            //};
+
+            //BinaryOperator.Name = "Binary Operator";
+            //BinaryOperator.Type = ParseUnitType.Single;
+            //BinaryOperator.ChildType = ParseUnitChildType.FirstChild;
 
             //todo
 
