@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
@@ -19,11 +20,11 @@ namespace code0k_cc
             var ret = _Parse(RootParseUnit, tokenList, 0, 0);
             if (ret.Success)
             {
-                // todo check whether ret.Position == tokenList.Count
                 return ret.ResultInstance;
             }
             else
             {
+                //todo to make this more reliable, compute FIRST and FOLLOW
                 throw new Exception(string.Format(
                     "Failed at Parsing {0}, at {1}",
                     ret.ResultInstance?.ParseUnit?.Name,
@@ -57,12 +58,13 @@ namespace code0k_cc
                 Console.WriteLine();
             }
 
+            Debug.Assert(tokenList.Last().TokenType==TokenType.EOL);
             var token = tokenList[pos];
 
             if (unit.ChildType == ParseUnitChildType.LeafNode)
             {
                 // match the token
-                if (token.TokenType != TokenType.EOL && token.TokenType == unit.LeafNodeTokenType)
+                if (token.TokenType == unit.LeafNodeTokenType)
                 {
                     // matched
                     var ret = new ParseResult()
@@ -270,20 +272,12 @@ namespace code0k_cc
                 });
             }
 
-            ParseUnit NeverMatchUnit = new ParseUnit()
+            ParseUnit eolUnit = new ParseUnit()
             {
-                Name = "Never Match Unit",
+                Name = "Token " + TokenType.EOL.Name,
                 Type = ParseUnitType.Single,
-                ChildType = ParseUnitChildType.OneChild,
-                Children = new List<ParseUnit>() { }
-            };
-
-            ParseUnit NullMatchUnit = new ParseUnit()
-            {
-                Name = "Null Match Unit",
-                Type = ParseUnitType.Single,
-                ChildType = ParseUnitChildType.AllChild,
-                Children = new List<ParseUnit>() { }
+                ChildType = ParseUnitChildType.LeafNode,
+                LeafNodeTokenType = TokenType.EOL
             };
 
             ParseUnit MainProgram = new ParseUnit();
@@ -353,6 +347,7 @@ namespace code0k_cc
             {
                 MainProgramItem,
                 MainProgramLoop,
+                eolUnit,
             };
 
             MainProgramItem.Name = "Main Program Item";
@@ -555,7 +550,7 @@ namespace code0k_cc
                 TokenUnits[TokenType.If],
                 TokenUnits[TokenType.LeftBracket],
                 Expression,
-                TokenUnits[TokenType.RightBracket], 
+                TokenUnits[TokenType.RightBracket],
                 CompoundStatement,
                 OptionalElseStatement
             };
@@ -597,7 +592,7 @@ namespace code0k_cc
                 TokenUnits[TokenType.Max],
                 TokenUnits[TokenType.LeftBracket],
                 Expression,
-                TokenUnits[TokenType.RightBracket], 
+                TokenUnits[TokenType.RightBracket],
                 CompoundStatement
             };
 

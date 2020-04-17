@@ -43,7 +43,7 @@ namespace code0k_cc
             return Regex.IsMatch(str, pattern);
         }
 
-        public static readonly TokenType EOL = new TokenType("", ""); 
+        public static readonly TokenType EOL = new TokenType("\\b", "EOL"); 
 
         public static readonly TokenType Input = new TokenType("input", "input", new TokenTypeProperty() { IsDescriptionWord = true });
         public static readonly TokenType Output = new TokenType("output", "output", new TokenTypeProperty() { IsDescriptionWord = true });
