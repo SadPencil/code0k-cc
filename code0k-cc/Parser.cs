@@ -291,7 +291,7 @@ namespace code0k_cc
 
             ParseUnit StatementBody = new ParseUnit();
             ParseUnit Statement = new ParseUnit();
-            ParseUnit StatementCollection = new ParseUnit();
+            ParseUnit StatementSemicolonCollection = new ParseUnit();
             ParseUnit StatementSemicolon = new ParseUnit();
 
             ParseUnit DescriptionTokens = new ParseUnit();
@@ -431,17 +431,17 @@ namespace code0k_cc
 
             StatementSemicolon.Name = "Statement Semicolon";
             StatementSemicolon.Type = ParseUnitType.Single;
-            StatementSemicolon.ChildType = ParseUnitChildType.OneChild;
+            StatementSemicolon.ChildType = ParseUnitChildType.AllChild;
             StatementSemicolon.Children = new List<ParseUnit>()
             {
-                StatementCollection,
+                StatementSemicolonCollection,
                 TokenUnits[TokenType.Semicolon],
             };
 
-            StatementCollection.Name = "Statement Collection";
-            StatementCollection.Type = ParseUnitType.Single;
-            StatementCollection.ChildType = ParseUnitChildType.OneChild;
-            StatementCollection.Children = new List<ParseUnit>()
+            StatementSemicolonCollection.Name = "Statement Semicolon Collection";
+            StatementSemicolonCollection.Type = ParseUnitType.SingleOptional; // null statement included
+            StatementSemicolonCollection.ChildType = ParseUnitChildType.OneChild;
+            StatementSemicolonCollection.Children = new List<ParseUnit>()
             {
                 DefinitionStatement,
                 IfStatement,
