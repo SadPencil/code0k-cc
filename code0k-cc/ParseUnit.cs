@@ -11,5 +11,7 @@ namespace code0k_cc
         public IReadOnlyList<ParseUnit> Children;
         public TokenType TerminalTokenType;
         public string Name;
+
+        public Func<ParseInstance, EnvironmentBlock, object, RuntimeValue> Execute;
     }
 }

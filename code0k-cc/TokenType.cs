@@ -9,16 +9,11 @@ namespace code0k_cc
     class TokenType
     {
 
-        public readonly TokenTypeProperty Property;
-        /// <summary>
-        /// 匹配的正则表达式
-        /// </summary>
+        public readonly TokenTypeProperty Property; 
         private readonly string Pattern;
-
-        /// <summary>
-        /// 友好的名称
-        /// </summary>
-        public string Name { get; private set; }
+        public readonly string Name;
+        
+        private TokenType() { }
 
         public override string ToString()
         {

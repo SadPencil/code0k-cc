@@ -38,7 +38,7 @@ namespace code0k_cc
 
             {
                 //debug
-                if (depth > 100)
+                if (depth > 1000)
                 {
                     throw new Exception("stop");
                 }
@@ -58,7 +58,7 @@ namespace code0k_cc
                 Console.WriteLine();
             }
 
-            Debug.Assert(tokenList.Last().TokenType==TokenType.EOL);
+            Debug.Assert(tokenList.Last().TokenType == TokenType.EOL);
             var token = tokenList[pos];
 
             if (unit.ChildType == ParseUnitChildType.Terminal)
@@ -339,7 +339,7 @@ namespace code0k_cc
                 ExpressionsHelper[i] = new ParseUnit();
             }
 
-            // write the parse unit
+            // write the parse unit & execution function
             MainProgram.Name = "Main Program";
             MainProgram.Type = ParseUnitType.Single;
             MainProgram.ChildType = ParseUnitChildType.AllChild;
@@ -348,6 +348,18 @@ namespace code0k_cc
                 MainProgramItem,
                 MainProgramLoop,
                 eolUnit,
+            };
+            MainProgram.Execute = (instance, unwantedBlock, unwantedArg) =>
+            {
+                // prepare environment
+                EnvironmentBlock block = new EnvironmentBlock() { ParseInstance = instance };
+                foreach (var instanceChild in instance.Children)
+                {
+                    instanceChild.Execute(block, null);
+                }
+                // find & execute "main"
+                var main = block.GetVariableValue("main");
+                return main.Execute(block, null);
             };
 
             MainProgramItem.Name = "Main Program Item";
@@ -380,7 +392,25 @@ namespace code0k_cc
                 FunctionDeclarationArguments,
                 TokenUnits[TokenType.RightBracket],
                 TokenUnits[TokenType.Semicolon]
-        };
+            };
+            FunctionDeclaration.Execute = (instance, block, unwantedArg) =>
+            {
+                var funNameValue = instance.Children[1].Execute(block, null);
+                Debug.Assert(funNameValue.Type == RuntimeType.String);
+                var funName = (string)funNameValue.Data;
+
+                var typeNameValue = instance.Children[1].Execute(block, null);
+                Debug.Assert(typeNameValue.Type == RuntimeType.String);
+                var typeName = (string)typeNameValue.Data;
+
+                var retType = RuntimeType.GetRuntimeType(typeName);
+
+                TFunctionData data = new TFunctionData() { FunctionName = funName, Instance = null, ReturnType = retType };
+                RuntimeValue value = new RuntimeValue() { Data = data, Type = RuntimeType.Function };
+                block.Variables.Add(funName, value);
+
+                return null;
+            };
 
             TypeUnit.Name = "Type Name";
             TypeUnit.Type = ParseUnitType.Single;
