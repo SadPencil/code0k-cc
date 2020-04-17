@@ -444,9 +444,6 @@ namespace code0k_cc
             StatementSemicolonCollection.Children = new List<ParseUnit>()
             {
                 DefinitionStatement,
-                IfStatement,
-                ForStatement,
-                WhileStatement,
                 Expression
             };
 
@@ -456,8 +453,11 @@ namespace code0k_cc
             Statement.ChildType = ParseUnitChildType.OneChild;
             Statement.Children = new List<ParseUnit>()
             {
-                StatementSemicolon,
                 CompoundStatement,
+                IfStatement,
+                ForStatement,
+                WhileStatement,
+                StatementSemicolon,
             };
 
             GlobalDefinitionStatement.Name = "Global Definition Statement";
