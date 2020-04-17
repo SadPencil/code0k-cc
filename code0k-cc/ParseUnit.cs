@@ -9,7 +9,7 @@ namespace code0k_cc
         public ParseUnitType Type;
         public ParseUnitChildType ChildType;
         public IReadOnlyList<ParseUnit> Children;
-        public TokenType LeafNodeTokenType;
+        public TokenType TerminalTokenType;
         public string Name;
     }
 }

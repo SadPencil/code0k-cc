@@ -61,10 +61,10 @@ namespace code0k_cc
             Debug.Assert(tokenList.Last().TokenType==TokenType.EOL);
             var token = tokenList[pos];
 
-            if (unit.ChildType == ParseUnitChildType.LeafNode)
+            if (unit.ChildType == ParseUnitChildType.Terminal)
             {
                 // match the token
-                if (token.TokenType == unit.LeafNodeTokenType)
+                if (token.TokenType == unit.TerminalTokenType)
                 {
                     // matched
                     var ret = new ParseResult()
@@ -267,8 +267,8 @@ namespace code0k_cc
                 {
                     Name = "Token " + tokenType.Name,
                     Type = ParseUnitType.Single,
-                    ChildType = ParseUnitChildType.LeafNode,
-                    LeafNodeTokenType = tokenType
+                    ChildType = ParseUnitChildType.Terminal,
+                    TerminalTokenType = tokenType
                 });
             }
 
@@ -276,8 +276,8 @@ namespace code0k_cc
             {
                 Name = "Token " + TokenType.EOL.Name,
                 Type = ParseUnitType.Single,
-                ChildType = ParseUnitChildType.LeafNode,
-                LeafNodeTokenType = TokenType.EOL
+                ChildType = ParseUnitChildType.Terminal,
+                TerminalTokenType = TokenType.EOL
             };
 
             ParseUnit MainProgram = new ParseUnit();

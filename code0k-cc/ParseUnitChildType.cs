@@ -6,7 +6,7 @@ namespace code0k_cc
 {
     enum ParseUnitChildType
     {
-        LeafNode,
+        Terminal,
         OneChild,
         AllChild
     }

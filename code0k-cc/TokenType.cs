@@ -52,7 +52,7 @@ namespace code0k_cc
         public static readonly TokenType Var = new TokenType("var", "var", new TokenTypeProperty() { IsDescriptionWord = true });
         public static readonly TokenType Ref = new TokenType("ref", "ref", new TokenTypeProperty() { IsDescriptionWord = true });
 
-        public static readonly TokenType Call = new TokenType("call", "call");
+        //public static readonly TokenType Call = new TokenType("call", "call");
         public static readonly TokenType Return = new TokenType("return", "return");
 
         public static readonly TokenType If = new TokenType("if", "if");
@@ -60,11 +60,11 @@ namespace code0k_cc
         public static readonly TokenType Else = new TokenType("else", "else");
 
         public static readonly TokenType While = new TokenType("while", "while");
-        public static readonly TokenType Do = new TokenType("do", "do");
+        //public static readonly TokenType Do = new TokenType("do", "do");
         public static readonly TokenType Max = new TokenType("max", "max");
         public static readonly TokenType For = new TokenType("for", "for");
-        public static readonly TokenType To = new TokenType("to", "to");
-        public static readonly TokenType DownTo = new TokenType("downto", "downto");
+        //public static readonly TokenType To = new TokenType("to", "to");
+        //public static readonly TokenType DownTo = new TokenType("downto", "downto");
 
         public static readonly TokenType Break = new TokenType("break", "break");
         public static readonly TokenType Continue = new TokenType("continue", "continue");
@@ -124,21 +124,17 @@ namespace code0k_cc
             yield return Const;
             yield return Var;
             yield return Ref;
-
-            yield return Call;
+             
             yield return Return;
 
             yield return If;
             yield return Then;
             yield return Else;
 
-            yield return While;
-            yield return Do;
+            yield return While; 
             yield return Max;
 
-            yield return For;
-            yield return To;
-            yield return DownTo;
+            yield return For; 
 
             yield return Break;
             yield return Continue;
