@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.IO;
 using System.Linq;
@@ -16,114 +17,114 @@ namespace code0k_cc
         internal static IEnumerable<Token> Analyze(Stream stream, Encoding encoding)
         {
             StreamReader reader = new StreamReader(stream, encoding);
-            StringBuilder word = new StringBuilder();
+
+            StringBuilder sb = new StringBuilder();
+            LexCharType state = LexCharType.WhileSpace;
 
             while (true)
             {
+                LexChoice choice;
+
                 Int32 nextCharInt = reader.Peek();
+                char nextChar = Char.MinValue;
+                LexCharType nextCharType = LexCharType.Unknown;
+
+                Debug.Assert((sb.Length == 0) == (state == LexCharType.WhileSpace));
+
                 if (nextCharInt == -1) // EOL
                 {
-                    if (word.Length > 0)
+                    if (state == LexCharType.WhileSpace)
                     {
-                        yield return GetToken(word.ToString());
-                    }
-                    yield break;
-                }
-
-                char nextChar = (char)nextCharInt;
-
-                var nextCharType = (
-                    IsWhiteSpace: Char.IsWhiteSpace(nextChar),
-                    IsLetterOrDigitOrUnderscore: Char.IsLetter(nextChar) || Char.IsDigit(nextChar) || nextChar == '_'
-                );
-
-                // ugly because C# doesn't support inline enum
-                var choiceEnum = (ReadAppend: false, ReadReturn: false, PeekReturn: false, ReadIdle: false);
-
-                if (word.Length == 0)
-                {
-                    if (!nextCharType.IsWhiteSpace)
-                    {
-                        choiceEnum.ReadAppend = true;
+                        choice = LexChoice.Terminate;
                     }
                     else
                     {
-                        choiceEnum.ReadIdle = true;
+                        choice = LexChoice.PeekReturn;
                     }
                 }
                 else
                 {
-                    if (nextCharType.IsWhiteSpace)
+                    nextChar = (char)nextCharInt;
+                    nextCharType = GetCharType(nextChar);
+                    if (nextCharType == LexCharType.Unknown)
                     {
-                        choiceEnum.ReadReturn = true;
+                        throw new Exception("Unrecognized character \"" + nextChar.ToString() + "\"");
                     }
-                    else
+
+                    switch (state)
                     {
-                        if (nextCharType.IsLetterOrDigitOrUnderscore)
-                        {
-                            if ((!nextCharType.IsLetterOrDigitOrUnderscore))
+                        case LexCharType.WhileSpace when nextCharType == LexCharType.WhileSpace:
+                            choice = LexChoice.Drop;
+                            break;
+
+                        case LexCharType.LetterOrDigitOrUnderscore when nextCharType == LexCharType.LetterOrDigitOrUnderscore:
+                        case LexCharType.WhileSpace when nextCharType == LexCharType.LetterOrDigitOrUnderscore:
+                        case LexCharType.WhileSpace when nextCharType == LexCharType.Punctuation:
+                            choice = LexChoice.ReadAppend;
+                            break;
+
+                        case LexCharType.Punctuation when nextCharType == LexCharType.WhileSpace:
+                        case LexCharType.LetterOrDigitOrUnderscore when nextCharType == LexCharType.WhileSpace:
+                            choice = LexChoice.DropReturn;
+                            break;
+
+                        case LexCharType.Punctuation when nextCharType == LexCharType.LetterOrDigitOrUnderscore:
+                        case LexCharType.LetterOrDigitOrUnderscore when nextCharType == LexCharType.Punctuation:
+                            choice = LexChoice.PeekReturn;
+                            break;
+
+                        case LexCharType.Punctuation when nextCharType == LexCharType.Punctuation:
+                            // consider '&' and '&&'
+                            if (GetTokenType(sb.ToString()) != null)
                             {
-                                choiceEnum.PeekReturn = true;
-                            }
-                            else
-                            {
-                                choiceEnum.ReadAppend = true;
-                            }
-                        }
-                        else
-                        {
-                            if ((!nextCharType.IsLetterOrDigitOrUnderscore))
-                            {
-                                // consider '&' and '&&'
-                                if (GetTokenType(word.ToString()) != null)
+                                if (GetTokenType(sb.ToString() + nextChar) != null)
                                 {
-                                    if (GetTokenType(word.ToString() + nextChar) != null)
-                                    {
-                                        choiceEnum.ReadAppend = true;
-                                    }
-                                    else
-                                    {
-                                        choiceEnum.PeekReturn = true;
-                                    }
+                                    choice = LexChoice.ReadAppend;
                                 }
                                 else
                                 {
-                                    choiceEnum.ReadAppend = true;
+                                    choice = LexChoice.PeekReturn;
                                 }
                             }
                             else
                             {
-                                choiceEnum.PeekReturn = true;
+                                choice = LexChoice.ReadAppend;
                             }
-
-                        }
+                            break;
+                        default:
+                            throw new Exception("Assert failed!");
                     }
 
                 }
 
-                if (choiceEnum.PeekReturn)
+                switch (choice)
                 {
-                    yield return GetToken(word.ToString());
-                    word.Clear();
-                }
-                else if (choiceEnum.ReadReturn)
-                {
-                    reader.Read();
-                    yield return GetToken(word.ToString());
-                    word.Clear();
-                }
-                else if (choiceEnum.ReadAppend)
-                {
-                    reader.Read();
-                    word.Append(nextChar);
-                }
-                else if (choiceEnum.ReadIdle)
-                {
-                    reader.Read();
-                }
-                else
-                {
-                    throw new Exception("Assert failed!");
+                    case LexChoice.PeekReturn:
+                        yield return GetToken(sb.ToString());
+                        sb.Clear();
+                        state = LexCharType.WhileSpace;
+                        break;
+                    case LexChoice.DropReturn:
+                        reader.Read();
+                        yield return GetToken(sb.ToString());
+                        sb.Clear();
+                        state = LexCharType.WhileSpace;
+                        break;
+                    case LexChoice.Drop:
+                        reader.Read();
+                        break;
+                    case LexChoice.ReadAppend:
+                        reader.Read();
+                        if (state == LexCharType.WhileSpace)
+                        {
+                            state = nextCharType;
+                        }
+                        sb.Append(nextChar);
+                        break;
+                    case LexChoice.Terminate:
+                        yield break;
+                    default:
+                        throw new Exception("Assert failed!");
                 }
 
             }
@@ -131,22 +132,33 @@ namespace code0k_cc
         }
         private static TokenType GetTokenType(string word)
         {
-            return TokenType.GetAll().FirstOrDefault(type => { return type.Match(word); });
-
-            //foreach (var symbol in TokenType.GetAll())
-            //{
-            //    if (symbol.Match(word))
-            //    {
-            //        return true;
-            //    }
-            //}
-            //return false;
+            return TokenType.GetAll().FirstOrDefault(type => type.Match(word));
         }
 
         private static Token GetToken(string word)
         {
             TokenType tokenType = GetTokenType(word);
             return new Token() { Value = word, TokenType = tokenType };
+        }
+
+        private static LexCharType GetCharType(Char ch)
+        {
+            if (Char.IsWhiteSpace(ch))
+            {
+                return LexCharType.WhileSpace;
+            }
+            else if (Char.IsLetter(ch) || Char.IsDigit(ch) || ch == '_')
+            {
+                return LexCharType.LetterOrDigitOrUnderscore;
+            }
+            else if ('!' <= ch && ch <= '/' || ':' <= ch && ch <= '@' || '[' <= ch && ch <= '`' && ch != '_' || '{' <= ch && ch <= '~')
+            {
+                return LexCharType.Punctuation;
+            }
+            else
+            {
+                return LexCharType.Unknown;
+            }
         }
     }
 }

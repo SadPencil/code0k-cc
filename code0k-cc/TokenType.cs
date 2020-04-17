@@ -56,10 +56,7 @@ namespace code0k_cc
         public static readonly TokenType If = new TokenType("if", "if");
         public static readonly TokenType Then = new TokenType("then", "then");
         public static readonly TokenType Else = new TokenType("else", "else");
-
-        //public static readonly Symbol Read = new Symbol(Type.Keyword, "read", "read");
-        //public static readonly Symbol Write = new Symbol(Type.Keyword, "write", "write");
-
+         
         public static readonly TokenType While = new TokenType("while", "while");
         public static readonly TokenType Do = new TokenType("do", "do");
         public static readonly TokenType Max = new TokenType("max", "max");
