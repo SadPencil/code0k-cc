@@ -49,7 +49,7 @@ namespace code0k_cc
                 Console.Write("\t");
                 Console.Write(tokenList.ElementAtOrDefault(pos)?.Value);
                 Console.Write(" [");
-                Console.Write(pos); 
+                Console.Write(pos);
                 Console.Write("]");
                 Console.WriteLine();
             }
@@ -291,6 +291,8 @@ namespace code0k_cc
 
             ParseUnit StatementBody = new ParseUnit();
             ParseUnit Statement = new ParseUnit();
+            ParseUnit StatementCollection = new ParseUnit();
+            ParseUnit StatementSemicolon = new ParseUnit();
 
             ParseUnit DescriptionTokens = new ParseUnit();
             ParseUnit DescriptionTokenUnit = new ParseUnit();
@@ -424,20 +426,37 @@ namespace code0k_cc
             StatementBody.Children = new List<ParseUnit>()
             {
                 Statement,
-                TokenUnits[TokenType.Semicolon],
                 StatementBody
             };
 
-            Statement.Name = "Statement";
-            Statement.Type = ParseUnitType.SingleOptional;
-            Statement.ChildType = ParseUnitChildType.OneChild;
-            Statement.Children = new List<ParseUnit>()
+            StatementSemicolon.Name = "Statement Semicolon";
+            StatementSemicolon.Type = ParseUnitType.Single;
+            StatementSemicolon.ChildType = ParseUnitChildType.OneChild;
+            StatementSemicolon.Children = new List<ParseUnit>()
+            {
+                StatementCollection,
+                TokenUnits[TokenType.Semicolon],
+            };
+
+            StatementCollection.Name = "Statement Collection";
+            StatementCollection.Type = ParseUnitType.Single;
+            StatementCollection.ChildType = ParseUnitChildType.OneChild;
+            StatementCollection.Children = new List<ParseUnit>()
             {
                 DefinitionStatement,
                 IfStatement,
                 ForStatement,
                 WhileStatement,
-                Expression,
+                Expression
+            };
+
+
+            Statement.Name = "Statement";
+            Statement.Type = ParseUnitType.Single;
+            Statement.ChildType = ParseUnitChildType.OneChild;
+            Statement.Children = new List<ParseUnit>()
+            {
+                StatementSemicolon,
                 CompoundStatement,
             };
 
@@ -510,7 +529,7 @@ namespace code0k_cc
             ForStatement.Children = new List<ParseUnit>()
             {
                 TokenUnits[TokenType.For],
-                Expression,
+                LeftValue,
                 TokenUnits[TokenType.Assign],
                 Expression,
                 TokenUnits[TokenType.To],

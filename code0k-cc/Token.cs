@@ -9,5 +9,10 @@ namespace code0k_cc
         public TokenType TokenType;
         public String Value;
         public long LocationInSourceCode;
+
+        public override string ToString()
+        {
+            return base.ToString() +" "+ this.Value.ToString();
+        }
     }
 }
