@@ -24,8 +24,10 @@ namespace code0k_cc
             }
             else
             {
-                throw new Exception("Failed at Parsing <InstanceName>, near <TokenName> at around <LocationInSourceCode>");
-                //todo
+                throw new Exception(string.Format(
+                    "Failed at Parsing {0}, at {1}",
+                    ret.ResultInstance?.ParseUnit?.Name,
+                    string.Format("row {0} col {1}", ret.Row, ret.Column)));
             }
 
         }
@@ -34,6 +36,7 @@ namespace code0k_cc
         {
 
             {
+                //debug
                 if (depth > 100)
                 {
                     throw new Exception("stop");
@@ -54,30 +57,31 @@ namespace code0k_cc
                 Console.WriteLine();
             }
 
+            var token = tokenList[pos];
 
             if (unit.ChildType == ParseUnitChildType.LeafNode)
             {
                 // match the token
-                if (pos < tokenList.Count)
+                if (token.TokenType != TokenType.EOL && token.TokenType == unit.LeafNodeTokenType)
                 {
-                    if (tokenList[pos].TokenType == unit.LeafNodeTokenType)
+                    // matched
+                    var ret = new ParseResult()
                     {
-                        // matched
-                        var ret = new ParseResult()
+                        Position = pos + 1,
+                        Success = true,
+                        ResultInstance = new ParseInstance()
                         {
-                            Position = pos + 1,
-                            Success = true,
-                            ResultInstance = new ParseInstance()
-                            {
-                                Children = null,
-                                ParseUnit = unit,
-                                Token = tokenList[pos]
-                            }
-                        };
-                        return ret;
-                    }
-                }
+                            Children = null,
+                            ParseUnit = unit,
+                            Token = token,
+                        },
+                        Row = token.Row,
+                        Column = token.Column,
+                    };
+                    return ret;
 
+                }
+                else
                 // failed
                 {
                     if (unit.Type == ParseUnitType.SingleOptional)
@@ -87,7 +91,9 @@ namespace code0k_cc
                         {
                             Position = pos,
                             Success = true,
-                            ResultInstance = null
+                            ResultInstance = null,
+                            Row = token.Row,
+                            Column = token.Column,
                         };
                         return ret;
                     }
@@ -103,7 +109,9 @@ namespace code0k_cc
                                 Children = null,
                                 ParseUnit = unit,
                                 Token = null
-                            }
+                            },
+                            Row = token.Row,
+                            Column = token.Column,
                         };
                         return ret;
                     }
@@ -111,14 +119,13 @@ namespace code0k_cc
                     {
                         throw new Exception("Assert failed!");
                     }
-
-
                 }
             }
             else if (unit.ChildType == ParseUnitChildType.AllChild)
             {
                 ParseResult badResult = null;
                 int newPos = pos;
+                var newRowCol = (Row: token.Row, Column: token.Column);
                 List<ParseInstance> children = new List<ParseInstance>();
                 foreach (var unitChild in unit.Children)
                 {
@@ -131,6 +138,7 @@ namespace code0k_cc
                     else
                     {
                         newPos = ret.Position;
+                        newRowCol = (ret.Row, ret.Column);
                         children.Add(ret.ResultInstance);
                     }
                 }
@@ -145,7 +153,9 @@ namespace code0k_cc
                         {
                             Position = pos,
                             Success = true,
-                            ResultInstance = null
+                            ResultInstance = null,
+                            Row = token.Row,
+                            Column = token.Column,
                         };
                         return ret;
                     }
@@ -171,7 +181,9 @@ namespace code0k_cc
                             Children = children,
                             ParseUnit = unit,
                             Token = null
-                        }
+                        },
+                        Row = newRowCol.Row,
+                        Column = newRowCol.Column,
                     };
                     return ret;
                 }
@@ -201,7 +213,9 @@ namespace code0k_cc
                         {
                             Position = pos,
                             Success = true,
-                            ResultInstance = null
+                            ResultInstance = null,
+                            Row = token.Row,
+                            Column = token.Column,
                         };
                         return ret;
                     }
@@ -227,7 +241,9 @@ namespace code0k_cc
                             Children = new List<ParseInstance>() { goodResult.ResultInstance },
                             ParseUnit = unit,
                             Token = null
-                        }
+                        },
+                        Row = goodResult.Row,
+                        Column = goodResult.Column,
                     };
                     return ret;
                 }
@@ -303,8 +319,9 @@ namespace code0k_cc
             ParseUnit ForStatement = new ParseUnit();
             ParseUnit WhileStatement = new ParseUnit();
             ParseUnit CompoundStatement = new ParseUnit();
-
-            //todo return break continue
+            ParseUnit ReturnStatement = new ParseUnit();
+            ParseUnit BreakStatement = new ParseUnit();
+            ParseUnit ContinueStatement = new ParseUnit();
 
             ParseUnit FunctionCall = new ParseUnit();
             ParseUnit FunctionCallArgument = new ParseUnit();
@@ -343,9 +360,9 @@ namespace code0k_cc
             MainProgramItem.ChildType = ParseUnitChildType.OneChild;
             MainProgramItem.Children = new List<ParseUnit>()
             {
-                FunctionImplementation,
+                GlobalDefinitionStatement,
                 FunctionDeclaration,
-                DefinitionStatement,
+                FunctionImplementation,
             };
 
             MainProgramLoop.Name = "Main Program Loop";
@@ -376,7 +393,7 @@ namespace code0k_cc
             TypeUnit.Children = new List<ParseUnit>()
             {
                 TokenUnits[TokenType.Identifier]
-    };
+            };
 
             FunctionImplementation.Name = "Function Implementation";
             FunctionImplementation.Type = ParseUnitType.Single;
@@ -389,7 +406,7 @@ namespace code0k_cc
                 FunctionDeclarationArguments,
                 TokenUnits[TokenType.RightBracket],
                 CompoundStatement
-};
+            };
 
             FunctionDeclarationArguments.Name = "Function Arguments";
             FunctionDeclarationArguments.Type = ParseUnitType.SingleOptional;
@@ -443,6 +460,9 @@ namespace code0k_cc
             StatementSemicolonCollection.ChildType = ParseUnitChildType.OneChild;
             StatementSemicolonCollection.Children = new List<ParseUnit>()
             {
+                BreakStatement,
+                ContinueStatement,
+                ReturnStatement,
                 DefinitionStatement,
                 Expression
             };
@@ -467,6 +487,31 @@ namespace code0k_cc
             {
                 DefinitionStatement,
                 TokenUnits[TokenType.Semicolon],
+            };
+
+            ReturnStatement.Name = "Return Statement";
+            ReturnStatement.Type = ParseUnitType.Single;
+            ReturnStatement.ChildType = ParseUnitChildType.AllChild;
+            ReturnStatement.Children = new List<ParseUnit>()
+            {
+                TokenUnits[TokenType.Return],
+                Expression,
+            };
+
+            BreakStatement.Name = "Break Statement";
+            BreakStatement.Type = ParseUnitType.Single;
+            BreakStatement.ChildType = ParseUnitChildType.AllChild;
+            BreakStatement.Children = new List<ParseUnit>()
+            {
+                TokenUnits[TokenType.Break],
+            };
+
+            ContinueStatement.Name = "Continue Statement";
+            ContinueStatement.Type = ParseUnitType.Single;
+            ContinueStatement.ChildType = ParseUnitChildType.AllChild;
+            ContinueStatement.Children = new List<ParseUnit>()
+            {
+                TokenUnits[TokenType.Continue],
             };
 
             DefinitionStatement.Name = "Definition Statement";
@@ -508,8 +553,9 @@ namespace code0k_cc
             IfStatement.Children = new List<ParseUnit>()
             {
                 TokenUnits[TokenType.If],
+                TokenUnits[TokenType.LeftBracket],
                 Expression,
-                TokenUnits[TokenType.Then],
+                TokenUnits[TokenType.RightBracket], 
                 CompoundStatement,
                 OptionalElseStatement
             };
@@ -529,12 +575,13 @@ namespace code0k_cc
             ForStatement.Children = new List<ParseUnit>()
             {
                 TokenUnits[TokenType.For],
-                LeftValue,
-                TokenUnits[TokenType.Assign],
+                TokenUnits[TokenType.LeftBracket],
                 Expression,
-                TokenUnits[TokenType.To],
+                TokenUnits[TokenType.Semicolon],
                 Expression,
-                TokenUnits[TokenType.Do],
+                TokenUnits[TokenType.Semicolon],
+                Expression,
+                TokenUnits[TokenType.RightBracket],
                 CompoundStatement
             };
 
@@ -544,10 +591,13 @@ namespace code0k_cc
             WhileStatement.Children = new List<ParseUnit>()
             {
                 TokenUnits[TokenType.While],
+                TokenUnits[TokenType.LeftBracket],
                 Expression,
+                TokenUnits[TokenType.RightBracket],
                 TokenUnits[TokenType.Max],
+                TokenUnits[TokenType.LeftBracket],
                 Expression,
-                TokenUnits[TokenType.Do],
+                TokenUnits[TokenType.RightBracket], 
                 CompoundStatement
             };
 

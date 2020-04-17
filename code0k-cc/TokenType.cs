@@ -43,6 +43,8 @@ namespace code0k_cc
             return Regex.IsMatch(str, pattern);
         }
 
+        public static readonly TokenType EOL = new TokenType("", ""); 
+
         public static readonly TokenType Input = new TokenType("input", "input", new TokenTypeProperty() { IsDescriptionWord = true });
         public static readonly TokenType Output = new TokenType("output", "output", new TokenTypeProperty() { IsDescriptionWord = true });
         public static readonly TokenType NizkInput = new TokenType("nizkinput", "nizkinput", new TokenTypeProperty() { IsDescriptionWord = true });
@@ -56,7 +58,7 @@ namespace code0k_cc
         public static readonly TokenType If = new TokenType("if", "if");
         public static readonly TokenType Then = new TokenType("then", "then");
         public static readonly TokenType Else = new TokenType("else", "else");
-         
+
         public static readonly TokenType While = new TokenType("while", "while");
         public static readonly TokenType Do = new TokenType("do", "do");
         public static readonly TokenType Max = new TokenType("max", "max");
@@ -114,6 +116,8 @@ namespace code0k_cc
 
         public static IEnumerable<TokenType> GetAll()
         {
+            // no EOL
+
             yield return Input;
             yield return Output;
             yield return NizkInput;

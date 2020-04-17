@@ -8,7 +8,8 @@ namespace code0k_cc
     {
         public TokenType TokenType;
         public String Value;
-        public long LocationInSourceCode;
+        public int Row;
+        public int Column;
 
         public override string ToString()
         {

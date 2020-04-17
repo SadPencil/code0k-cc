@@ -21,6 +21,9 @@ namespace code0k_cc
             StringBuilder sb = new StringBuilder();
             LexCharType state = LexCharType.WhileSpace;
 
+            int row = 1;
+            int column = 0;
+
             while (true)
             {
                 LexChoice choice;
@@ -45,6 +48,14 @@ namespace code0k_cc
                 else
                 {
                     nextChar = (char)nextCharInt;
+
+                    ++column;
+                    if (nextChar == '\n')
+                    {
+                        column = 0;
+                        ++row;
+                    }
+
                     nextCharType = GetCharType(nextChar);
                     if (nextCharType == LexCharType.Unknown)
                     {
@@ -100,13 +111,13 @@ namespace code0k_cc
                 switch (choice)
                 {
                     case LexChoice.PeekReturn:
-                        yield return GetToken(sb.ToString());
+                        yield return GetToken(sb.ToString(), row, column);
                         sb.Clear();
                         state = LexCharType.WhileSpace;
                         break;
                     case LexChoice.DropReturn:
                         reader.Read();
-                        yield return GetToken(sb.ToString());
+                        yield return GetToken(sb.ToString(), row, column);
                         sb.Clear();
                         state = LexCharType.WhileSpace;
                         break;
@@ -122,6 +133,7 @@ namespace code0k_cc
                         sb.Append(nextChar);
                         break;
                     case LexChoice.Terminate:
+                        yield return GetEOL(row, column);
                         yield break;
                     default:
                         throw new Exception("Assert failed!");
@@ -130,15 +142,21 @@ namespace code0k_cc
             }
 
         }
+
+        private static Token GetEOL(int row, int column)
+        {
+            return new Token() { Value = "", TokenType = TokenType.EOL, Row = row, Column = column };
+        }
+
         private static TokenType GetTokenType(string word)
         {
             return TokenType.GetAll().FirstOrDefault(type => type.Match(word));
         }
 
-        private static Token GetToken(string word)
+        private static Token GetToken(string word, int row, int column)
         {
             TokenType tokenType = GetTokenType(word);
-            return new Token() { Value = word, TokenType = tokenType };
+            return new Token() { Value = word, TokenType = tokenType, Row = row, Column = column };
         }
 
         private static LexCharType GetCharType(Char ch)
