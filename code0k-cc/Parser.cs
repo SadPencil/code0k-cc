@@ -24,7 +24,7 @@ namespace code0k_cc
             }
             else
             {
-                //todo to make this more reliable, compute FIRST and FOLLOW
+                //todo: to make this error message more reliable, compute FIRST and FOLLOW
                 throw new Exception(
                     $"Failed at Parsing {ret.ResultInstance?.ParseUnit?.Name}, at row {ret.Row} col {ret.Column}");
             }
@@ -353,7 +353,7 @@ namespace code0k_cc
                 EnvironmentBlock block = new EnvironmentBlock() { ParseInstance = instance };
                 foreach (var instanceChild in instance.Children)
                 {
-                    _ = instanceChild.Execute(block, null);
+                    _ = instanceChild?.Execute(block, null);
                 }
                 // find & execute "main"
                 var main = block.GetVariableValue("main");
@@ -377,8 +377,10 @@ namespace code0k_cc
             MainProgramLoop.Children = new List<ParseUnit>()
             {
                 MainProgramItem,
-                MainProgramLoop
+                MainProgramLoop,
             };
+            MainProgramItem.Execute = (instance, block, arg) => instance.Children[0].Execute(block, arg);
+
 
             FunctionDeclaration.Name = "Function Declaration";
             FunctionDeclaration.Type = ParseUnitType.Single;
@@ -398,16 +400,22 @@ namespace code0k_cc
                 Debug.Assert(funNameValue.Type == RuntimeType.String);
                 var funName = ( (StringValueData) funNameValue.Data ).Value;
 
-                var typeNameValue = instance.Children[1].Execute(block, null);
+                var typeNameValue = instance.Children[0].Execute(block, null);
                 Debug.Assert(typeNameValue.Type == RuntimeType.String);
                 var typeName = ( (StringValueData) typeNameValue.Data ).Value;
 
                 var retType = RuntimeType.GetRuntimeType(typeName);
 
-                //todo func args!
+                var argDataValue = instance.Children[3]?.Execute(block, null);
+                var argList = new List<RuntimeType>();
+                if (argDataValue != null)
+                {
+                    var argData = (FunctionDeclarationArgumentsValueData) argDataValue.Data;
+                    argList = argData.Arguments.ToList();
+                }
 
-                FunctionValueData data = new FunctionValueData() { FunctionName = funName, Instance = null, ReturnType = retType };
-                RuntimeValue value = new RuntimeValue() { Data = data, Type = RuntimeType.Function };
+                FunctionValueData data = new FunctionValueData() { FunctionName = funName, Instance = null, ReturnType = retType, ArgumentTypes = argList };
+                RuntimeValue value = RuntimeType.Function.GetNewRuntimeValue(data);
                 block.Variables.Add(funName, value);
 
                 return null;
@@ -418,9 +426,14 @@ namespace code0k_cc
             TypeUnit.ChildType = ParseUnitChildType.AllChild;
             TypeUnit.Children = new List<ParseUnit>()
             {
+                DescriptionTokens,
                 TokenUnits[TokenType.Identifier]
             };
-            TypeUnit.Execute = (instance, block, arg) => instance.Children[0].Execute(block, arg);
+            TypeUnit.Execute = (instance, block, arg) =>
+            {
+                //todo
+
+            };
 
             FunctionImplementation.Name = "Function Implementation";
             FunctionImplementation.Type = ParseUnitType.Single;
@@ -438,7 +451,7 @@ namespace code0k_cc
             FunctionImplementation.Execute = (instance, block, arg) => instance.Children[0].Execute(block, arg);
 
 
-            FunctionDeclarationArguments.Name = "Function Arguments";
+            FunctionDeclarationArguments.Name = "Function Declaration Arguments";
             FunctionDeclarationArguments.Type = ParseUnitType.SingleOptional;
             FunctionDeclarationArguments.ChildType = ParseUnitChildType.AllChild;
             FunctionDeclarationArguments.Children = new List<ParseUnit>()
@@ -446,20 +459,42 @@ namespace code0k_cc
                 FunctionArgumentUnit,
                 FunctionArgumentLoop,
             };
+            FunctionDeclarationArguments.Execute = (instance, block, arg) =>
+            {
+                //link the list
+                var thisUnitValue = instance.Children[0].Execute(block, arg);
+                var thisList = ( (FunctionDeclarationArgumentsValueData) thisUnitValue.Data ).Arguments;
+
+                var thatUnitValue = instance.Children[1]?.Execute(block, arg);
+                if (thatUnitValue != null)
+                {
+                    var thatList = ( (FunctionDeclarationArgumentsValueData) thatUnitValue.Data ).Arguments;
+                    thisList = thisList.Concat(thatList).ToList();
+                }
+                return RuntimeType.FunctionDeclarationArguments.GetNewRuntimeValue(new FunctionDeclarationArgumentsValueData() { Arguments = thisList });
+            };
             //todo execute
 
-            FunctionArgumentUnit.Name = "Function Argument Unit";
+            FunctionArgumentUnit.Name = "Function Declaration Argument Unit";
             FunctionArgumentUnit.Type = ParseUnitType.Single;
             FunctionArgumentUnit.ChildType = ParseUnitChildType.AllChild;
             FunctionArgumentUnit.Children = new List<ParseUnit>()
             {
-                DescriptionTokens,
                 TypeUnit,
-                TokenUnits[TokenType.Identifier]
+                TokenUnits[TokenType.Identifier] //required but omitted
             };
-            //todo execute
+            FunctionArgumentUnit.Execute = (instance, block, arg) =>
+            {
+                var value = instance.Children[0].Execute(block, null);
+                var data = (FunctionDeclarationArgumentsValueData) value.Data;
 
-            FunctionArgumentLoop.Name = "Function Argument Loop";
+                return RuntimeType.FunctionDeclarationArguments.GetNewRuntimeValue(new FunctionDeclarationArgumentsValueData()
+                {
+                    Arguments = data.Arguments
+                });
+            };
+
+            FunctionArgumentLoop.Name = "Function Declaration Argument Loop";
             FunctionArgumentLoop.Type = ParseUnitType.SingleOptional;
             FunctionArgumentLoop.ChildType = ParseUnitChildType.AllChild;
             FunctionArgumentLoop.Children = new List<ParseUnit>()
@@ -478,7 +513,7 @@ namespace code0k_cc
                 Statement,
                 StatementBody
             };
-            StatementBody.Execute = (instance, block, arg) => new RuntimeValue() { Type = RuntimeType.Void };
+            StatementBody.Execute = (instance, block, arg) => RuntimeType.Void.GetNewRuntimeValue();
 
             StatementSemicolon.Name = "Statement Semicolon";
             StatementSemicolon.Type = ParseUnitType.Single;
@@ -571,7 +606,6 @@ namespace code0k_cc
             DefinitionStatement.ChildType = ParseUnitChildType.AllChild;
             DefinitionStatement.Children = new List<ParseUnit>()
             {
-                DescriptionTokens,
                 TypeUnit,
                 LeftValue,
                 TokenUnits[TokenType.Assign],
@@ -579,20 +613,25 @@ namespace code0k_cc
             };
             DefinitionStatement.Execute = (instance, block, arg) =>
             {
-                var varNameValue = instance.Children[2].Execute(block, null);
+                var varNameValue = instance.Children[1].Execute(block, null);
                 Debug.Assert(varNameValue.Type == RuntimeType.String);
                 var varName = ( (StringValueData) varNameValue.Data ).Value;
 
                 //todo description token type name
-                var typeNameValue = instance.Children[1].Execute(block, null);
+                var typeNameValue = instance.Children[0].Execute(block, null);
                 Debug.Assert(typeNameValue.Type == RuntimeType.String);
                 var typeName = ( (StringValueData) typeNameValue.Data ).Value;
 
-                var retType = RuntimeType.GetRuntimeType(typeName);
+                var varType = RuntimeType.GetRuntimeType(typeName);
 
-                var expressionValue = instance.Children[4].Execute(block, null);
+                var expressionValue = instance.Children[3].Execute(block, null);
 
-                //todo check the type and type cast?
+
+                if (varType != expressionValue.Type)
+                {
+                    //todo type cast
+                    throw new Exception($"Unexpected type \"{expressionValue.Type.CodeName}\". Supposed to be \"{varType.CodeName}\".");
+                }
 
                 block.Variables.Add(varName, expressionValue);
 
@@ -608,7 +647,20 @@ namespace code0k_cc
                 DescriptionTokenUnit,
                 DescriptionTokens,
             };
-            //todo exe
+            DescriptionTokens.Execute = (instance, block, arg) =>
+            {
+                //link the list
+                var thisUnitValue = instance.Children[0].Execute(block, arg);
+                var thisList = ( (DescriptionWordsValueData) thisUnitValue.Data ).DescriptionWords;
+
+                var thatUnitValue = instance.Children[1]?.Execute(block, arg);
+                if (thatUnitValue != null)
+                {
+                    var thatList = ( (DescriptionWordsValueData) thatUnitValue.Data ).DescriptionWords;
+                    thisList = thisList.Concat(thatList).ToList();
+                }
+                return RuntimeType.DescriptionWords.GetNewRuntimeValue(new DescriptionWordsValueData() { DescriptionWords = thisList });
+            };
 
             DescriptionTokenUnit.Name = "Definition Description Unit";
             DescriptionTokenUnit.Type = ParseUnitType.Single;
@@ -621,7 +673,17 @@ namespace code0k_cc
                 TokenUnits[TokenType.Const],
                 TokenUnits[TokenType.Ref],
             };
-            //todo exe
+            DescriptionTokenUnit.Execute = (instance, block, arg) =>
+            {
+                var value = instance.Children[0].Execute(block, null);
+                var data = (DescriptionWordsValueData) value.Data;
+
+                return RuntimeType.DescriptionWords.GetNewRuntimeValue(new DescriptionWordsValueData()
+                {
+                    DescriptionWords =  data.DescriptionWords  
+                });
+            };
+
 
             //todo snark
 

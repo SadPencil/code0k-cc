@@ -4,8 +4,12 @@ using System.Text;
 
 namespace code0k_cc
 {
-    class StatementValueData : RuntimeValueData
+    enum DescriptionWord
     {
-
+        Input,
+        Output,
+        NizkInput,
+        Ref,
+        Const
     }
 }

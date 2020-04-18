@@ -4,7 +4,8 @@ using System.Text;
 
 namespace code0k_cc
 {
-    class StatementExecuteArg : RuntimeTypeExecuteArg
+    class StatementResultValueData : RuntimeValueData
     {
+
     }
 }

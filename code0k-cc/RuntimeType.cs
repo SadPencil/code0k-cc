@@ -7,23 +7,35 @@ namespace code0k_cc
 {
     class RuntimeType
     {
-        public string Name;
+        public string CodeName;
         public Func<EnvironmentBlock, RuntimeValue, RuntimeTypeExecuteArg, RuntimeValue> Execute;
         public Func<RuntimeValue, bool> GetBool;
         public Func<RuntimeValue, Int32> GetInt32;
 
+        public RuntimeValue GetNewRuntimeValue()
+        {
+            return this.GetNewRuntimeValue(null);
+        }
+
+        public RuntimeValue GetNewRuntimeValue(RuntimeValueData data)
+        {
+            return new RuntimeValue() { Type = this, Data = data };
+        }
 
         private RuntimeType() { }
 
         public static RuntimeType GetRuntimeType(string name)
         {
-            return GetAll().FirstOrDefault(runtimeType => runtimeType.Name == name);
+            return GetAll().FirstOrDefault(runtimeType => runtimeType.CodeName == name);
         }
 
         public static IEnumerable<RuntimeType> GetAll()
         {
             yield return Function;
+            yield return FunctionDeclarationArguments;
             yield return StatementResult;
+            yield return DescriptionWords;
+            yield return DescriptionWord;
 
             yield return Void;
             yield return String;
@@ -31,28 +43,46 @@ namespace code0k_cc
 
         public static readonly RuntimeType StatementResult = new RuntimeType()
         {
-            Name = "StatementResult",
-            //todo
+            CodeName = "StatementResult",
+            Execute = (block, value, arg) => value
+        };
+
+        public static readonly RuntimeType FunctionDeclarationArguments = new RuntimeType()
+        {
+            CodeName = "FunctionDeclarationArguments",
+            Execute = (block, value, arg) => value
+        };
+        public static readonly RuntimeType DescriptionWords = new RuntimeType()
+        {
+            CodeName = "DescriptionWords",
+            Execute = (block, value, arg) => value
+        };
+        public static readonly RuntimeType DescriptionWord = new RuntimeType()
+        {
+            CodeName = "DescriptionWord",
+            Execute = (block, value, arg) => value
         };
 
         public static readonly RuntimeType String = new RuntimeType()
         {
-            Name = "String",
+            CodeName = "String",
             Execute = (block, value, arg) => value
         };
 
         public static readonly RuntimeType Void = new RuntimeType()
         {
-            Name = "Void",
+            CodeName = "Void",
             Execute = (block, value, arg) => value,
             GetBool = (value) => false
         };
 
         public static readonly RuntimeType Function = new RuntimeType()
         {
-            Name = "Function",
+            CodeName = "Function",
             Execute = (block, value, arg) =>
             {
+                // call the function
+
                 // prepare new environment
                 var data = (FunctionValueData) value.Data;
                 EnvironmentBlock newBlock = new EnvironmentBlock()
