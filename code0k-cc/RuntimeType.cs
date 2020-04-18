@@ -54,7 +54,7 @@ namespace code0k_cc
             Execute = (block, value, arg) =>
             {
                 // prepare new environment
-                var data = (FunctionValueData)value.Data;
+                var data = (FunctionValueData) value.Data;
                 EnvironmentBlock newBlock = new EnvironmentBlock()
                 {
                     ParentBlock = block.LocateVariable(data.FunctionName),
@@ -62,13 +62,23 @@ namespace code0k_cc
                     ReturnBlock = block,
                 };
                 // load function arguments if available
-                // todo check function arg types!
                 if (arg != null)
-                { 
-                    //todo correct the name
-                    foreach (var (k, v) in ((FunctionExecuteArg)arg).NameValues)
+                {
+                    var funcArg = (FunctionExecuteArg) arg;
+                    if (data.ArgumentTypes.Count != funcArg.NameValues.Count)
                     {
-                        newBlock.Variables.Add(k, v);
+                        throw new Exception($"Unexpected function arguments of function \"{data.FunctionName}\".");
+                    }
+
+                    foreach (var i in Enumerable.Range(0, ( (FunctionExecuteArg) arg ).NameValues.Count))
+                    {
+                        (string argName, RuntimeValue argValue) = ( (FunctionExecuteArg) arg ).NameValues[i];
+                        if (data.ArgumentTypes[i] != argValue.Type)
+                        {
+                            throw new Exception($"Unexpected function argument \"{argName}\" of function \"{data.FunctionName}\".");
+                        }
+                        newBlock.Variables.Add(argName, argValue);
+
                     }
                 }
 
