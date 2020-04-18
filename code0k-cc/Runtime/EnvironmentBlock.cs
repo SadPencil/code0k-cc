@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using code0k_cc.Runtime.Type;
 
-namespace code0k_cc
+namespace code0k_cc.Runtime
 {
     class EnvironmentBlock
     {
         public EnvironmentBlock ReturnBlock;
         public EnvironmentBlock ParentBlock;
-        public readonly Dictionary<string, RuntimeValue> Variables = new Dictionary<string, RuntimeValue>();
+        public readonly Dictionary<string, IType> Variables = new Dictionary<string, IType>();
         public ParseInstance ParseInstance;
 
         public EnvironmentBlock LocateVariable(string name)
@@ -29,7 +29,7 @@ namespace code0k_cc
                 }
             }
         }
-        public RuntimeValue GetVariableValue(string name)
+        public IType GetVariableValue(string name)
         {
             if (this.Variables.ContainsKey(name))
             {

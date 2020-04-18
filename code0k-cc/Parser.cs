@@ -7,6 +7,8 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using code0k_cc.Runtime;
+using code0k_cc.Runtime.Type;
 
 namespace code0k_cc
 {
@@ -396,27 +398,25 @@ namespace code0k_cc
             };
             FunctionDeclaration.Execute = (instance, block, unwantedArg) =>
             {
-                var funNameValue = instance.Children[1].Execute(block, null);
-                Debug.Assert(funNameValue.Type == RuntimeType.String);
-                var funName = ( (StringValueData) funNameValue.Data ).Value;
+                var funNameT = (TString) ( instance.Children[1].Execute(block, null) );
 
-                var typeNameValue = instance.Children[0].Execute(block, null);
-                Debug.Assert(typeNameValue.Type == RuntimeType.String);
-                var typeName = ( (StringValueData) typeNameValue.Data ).Value;
+                var funName = funNameT.Value;
 
-                var retType = RuntimeType.GetRuntimeType(typeName);
+                var funRetTypeT = (TTypeOfType) ( instance.Children[0].Execute(block, null) );
 
-                var argDataValue = instance.Children[3]?.Execute(block, null);
-                var argList = new List<RuntimeType>();
-                if (argDataValue != null)
+                var funDeclareArgsRaw = instance.Children[3]?.Execute(block, null);
+
+                var argList = new TFunctionDeclarationArguments();
+
+                if (funDeclareArgsRaw != null)
                 {
-                    var argData = (FunctionDeclarationArgumentsValueData) argDataValue.Data;
-                    argList = argData.Arguments.ToList();
+                    var funDeclareArgsT = (TFunctionDeclarationArguments) funDeclareArgsRaw;
+                    argList.Arguments = funDeclareArgsT.Arguments;
                 }
 
-                FunctionValueData data = new FunctionValueData() { FunctionName = funName, Instance = null, ReturnType = retType, ArgumentTypes = argList };
-                RuntimeValue value = RuntimeType.Function.GetNewRuntimeValue(data);
-                block.Variables.Add(funName, value);
+                var funT = new TFunction() { Arguments = argList, FunctionName = funName, ReturnType = funRetTypeT, Instance = null };
+
+                block.Variables.Add(funName, funT);
 
                 return null;
             };
@@ -630,7 +630,7 @@ namespace code0k_cc
                 if (varType != expressionValue.Type)
                 {
                     //todo type cast
-                    throw new Exception($"Unexpected type \"{expressionValue.Type.CodeName}\". Supposed to be \"{varType.CodeName}\".");
+                    throw new Exception($"Unexpected type \"{expressionValue.Type.CodeName}\". Supposed to be \"{varType.TypeCodeName}\".");
                 }
 
                 block.Variables.Add(varName, expressionValue);
@@ -680,7 +680,7 @@ namespace code0k_cc
 
                 return RuntimeType.DescriptionWords.GetNewRuntimeValue(new DescriptionWordsValueData()
                 {
-                    DescriptionWords =  data.DescriptionWords  
+                    DescriptionWords = data.DescriptionWords
                 });
             };
 
