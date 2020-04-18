@@ -17,7 +17,7 @@ namespace code0k_cc
         internal static ParseInstance Parse(in IEnumerable<Token> tokens)
         {
             IReadOnlyList<Token> tokenList = tokens.ToList();
-            var ret = _Parse(RootParseUnit, tokenList, 0, 0);
+            var ret = Parse(RootParseUnit, tokenList, 0, 0);
             if (ret.Success)
             {
                 return ret.ResultInstance;
@@ -33,7 +33,7 @@ namespace code0k_cc
 
         }
 
-        private static ParseResult _Parse(in ParseUnit unit, in IReadOnlyList<Token> tokenList, in int pos, in int depth)
+        private static ParseResult Parse(in ParseUnit unit, in IReadOnlyList<Token> tokenList, in int pos, in int depth)
         {
 
             {
@@ -131,7 +131,7 @@ namespace code0k_cc
                 List<ParseInstance> children = new List<ParseInstance>();
                 foreach (var unitChild in unit.Children)
                 {
-                    var ret = _Parse(unitChild, tokenList, newPos, depth + 1);
+                    var ret = Parse(unitChild, tokenList, newPos, depth + 1);
                     if (!ret.Success)
                     {
                         badResult = ret;
@@ -197,7 +197,7 @@ namespace code0k_cc
                 ParseResult lastResult = null;
                 foreach (var unitChild in unit.Children)
                 {
-                    lastResult = _Parse(unitChild, tokenList, pos, depth + 1);
+                    lastResult = Parse(unitChild, tokenList, pos, depth + 1);
                     if (lastResult.Success)
                     {
                         goodResult = lastResult;
@@ -355,7 +355,7 @@ namespace code0k_cc
                 EnvironmentBlock block = new EnvironmentBlock() { ParseInstance = instance };
                 foreach (var instanceChild in instance.Children)
                 {
-                    instanceChild.Execute(block, null);
+                    _ = instanceChild.Execute(block, null);
                 }
                 // find & execute "main"
                 var main = block.GetVariableValue("main");
@@ -398,11 +398,11 @@ namespace code0k_cc
             {
                 var funNameValue = instance.Children[1].Execute(block, null);
                 Debug.Assert(funNameValue.Type == RuntimeType.String);
-                var funName = ((StringValueData)funNameValue.Data).Value;
+                var funName = ( (StringValueData) funNameValue.Data ).Value;
 
                 var typeNameValue = instance.Children[1].Execute(block, null);
                 Debug.Assert(typeNameValue.Type == RuntimeType.String);
-                var typeName = ((StringValueData)typeNameValue.Data).Value;
+                var typeName = ( (StringValueData) typeNameValue.Data ).Value;
 
                 var retType = RuntimeType.GetRuntimeType(typeName);
 
@@ -583,12 +583,12 @@ namespace code0k_cc
             {
                 var varNameValue = instance.Children[2].Execute(block, null);
                 Debug.Assert(varNameValue.Type == RuntimeType.String);
-                var varName = ((StringValueData)varNameValue.Data).Value;
+                var varName = ( (StringValueData) varNameValue.Data ).Value;
 
                 //todo description token type name
                 var typeNameValue = instance.Children[1].Execute(block, null);
                 Debug.Assert(typeNameValue.Type == RuntimeType.String);
-                var typeName = ((StringValueData)typeNameValue.Data).Value;
+                var typeName = ( (StringValueData) typeNameValue.Data ).Value;
 
                 var retType = RuntimeType.GetRuntimeType(typeName);
 
@@ -689,14 +689,14 @@ namespace code0k_cc
                 var maxValue = instance.Children[10].Execute(block, null);
                 Int32 max = maxValue.Type.GetInt32(maxValue);
 
-                instance.Children[2].Execute(block, null);
+                _ = instance.Children[2].Execute(block, null);
 
                 var expressionValue = instance.Children[4].Execute(block, null);
                 for (Int32 i = 0; i < max && expressionValue.Type.GetBool(expressionValue); ++i)
                 {
-                    instance.Children[12].Execute(block, null);
+                    _ = instance.Children[12].Execute(block, null);
 
-                    instance.Children[6].Execute(block, null);
+                    _ = instance.Children[6].Execute(block, null);
 
                     expressionValue = instance.Children[4].Execute(block, null);
                 }
@@ -726,7 +726,7 @@ namespace code0k_cc
                 var expressionValue = instance.Children[2].Execute(block, null);
                 for (Int32 i = 0; i < max && expressionValue.Type.GetBool(expressionValue); ++i)
                 {
-                    instance.Children[8].Execute(block, null);
+                    _ = instance.Children[8].Execute(block, null);
 
                     expressionValue = instance.Children[2].Execute(block, null);
                 }

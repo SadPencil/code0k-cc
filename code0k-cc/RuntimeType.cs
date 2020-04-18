@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace code0k_cc
@@ -16,15 +17,7 @@ namespace code0k_cc
 
         public static RuntimeType GetRuntimeType(string name)
         {
-            foreach (var runtimeType in GetAll())
-            {
-                if (runtimeType.Name == name)
-                {
-                    return runtimeType;
-                }
-            }
-
-            return null;
+            return GetAll().FirstOrDefault(runtimeType => runtimeType.Name == name);
         }
 
         public static IEnumerable<RuntimeType> GetAll()
@@ -73,9 +66,9 @@ namespace code0k_cc
                 if (arg != null)
                 { 
                     //todo correct the name
-                    foreach (var pair in ((FunctionExecuteArg)arg).NameValues)
+                    foreach (var (k, v) in ((FunctionExecuteArg)arg).NameValues)
                     {
-                        newBlock.Variables.Add(pair.Key, pair.Value);
+                        newBlock.Variables.Add(k, v);
                     }
                 }
 
