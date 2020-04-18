@@ -12,7 +12,7 @@ namespace code0k_cc.Runtime.Type
         public abstract string TypeCodeName { get; }
         //public abstract IType Execute(EnvironmentBlock block, IType value, IRuntimeTypeExecuteArg arg);
         public abstract IType Execute(EnvironmentBlock block, IRuntimeExecuteArg arg);
-        public abstract IType Assign(EnvironmentBlock block, TTypeOfType targetType, IRuntimeAssignArg arg);
+        public abstract Func<EnvironmentBlock, TTypeOfType, IRuntimeAssignArg, IType> Assign { get; }
         public abstract bool ToBool();
         public abstract Int32 ToInt32();
         public abstract Dictionary<TUnaryOperation, (BinaryOperationDescription Description, Func<IType> OperationFunc)> UnaryOperations { get; }
