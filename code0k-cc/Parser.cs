@@ -25,10 +25,8 @@ namespace code0k_cc
             else
             {
                 //todo to make this more reliable, compute FIRST and FOLLOW
-                throw new Exception(string.Format(
-                    "Failed at Parsing {0}, at {1}",
-                    ret.ResultInstance?.ParseUnit?.Name,
-                    string.Format("row {0} col {1}", ret.Row, ret.Column)));
+                throw new Exception(
+                    $"Failed at Parsing {ret.ResultInstance?.ParseUnit?.Name}, at row {ret.Row} col {ret.Column}");
             }
 
         }

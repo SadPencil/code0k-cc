@@ -32,7 +32,7 @@ namespace code0k_cc
                 char nextChar = Char.MinValue;
                 LexCharType nextCharType = LexCharType.Unknown;
 
-                Debug.Assert((sb.Length == 0) == (state == LexCharType.WhileSpace));
+                Debug.Assert(( sb.Length == 0 ) == ( state == LexCharType.WhileSpace ));
 
                 if (nextCharInt == -1) // EOL
                 {
@@ -47,7 +47,7 @@ namespace code0k_cc
                 }
                 else
                 {
-                    nextChar = (char)nextCharInt;
+                    nextChar = (char) nextCharInt;
 
                     ++column;
                     if (nextChar == '\n')
@@ -112,25 +112,25 @@ namespace code0k_cc
                 {
                     case LexChoice.PeekReturn:
                         yield return GetToken(sb.ToString(), row, column);
-                        sb.Clear();
+                        _ = sb.Clear();
                         state = LexCharType.WhileSpace;
                         break;
                     case LexChoice.DropReturn:
-                        reader.Read();
+                        _ = reader.Read();
                         yield return GetToken(sb.ToString(), row, column);
-                        sb.Clear();
+                        _ = sb.Clear();
                         state = LexCharType.WhileSpace;
                         break;
                     case LexChoice.Drop:
-                        reader.Read();
+                        _ = reader.Read();
                         break;
                     case LexChoice.ReadAppend:
-                        reader.Read();
+                        _ = reader.Read();
                         if (state == LexCharType.WhileSpace)
                         {
                             state = nextCharType;
                         }
-                        sb.Append(nextChar);
+                        _ = sb.Append(nextChar);
                         break;
                     case LexChoice.Terminate:
                         yield return GetEOL(row, column);
