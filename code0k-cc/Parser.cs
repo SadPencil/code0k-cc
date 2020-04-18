@@ -296,8 +296,8 @@ namespace code0k_cc
             ParseUnit LeftValueSuffixItem = new ParseUnit();
 
             ParseUnit FunctionDeclarationArguments = new ParseUnit();
-            ParseUnit FunctionArgumentLoop = new ParseUnit();
-            ParseUnit FunctionArgumentUnit = new ParseUnit();
+            ParseUnit FunctionDeclarationArgumentLoop = new ParseUnit();
+            ParseUnit FunctionDeclarationArgumentUnit = new ParseUnit();
 
             ParseUnit StatementBody = new ParseUnit();
             ParseUnit Statement = new ParseUnit();
@@ -456,53 +456,50 @@ namespace code0k_cc
             FunctionDeclarationArguments.ChildType = ParseUnitChildType.AllChild;
             FunctionDeclarationArguments.Children = new List<ParseUnit>()
             {
-                FunctionArgumentUnit,
-                FunctionArgumentLoop,
+                FunctionDeclarationArgumentUnit,
+                FunctionDeclarationArgumentLoop,
             };
             FunctionDeclarationArguments.Execute = (instance, block, arg) =>
             {
                 //link the list
-                var thisUnitValue = instance.Children[0].Execute(block, arg);
-                var thisList = ( (FunctionDeclarationArgumentsValueData) thisUnitValue.Data ).Arguments;
+                var thisDecArgT = (TFunctionDeclarationArguments) instance.Children[0].Execute(block, arg);
 
-                var thatUnitValue = instance.Children[1]?.Execute(block, arg);
-                if (thatUnitValue != null)
+                var thatDecArgTRaw = instance.Children[1]?.Execute(block, arg);
+                if (thatDecArgTRaw != null)
                 {
-                    var thatList = ( (FunctionDeclarationArgumentsValueData) thatUnitValue.Data ).Arguments;
-                    thisList = thisList.Concat(thatList).ToList();
+                    var thatDecArgT = (TFunctionDeclarationArguments) thatDecArgTRaw;
+                    // no clone at this time
+                    thisDecArgT.Arguments = thisDecArgT.Arguments.Concat(thatDecArgT.Arguments).ToList();
                 }
-                return RuntimeType.FunctionDeclarationArguments.GetNewRuntimeValue(new FunctionDeclarationArgumentsValueData() { Arguments = thisList });
-            };
-            //todo execute
 
-            FunctionArgumentUnit.Name = "Function Declaration Argument Unit";
-            FunctionArgumentUnit.Type = ParseUnitType.Single;
-            FunctionArgumentUnit.ChildType = ParseUnitChildType.AllChild;
-            FunctionArgumentUnit.Children = new List<ParseUnit>()
+                return thisDecArgT;
+            };
+
+            FunctionDeclarationArgumentUnit.Name = "Function Declaration Argument Unit";
+            FunctionDeclarationArgumentUnit.Type = ParseUnitType.Single;
+            FunctionDeclarationArgumentUnit.ChildType = ParseUnitChildType.AllChild;
+            FunctionDeclarationArgumentUnit.Children = new List<ParseUnit>()
             {
                 TypeUnit,
-                TokenUnits[TokenType.Identifier] //required but omitted
+                TokenUnits[TokenType.Identifier]
             };
-            FunctionArgumentUnit.Execute = (instance, block, arg) =>
+            FunctionDeclarationArgumentUnit.Execute = (instance, block, arg) =>
             {
-                var value = instance.Children[0].Execute(block, null);
-                var data = (FunctionDeclarationArgumentsValueData) value.Data;
-
-                return RuntimeType.FunctionDeclarationArguments.GetNewRuntimeValue(new FunctionDeclarationArgumentsValueData()
-                {
-                    Arguments = data.Arguments
-                });
+                var funDecArgT = (TTypeOfType) instance.Children[0].Execute(block, null);
+                var funArgNameT = (TString) instance.Children[1].Execute(block, null);
+                var retT = new TFunctionDeclarationArguments() { Arguments = new List<(TTypeOfType Type, string VarName)>() { (funDecArgT, funArgNameT.Value) } };
+                return retT;
             };
 
-            FunctionArgumentLoop.Name = "Function Declaration Argument Loop";
-            FunctionArgumentLoop.Type = ParseUnitType.SingleOptional;
-            FunctionArgumentLoop.ChildType = ParseUnitChildType.AllChild;
-            FunctionArgumentLoop.Children = new List<ParseUnit>()
+            FunctionDeclarationArgumentLoop.Name = "Function Declaration Argument Loop";
+            FunctionDeclarationArgumentLoop.Type = ParseUnitType.SingleOptional;
+            FunctionDeclarationArgumentLoop.ChildType = ParseUnitChildType.AllChild;
+            FunctionDeclarationArgumentLoop.Children = new List<ParseUnit>()
             {
                 TokenUnits[TokenType.Comma],
                 FunctionDeclarationArguments
             };
-            //todo execute
+            FunctionImplementation.Execute = (instance, block, arg) => instance.Children[1]?.Execute(block, arg);
 
 
             StatementBody.Name = "Statement Body";
@@ -513,7 +510,7 @@ namespace code0k_cc
                 Statement,
                 StatementBody
             };
-            StatementBody.Execute = (instance, block, arg) => RuntimeType.Void.GetNewRuntimeValue();
+            StatementBody.Execute = (instance, block, arg) => new TVoid();
 
             StatementSemicolon.Name = "Statement Semicolon";
             StatementSemicolon.Type = ParseUnitType.Single;
@@ -544,7 +541,7 @@ namespace code0k_cc
                 }
                 else
                 {
-                    return new RuntimeValue() { Type = RuntimeType.Void };
+                    return new TVoid();
                 }
             };
 
@@ -613,27 +610,22 @@ namespace code0k_cc
             };
             DefinitionStatement.Execute = (instance, block, arg) =>
             {
-                var varNameValue = instance.Children[1].Execute(block, null);
-                Debug.Assert(varNameValue.Type == RuntimeType.String);
-                var varName = ( (StringValueData) varNameValue.Data ).Value;
+                var varNameT = (TString) ( instance.Children[1].Execute(block, null) );
+                var varName = varNameT.Value;
 
-                //todo description token type name
-                var typeNameValue = instance.Children[0].Execute(block, null);
-                Debug.Assert(typeNameValue.Type == RuntimeType.String);
-                var typeName = ( (StringValueData) typeNameValue.Data ).Value;
+                var typeT = (TTypeOfType) ( instance.Children[0].Execute(block, null) );
 
-                var varType = RuntimeType.GetRuntimeType(typeName);
+                var expressionValueT = instance.Children[3].Execute(block, null);
 
-                var expressionValue = instance.Children[3].Execute(block, null);
-
-
-                if (varType != expressionValue.Type)
+                if (!typeT.IsImplicitConvertible(expressionValueT))
                 {
-                    //todo type cast
-                    throw new Exception($"Unexpected type \"{expressionValue.Type.CodeName}\". Supposed to be \"{varType.TypeCodeName}\".");
+                    throw new Exception($"Unexpected type when assigning variable \"{varName}\"." + Environment.NewLine +
+                                        $"Supposed to be \"{ typeT.GetTypeCodeName() }\", got \"{typeT.TypeCodeName}\" here.");
                 }
 
-                block.Variables.Add(varName, expressionValue);
+                //todo do Implicit Convert
+
+                block.Variables.Add(varName, expressionValueT);
 
                 return null;
 
@@ -650,16 +642,17 @@ namespace code0k_cc
             DescriptionTokens.Execute = (instance, block, arg) =>
             {
                 //link the list
-                var thisUnitValue = instance.Children[0].Execute(block, arg);
-                var thisList = ( (DescriptionWordsValueData) thisUnitValue.Data ).DescriptionWords;
+                var thisDecArgT = (TDescriptionWords) instance.Children[0].Execute(block, arg);
 
-                var thatUnitValue = instance.Children[1]?.Execute(block, arg);
-                if (thatUnitValue != null)
+                var thatDecArgTRaw = instance.Children[1]?.Execute(block, arg);
+                if (thatDecArgTRaw != null)
                 {
-                    var thatList = ( (DescriptionWordsValueData) thatUnitValue.Data ).DescriptionWords;
-                    thisList = thisList.Concat(thatList).ToList();
+                    var thatDecArgT = (TDescriptionWords) thatDecArgTRaw;
+                    // no clone at this time
+                    thisDecArgT.DescriptionWords = thisDecArgT.DescriptionWords.Concat(thatDecArgT.DescriptionWords).ToList();
                 }
-                return RuntimeType.DescriptionWords.GetNewRuntimeValue(new DescriptionWordsValueData() { DescriptionWords = thisList });
+
+                return thisDecArgT;
             };
 
             DescriptionTokenUnit.Name = "Definition Description Unit";
@@ -675,13 +668,33 @@ namespace code0k_cc
             };
             DescriptionTokenUnit.Execute = (instance, block, arg) =>
             {
-                var value = instance.Children[0].Execute(block, null);
-                var data = (DescriptionWordsValueData) value.Data;
-
-                return RuntimeType.DescriptionWords.GetNewRuntimeValue(new DescriptionWordsValueData()
+                DescriptionWord des;
+                if (instance.Children[0].Token.TokenType == TokenType.Input)
                 {
-                    DescriptionWords = data.DescriptionWords
-                });
+                    des = DescriptionWord.Input;
+                }
+                else if (instance.Children[0].Token.TokenType == TokenType.NizkInput)
+                {
+                    des = DescriptionWord.NizkInput;
+                }
+                else if (instance.Children[0].Token.TokenType == TokenType.Output)
+                {
+                    des = DescriptionWord.Output;
+                }
+                else if (instance.Children[0].Token.TokenType == TokenType.Const)
+                {
+                    des = DescriptionWord.Const;
+                }
+                else if (instance.Children[0].Token.TokenType == TokenType.Ref)
+                {
+                    des = DescriptionWord.Ref;
+                }
+                else
+                {
+                    throw new Exception("Assert failed!");
+                }
+
+                return new TDescriptionWords() { DescriptionWords = new List<DescriptionWord>() { des } };
             };
 
 

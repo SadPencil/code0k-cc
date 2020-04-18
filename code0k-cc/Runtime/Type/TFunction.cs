@@ -42,12 +42,13 @@ namespace code0k_cc.Runtime.Type
                 {
                     var (value, argVarName) = funcArg.Arguments.Arguments[i];
                     
-                    //todo
                     if (!this.Arguments.Arguments[i].Type.IsImplicitConvertible(value))
                     {
                         throw new Exception($"Unexpected function argument \"{argVarName}\" of function \"{this.FunctionName}\"." + Environment.NewLine +
                         $"Supposed to be \"{ this.Arguments.Arguments[i].Type.GetTypeCodeName() }\", got \"{value.TypeCodeName}\" here.");
                     }
+
+                    //todo do Implicit Convert 
 
                     newBlock.Variables.Add(argVarName, value);
 
