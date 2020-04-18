@@ -8,6 +8,8 @@ namespace code0k_cc
     {
         public string Name;
         public Func<EnvironmentBlock, RuntimeValue, object, RuntimeValue> Execute;
+        public Func<RuntimeValue, bool> GetBool;
+        public Func<RuntimeValue, Int32> GetInt32;
 
         private RuntimeType() { }
 
@@ -32,14 +34,20 @@ namespace code0k_cc
 
         public static readonly RuntimeType String = new RuntimeType()
         {
-            Name = "String",
+            Name = "string",
             Execute = (block, value, arg) => value
         };
 
+        public static readonly RuntimeType Void = new RuntimeType()
+        {
+            Name = "void",
+            Execute = (block, value, arg) => value,
+            GetBool = () => false
+        };
 
         public static readonly RuntimeType Function = new RuntimeType()
         {
-            Name = "Function",
+            Name = "function",
             Execute = (block, value, arg) =>
             {
                 // prepare new environment
@@ -51,9 +59,11 @@ namespace code0k_cc
                     ReturnBlock = block,
                 };
                 // load function arguments if available
+                // todo check function arg types!
                 if (arg != null)
                 {
                     var args = (Dictionary<string, RuntimeValue>)arg;
+                    //todo correct the name
                     foreach (var pair in args)
                     {
                         newBlock.Variables.Add(pair.Key, pair.Value);

@@ -9,5 +9,6 @@ namespace code0k_cc
         public ParseInstance Instance;
         public string FunctionName;
         public RuntimeType ReturnType;
+        public List<RuntimeType> ArgumentTypes;
     }
 }

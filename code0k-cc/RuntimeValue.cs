@@ -9,6 +9,7 @@ namespace code0k_cc
         public RuntimeType Type;
         public object Data;
 
+        public RuntimeValue() { }
         public RuntimeValue Execute(EnvironmentBlock block, object arg)
         {
             return this.Type.Execute(block, this, arg);

@@ -371,6 +371,7 @@ namespace code0k_cc
                 FunctionDeclaration,
                 FunctionImplementation,
             };
+            MainProgramItem.Execute = (instance, block, arg) => instance.Children[0].Execute(block, arg);
 
             MainProgramLoop.Name = "Main Program Loop";
             MainProgramLoop.Type = ParseUnitType.SingleOptional;
@@ -405,6 +406,8 @@ namespace code0k_cc
 
                 var retType = RuntimeType.GetRuntimeType(typeName);
 
+                //todo func args!
+
                 TFunctionData data = new TFunctionData() { FunctionName = funName, Instance = null, ReturnType = retType };
                 RuntimeValue value = new RuntimeValue() { Data = data, Type = RuntimeType.Function };
                 block.Variables.Add(funName, value);
@@ -419,19 +422,23 @@ namespace code0k_cc
             {
                 TokenUnits[TokenType.Identifier]
             };
+            TypeUnit.Execute = (instance, block, arg) => instance.Children[0].Execute(block, arg);
 
             FunctionImplementation.Name = "Function Implementation";
             FunctionImplementation.Type = ParseUnitType.Single;
             FunctionImplementation.ChildType = ParseUnitChildType.AllChild;
             FunctionImplementation.Children = new List<ParseUnit>()
             {
-                TypeUnit,
-                TokenUnits[TokenType.Identifier],
-                TokenUnits[TokenType.LeftBracket],
-                FunctionDeclarationArguments,
-                TokenUnits[TokenType.RightBracket],
+                //TypeUnit,
+                //TokenUnits[TokenType.Identifier],
+                //TokenUnits[TokenType.LeftBracket],
+                //FunctionDeclarationArguments,
+                //TokenUnits[TokenType.RightBracket],
+                FunctionDeclaration,
                 CompoundStatement
             };
+            FunctionImplementation.Execute = (instance, block, arg) => instance.Children[0].Execute(block, arg);
+
 
             FunctionDeclarationArguments.Name = "Function Arguments";
             FunctionDeclarationArguments.Type = ParseUnitType.SingleOptional;
@@ -441,6 +448,7 @@ namespace code0k_cc
                 FunctionArgumentUnit,
                 FunctionArgumentLoop,
             };
+            //todo execute
 
             FunctionArgumentUnit.Name = "Function Argument Unit";
             FunctionArgumentUnit.Type = ParseUnitType.Single;
@@ -451,6 +459,7 @@ namespace code0k_cc
                 TypeUnit,
                 TokenUnits[TokenType.Identifier]
             };
+            //todo execute
 
             FunctionArgumentLoop.Name = "Function Argument Loop";
             FunctionArgumentLoop.Type = ParseUnitType.SingleOptional;
@@ -460,6 +469,7 @@ namespace code0k_cc
                 TokenUnits[TokenType.Comma],
                 FunctionDeclarationArguments
             };
+            //todo execute
 
 
             StatementBody.Name = "Statement Body";
@@ -470,6 +480,7 @@ namespace code0k_cc
                 Statement,
                 StatementBody
             };
+            StatementBody.Execute = (instance, block, arg) => new RuntimeValue() { Type = RuntimeType.Void };
 
             StatementSemicolon.Name = "Statement Semicolon";
             StatementSemicolon.Type = ParseUnitType.Single;
@@ -479,6 +490,7 @@ namespace code0k_cc
                 StatementSemicolonCollection,
                 TokenUnits[TokenType.Semicolon],
             };
+            StatementSemicolon.Execute = (instance, block, arg) => instance.Children[0].Execute(block, arg);
 
             StatementSemicolonCollection.Name = "Statement Semicolon Collection";
             StatementSemicolonCollection.Type = ParseUnitType.SingleOptional; // null statement included
@@ -490,6 +502,17 @@ namespace code0k_cc
                 ReturnStatement,
                 DefinitionStatement,
                 Expression
+            };
+            StatementSemicolonCollection.Execute = (instance, block, arg) =>
+            {
+                if (instance.Children.Count > 0)
+                {
+                    return instance.Children[0].Execute(block, arg);
+                }
+                else
+                {
+                    return new RuntimeValue() { Type = RuntimeType.Void };
+                }
             };
 
 
@@ -504,6 +527,7 @@ namespace code0k_cc
                 WhileStatement,
                 StatementSemicolon,
             };
+            Statement.Execute = (instance, block, arg) => instance.Children[0].Execute(block, arg);
 
             GlobalDefinitionStatement.Name = "Global Definition Statement";
             GlobalDefinitionStatement.Type = ParseUnitType.Single;
@@ -513,6 +537,7 @@ namespace code0k_cc
                 DefinitionStatement,
                 TokenUnits[TokenType.Semicolon],
             };
+            GlobalDefinitionStatement.Execute = (instance, block, arg) => instance.Children[0].Execute(block, arg);
 
             ReturnStatement.Name = "Return Statement";
             ReturnStatement.Type = ParseUnitType.Single;
@@ -522,6 +547,8 @@ namespace code0k_cc
                 TokenUnits[TokenType.Return],
                 Expression,
             };
+            //todo execute
+
 
             BreakStatement.Name = "Break Statement";
             BreakStatement.Type = ParseUnitType.Single;
@@ -530,6 +557,7 @@ namespace code0k_cc
             {
                 TokenUnits[TokenType.Break],
             };
+            //todo execute
 
             ContinueStatement.Name = "Continue Statement";
             ContinueStatement.Type = ParseUnitType.Single;
@@ -538,6 +566,7 @@ namespace code0k_cc
             {
                 TokenUnits[TokenType.Continue],
             };
+            //todo execute
 
             DefinitionStatement.Name = "Definition Statement";
             DefinitionStatement.Type = ParseUnitType.Single;
@@ -550,6 +579,28 @@ namespace code0k_cc
                 TokenUnits[TokenType.Assign],
                 Expression
             };
+            DefinitionStatement.Execute = (instance, block, arg) =>
+            {
+                var varNameValue = instance.Children[2].Execute(block, null);
+                Debug.Assert(varNameValue.Type == RuntimeType.String);
+                var varName = (string)varNameValue.Data;
+
+                //todo description token type name
+                var typeNameValue = instance.Children[1].Execute(block, null);
+                Debug.Assert(typeNameValue.Type == RuntimeType.String);
+                var typeName = (string)typeNameValue.Data;
+
+                var retType = RuntimeType.GetRuntimeType(typeName);
+
+                var expressionValue = instance.Children[4].Execute(block, null);
+
+                //todo check the type and type cast?
+
+                block.Variables.Add(varName, expressionValue);
+
+                return null;
+
+            };
 
             DescriptionTokens.Name = "Definition Description";
             DescriptionTokens.Type = ParseUnitType.SingleOptional;
@@ -559,6 +610,7 @@ namespace code0k_cc
                 DescriptionTokenUnit,
                 DescriptionTokens,
             };
+            //todo exe
 
             DescriptionTokenUnit.Name = "Definition Description Unit";
             DescriptionTokenUnit.Type = ParseUnitType.Single;
@@ -571,6 +623,9 @@ namespace code0k_cc
                 TokenUnits[TokenType.Const],
                 TokenUnits[TokenType.Ref],
             };
+            //todo exe
+
+            //todo snark
 
             IfStatement.Name = "If Statement";
             IfStatement.Type = ParseUnitType.Single;
@@ -584,6 +639,20 @@ namespace code0k_cc
                 CompoundStatement,
                 OptionalElseStatement
             };
+            IfStatement.Execute = (instance, block, arg) =>
+            {
+                var expressionValue = instance.Children[2].Execute(block, null);
+
+                if (expressionValue.Type.GetBool(expressionValue))
+                {
+                    return instance.Children[4].Execute(block, null);
+                }
+                else
+                {
+                    return instance.Children[5].Execute(block, null);
+                }
+            };
+
 
             OptionalElseStatement.Name = "Else Statement";
             OptionalElseStatement.Type = ParseUnitType.SingleOptional;
@@ -593,6 +662,7 @@ namespace code0k_cc
                 TokenUnits[TokenType.Else],
                 CompoundStatement
             };
+            OptionalElseStatement.Execute = (instance, block, arg) => instance.Children[1].Execute(block, null);
 
             ForStatement.Name = "For Statement";
             ForStatement.Type = ParseUnitType.Single;
@@ -607,7 +677,29 @@ namespace code0k_cc
                 TokenUnits[TokenType.Semicolon],
                 Expression,
                 TokenUnits[TokenType.RightBracket],
+                TokenUnits[TokenType.Max],
+                TokenUnits[TokenType.LeftBracket],
+                Expression,
+                TokenUnits[TokenType.RightBracket],
                 CompoundStatement
+            };
+            ForStatement.Execute = (instance, block, arg) =>
+            {
+                var maxValue = instance.Children[10].Execute(block, null);
+                Int32 max = maxValue.Type.GetInt32(maxValue);
+
+                instance.Children[2].Execute(block, null);
+
+                var expressionValue = instance.Children[4].Execute(block, null);
+                for (Int32 i = 0; i < max && expressionValue.Type.GetBool(expressionValue); ++i)
+                {
+                    instance.Children[12].Execute(block, null);
+
+                    instance.Children[6].Execute(block, null);
+
+                    expressionValue = instance.Children[4].Execute(block, null);
+                } 
+                return new RuntimeValue() { Type = RuntimeType.Void };
             };
 
             WhileStatement.Name = "While Statement";
@@ -625,6 +717,22 @@ namespace code0k_cc
                 TokenUnits[TokenType.RightBracket],
                 CompoundStatement
             };
+            WhileStatement.Execute = (instance, block, arg) =>
+            {
+                var maxValue = instance.Children[6].Execute(block, null);
+                Int32 max = maxValue.Type.GetInt32(maxValue);
+                 
+                var expressionValue = instance.Children[2].Execute(block, null);
+                for (Int32 i = 0; i < max && expressionValue.Type.GetBool(expressionValue); ++i)
+                { 
+                    instance.Children[8].Execute(block, null);
+
+                    expressionValue = instance.Children[2].Execute(block, null);
+                }
+
+                return new RuntimeValue() { Type = RuntimeType.Void };
+            };
+
 
             CompoundStatement.Name = "Compound Statement";
             CompoundStatement.Type = ParseUnitType.Single;
@@ -635,6 +743,7 @@ namespace code0k_cc
                 StatementBody,
                 TokenUnits[TokenType.End],
             };
+            //todo exe
 
             LeftValue.Name = "Left Value";
             LeftValue.Type = ParseUnitType.Single;
