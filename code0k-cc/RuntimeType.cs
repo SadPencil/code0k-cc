@@ -7,9 +7,10 @@ namespace code0k_cc
     class RuntimeType
     {
         public string Name;
-        public Func<EnvironmentBlock, RuntimeValue, object, RuntimeValue> Execute;
+        public Func<EnvironmentBlock, RuntimeValue, RuntimeTypeExecuteArg, RuntimeValue> Execute;
         public Func<RuntimeValue, bool> GetBool;
         public Func<RuntimeValue, Int32> GetInt32;
+
 
         private RuntimeType() { }
 
@@ -29,29 +30,38 @@ namespace code0k_cc
         public static IEnumerable<RuntimeType> GetAll()
         {
             yield return Function;
+            yield return StatementResult;
+
+            yield return Void;
             yield return String;
         }
 
+        public static readonly RuntimeType StatementResult = new RuntimeType()
+        {
+            Name = "StatementResult",
+            //todo
+        };
+
         public static readonly RuntimeType String = new RuntimeType()
         {
-            Name = "string",
+            Name = "String",
             Execute = (block, value, arg) => value
         };
 
         public static readonly RuntimeType Void = new RuntimeType()
         {
-            Name = "void",
+            Name = "Void",
             Execute = (block, value, arg) => value,
-            GetBool = () => false
+            GetBool = (value) => false
         };
 
         public static readonly RuntimeType Function = new RuntimeType()
         {
-            Name = "function",
+            Name = "Function",
             Execute = (block, value, arg) =>
             {
                 // prepare new environment
-                var data = (TFunctionData)value.Data;
+                var data = (FunctionValueData)value.Data;
                 EnvironmentBlock newBlock = new EnvironmentBlock()
                 {
                     ParentBlock = block.LocateVariable(data.FunctionName),
@@ -61,10 +71,9 @@ namespace code0k_cc
                 // load function arguments if available
                 // todo check function arg types!
                 if (arg != null)
-                {
-                    var args = (Dictionary<string, RuntimeValue>)arg;
+                { 
                     //todo correct the name
-                    foreach (var pair in args)
+                    foreach (var pair in ((FunctionExecuteArg)arg).NameValues)
                     {
                         newBlock.Variables.Add(pair.Key, pair.Value);
                     }

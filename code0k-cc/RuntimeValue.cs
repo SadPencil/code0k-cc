@@ -7,14 +7,14 @@ namespace code0k_cc
     class RuntimeValue
     {
         public RuntimeType Type;
-        public object Data;
+        public RuntimeValueData Data;
 
         public RuntimeValue() { }
-        public RuntimeValue Execute(EnvironmentBlock block, object arg)
+        public RuntimeValue Execute(EnvironmentBlock block, RuntimeTypeExecuteArg arg)
         {
             return this.Type.Execute(block, this, arg);
         }
 
-        
+
     }
 }

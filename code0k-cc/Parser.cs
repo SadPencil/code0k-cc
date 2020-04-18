@@ -398,17 +398,17 @@ namespace code0k_cc
             {
                 var funNameValue = instance.Children[1].Execute(block, null);
                 Debug.Assert(funNameValue.Type == RuntimeType.String);
-                var funName = (string)funNameValue.Data;
+                var funName = ((StringValueData)funNameValue.Data).Value;
 
                 var typeNameValue = instance.Children[1].Execute(block, null);
                 Debug.Assert(typeNameValue.Type == RuntimeType.String);
-                var typeName = (string)typeNameValue.Data;
+                var typeName = ((StringValueData)typeNameValue.Data).Value;
 
                 var retType = RuntimeType.GetRuntimeType(typeName);
 
                 //todo func args!
 
-                TFunctionData data = new TFunctionData() { FunctionName = funName, Instance = null, ReturnType = retType };
+                FunctionValueData data = new FunctionValueData() { FunctionName = funName, Instance = null, ReturnType = retType };
                 RuntimeValue value = new RuntimeValue() { Data = data, Type = RuntimeType.Function };
                 block.Variables.Add(funName, value);
 
@@ -583,12 +583,12 @@ namespace code0k_cc
             {
                 var varNameValue = instance.Children[2].Execute(block, null);
                 Debug.Assert(varNameValue.Type == RuntimeType.String);
-                var varName = (string)varNameValue.Data;
+                var varName = ((StringValueData)varNameValue.Data).Value;
 
                 //todo description token type name
                 var typeNameValue = instance.Children[1].Execute(block, null);
                 Debug.Assert(typeNameValue.Type == RuntimeType.String);
-                var typeName = (string)typeNameValue.Data;
+                var typeName = ((StringValueData)typeNameValue.Data).Value;
 
                 var retType = RuntimeType.GetRuntimeType(typeName);
 
@@ -639,6 +639,7 @@ namespace code0k_cc
                 CompoundStatement,
                 OptionalElseStatement
             };
+
             IfStatement.Execute = (instance, block, arg) =>
             {
                 var expressionValue = instance.Children[2].Execute(block, null);
@@ -698,7 +699,7 @@ namespace code0k_cc
                     instance.Children[6].Execute(block, null);
 
                     expressionValue = instance.Children[4].Execute(block, null);
-                } 
+                }
                 return new RuntimeValue() { Type = RuntimeType.Void };
             };
 
@@ -721,10 +722,10 @@ namespace code0k_cc
             {
                 var maxValue = instance.Children[6].Execute(block, null);
                 Int32 max = maxValue.Type.GetInt32(maxValue);
-                 
+
                 var expressionValue = instance.Children[2].Execute(block, null);
                 for (Int32 i = 0; i < max && expressionValue.Type.GetBool(expressionValue); ++i)
-                { 
+                {
                     instance.Children[8].Execute(block, null);
 
                     expressionValue = instance.Children[2].Execute(block, null);

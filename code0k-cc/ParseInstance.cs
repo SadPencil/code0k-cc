@@ -10,7 +10,7 @@ namespace code0k_cc
         public Token Token = null;
         public IReadOnlyList<ParseInstance> Children;
 
-        public RuntimeValue Execute(EnvironmentBlock block, object arg)
+        public RuntimeValue Execute(EnvironmentBlock block,  FunctionExecuteArg arg)
         {
             return this.ParseUnit.Execute(this, block, arg);
         }

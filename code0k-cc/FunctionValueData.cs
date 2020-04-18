@@ -4,7 +4,7 @@ using System.Text;
 
 namespace code0k_cc
 {
-    class TFunctionData
+    class FunctionValueData:RuntimeValueData
     {
         public ParseInstance Instance;
         public string FunctionName;
