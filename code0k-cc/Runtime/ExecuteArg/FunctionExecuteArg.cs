@@ -5,7 +5,7 @@ using code0k_cc.Runtime.Type;
 
 namespace code0k_cc.Runtime.ExecuteArg
 {
-    class FunctionExecuteArg : IRuntimeTypeExecuteArg
+    class FunctionExecuteArg : IRuntimeExecuteArg
     {
         public TFunctionInvokeArguments Arguments = new TFunctionInvokeArguments();
     }

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace code0k_cc.Runtime.ExecuteArg
 {
-    interface IRuntimeTypeExecuteArg
+    interface IRuntimeExecuteArg
     {
     }
 }

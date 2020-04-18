@@ -5,11 +5,14 @@ using code0k_cc.Runtime.ExecuteArg;
 
 namespace code0k_cc.Runtime.Type
 {
-    class TVoid : IType
+    class TNizkVar: IType
     {
-        public string TypeCodeName => "Void";
+        public string TypeCodeName => "__NizkVar";
         public IType Execute(EnvironmentBlock block, IRuntimeExecuteArg arg) { throw new Exception($"Type \"{this.TypeCodeName} \" can't be executed."); }
-        public bool ToBool() => false;
-        public int ToInt32() => 0;
+        public bool ToBool() { throw new Exception($"Can't convert \"{this.TypeCodeName} \" to \"Bool\"."); }
+        public int ToInt32() { throw new Exception($"Can't convert \"{this.TypeCodeName} \" to \"Int32\"."); }
+
+
+
     }
 }

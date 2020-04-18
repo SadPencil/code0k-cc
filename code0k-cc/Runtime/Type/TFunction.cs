@@ -17,7 +17,7 @@ namespace code0k_cc.Runtime.Type
         public TTypeOfType ReturnType;
         public TFunctionDeclarationArguments Arguments;
 
-        public IType Execute(EnvironmentBlock block, IRuntimeTypeExecuteArg arg)
+        public IType Execute(EnvironmentBlock block, IRuntimeExecuteArg arg)
         {
             // call the function
 

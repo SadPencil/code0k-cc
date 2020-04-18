@@ -851,7 +851,7 @@ namespace code0k_cc
             // so I will follow the number from 1 to 17
             // although some of the operators are not implemented by now
             // these number are still reserved
-            // Expression[0] means the identifier or number or bracket
+            // Expression[0] means the identifier or number or bracket expression
 
             Expression.Name = "Expression";
             Expression.Type = ParseUnitType.Single;
@@ -873,6 +873,7 @@ namespace code0k_cc
 
             foreach (var i in Enumerable.Range(0, OPERATOR_PRECEDENCE_LEVEL))
             {
+                // some level's expression are not followed these settings and it will be overriden later in the code
                 Expressions[i].Name = "Expression Level " + i.ToString(CultureInfo.InvariantCulture);
                 Expressions[i].Type = ParseUnitType.Single;
                 Expressions[i].ChildType = ParseUnitChildType.AllChild;
