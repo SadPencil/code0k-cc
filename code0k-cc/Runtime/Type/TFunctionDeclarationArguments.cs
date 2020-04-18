@@ -9,15 +9,8 @@ namespace code0k_cc.Runtime.Type
 {
     class TFunctionDeclarationArguments : IType
     {
-        public string TypeCodeName => "__TFunctionDeclarationArguments";
-        public IType Execute(EnvironmentBlock block, IRuntimeExecuteArg arg) { throw new Exception($"Type \"{this.TypeCodeName} \" can't be executed."); }
-        public bool ToBool() { throw new Exception($"Can't convert \"{this.TypeCodeName} \" to \"Bool\"."); }
-        public int ToInt32() { throw new Exception($"Can't convert \"{this.TypeCodeName} \" to \"Int32\"."); }
+        public override string TypeCodeName => "__TFunctionDeclarationArguments"; 
 
-        public Func<EnvironmentBlock, TTypeOfType, IRuntimeAssignArg, IType> Assign => null;
-        public Dictionary<TUnaryOperation, (BinaryOperationDescription Description, Func<IType> OperationFunc)> UnaryOperations => new Dictionary<TUnaryOperation, (BinaryOperationDescription Description, Func<IType> OperationFunc)>();
-        public Dictionary<TBinaryOperation, (UnaryOperation Description, Func<IType, IType> OperationFunc)> BinaryOperations => new Dictionary<TBinaryOperation, (UnaryOperation Description, Func<IType, IType> OperationFunc)>();
-        
         public List<(TTypeOfType Type, string VarName)> Arguments = new List<(TTypeOfType Type, string VarName)>();
     }
 }

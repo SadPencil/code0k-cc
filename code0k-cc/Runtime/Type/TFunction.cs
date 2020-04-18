@@ -10,31 +10,14 @@ namespace code0k_cc.Runtime.Type
 {
     class TFunction : IType
     {
-        public string TypeCodeName => "__Function";
-        public bool ToBool() { throw new Exception($"Can't convert \"{this.TypeCodeName} \" to \"Bool\"."); }
-        public int ToInt32() { throw new Exception($"Can't convert \"{this.TypeCodeName} \" to \"Int32\"."); }
+        public override string TypeCodeName => "__Function";
 
         public ParseInstance Instance;
         public string FunctionName;
         public TTypeOfType ReturnType;
         public TFunctionDeclarationArguments Arguments;
 
-        public Func<EnvironmentBlock, TTypeOfType, IRuntimeAssignArg, IType> Assign => (block, typeOfType, arg) =>
-        {
-            if (typeOfType.IsTypeEquals(this))
-            {
-                return this;
-            }
-            else
-            {
-                throw new Exception($"Unexpected type when assigning variable." + Environment.NewLine +
-                                    $"Supposed to be \"{ this.TypeCodeName }\", got \"{typeOfType.TypeCodeName}\" here.");
-            }
-        };
-        public Dictionary<TUnaryOperation, (BinaryOperationDescription Description, Func<IType> OperationFunc)> UnaryOperations => new Dictionary<TUnaryOperation, (BinaryOperationDescription Description, Func<IType> OperationFunc)>();
-        public Dictionary<TBinaryOperation, (UnaryOperation Description, Func<IType, IType> OperationFunc)> BinaryOperations => new Dictionary<TBinaryOperation, (UnaryOperation Description, Func<IType, IType> OperationFunc)>();
-
-        public IType Execute(EnvironmentBlock block, IRuntimeExecuteArg arg)
+        public override IType Execute(EnvironmentBlock block, IRuntimeExecuteArg arg)
         {
             // call the function
 
@@ -58,16 +41,11 @@ namespace code0k_cc.Runtime.Type
                 foreach (var i in Enumerable.Range(0, funcArg.Arguments.Arguments.Count))
                 {
                     var (value, argVarName) = funcArg.Arguments.Arguments[i];
-                    
-                    if (!this.Arguments.Arguments[i].Type.IsImplicitConvertible(value))
-                    {
-                        throw new Exception($"Unexpected function argument \"{argVarName}\" of function \"{this.FunctionName}\"." + Environment.NewLine +
-                        $"Supposed to be \"{ this.Arguments.Arguments[i].Type.GetTypeCodeName() }\", got \"{value.TypeCodeName}\" here.");
-                    }
 
-                    //todo do Implicit Convert 
+                    // implicit convert
+                    var newValue = value.ImplicitConvertTo(this.Arguments.Arguments[i].Type);
 
-                    newBlock.Variables.Add(argVarName, value);
+                    newBlock.Variables.Add(argVarName, newValue);
 
                 }
             }

@@ -10,7 +10,7 @@ namespace code0k_cc.Runtime.Type
         public string TypeCodeName => "__NizkVar";
         public IType Execute(EnvironmentBlock block, IRuntimeExecuteArg arg) { throw new Exception($"Type \"{this.TypeCodeName} \" can't be executed."); }
         public bool ToBool() { throw new Exception($"Can't convert \"{this.TypeCodeName} \" to \"Bool\"."); }
-        public int ToInt32() { throw new Exception($"Can't convert \"{this.TypeCodeName} \" to \"Int32\"."); }
+        public UInt32 ToUInt32() { throw new Exception($"Can't convert \"{this.TypeCodeName} \" to \"UInt32\"."); }
 
 
 

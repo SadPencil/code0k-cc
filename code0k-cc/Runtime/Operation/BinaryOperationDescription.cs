@@ -7,7 +7,7 @@ namespace code0k_cc.Runtime.Operation
 {
     class BinaryOperationDescription
     {
-        public UnaryOperation Operation;
+        public BinaryOperation Operation;
         public TTypeOfType OP1Type;
         public TTypeOfType OP2Type;
         public TTypeOfType RetType;

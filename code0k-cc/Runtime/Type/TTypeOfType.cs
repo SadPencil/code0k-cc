@@ -10,17 +10,10 @@ namespace code0k_cc.Runtime.Type
 {
     class TTypeOfType : IType
     {
-        public string TypeCodeName => "__Type";
-        public IType Execute(EnvironmentBlock block, IRuntimeExecuteArg arg) { throw new Exception($"Type \"{this.TypeCodeName} \" can't be executed."); }
-        public bool ToBool() { throw new Exception($"Can't convert \"{this.TypeCodeName} \" to \"Bool\"."); }
-        public int ToInt32() { throw new Exception($"Can't convert \"{this.TypeCodeName} \" to \"Int32\"."); }
-        public Func<EnvironmentBlock, TTypeOfType, IRuntimeAssignArg, IType> Assign => null;
-        public Dictionary<TUnaryOperation, (BinaryOperationDescription Description, Func<IType> OperationFunc)> UnaryOperations => new Dictionary<TUnaryOperation, (BinaryOperationDescription Description, Func<IType> OperationFunc)>();
-        public Dictionary<TBinaryOperation, (UnaryOperation Description, Func<IType, IType> OperationFunc)> BinaryOperations => new Dictionary<TBinaryOperation, (UnaryOperation Description, Func<IType, IType> OperationFunc)>();
-
+        public override string TypeCodeName => "__Type";
         public TTypeOfType()
         {
-            // to support nested TypeOfType
+            // implement this to support nested TypeOfType
             throw new NotImplementedException();
         }
 
@@ -29,7 +22,7 @@ namespace code0k_cc.Runtime.Type
             //todo some magic here
             throw new NotImplementedException();
         }
-
+        //todo add constant readonly TTypeOfType member
         public TTypeOfType(IType value)
         {
             this.Type = value.GetType();

@@ -7,16 +7,38 @@ using code0k_cc.Runtime.Operation;
 
 namespace code0k_cc.Runtime.Type
 {
-    interface IType
+    abstract class IType
     {
         public abstract string TypeCodeName { get; }
-        //public abstract IType Execute(EnvironmentBlock block, IType value, IRuntimeTypeExecuteArg arg);
-        public abstract IType Execute(EnvironmentBlock block, IRuntimeExecuteArg arg);
-        public abstract Func<EnvironmentBlock, TTypeOfType, IRuntimeAssignArg, IType> Assign { get; }
-        public abstract bool ToBool();
-        public abstract Int32 ToInt32();
-        public abstract Dictionary<TUnaryOperation, (BinaryOperationDescription Description, Func<IType> OperationFunc)> UnaryOperations { get; }
-        public abstract Dictionary<TBinaryOperation, (UnaryOperation Description, Func<IType, IType> OperationFunc)> BinaryOperations { get; }
+        public virtual IType Execute(EnvironmentBlock block, IRuntimeExecuteArg arg) { throw new Exception($"Type \"{this.TypeCodeName} \" can't be executed."); }
+        public virtual IType Assign(EnvironmentBlock block, TTypeOfType typeOfType, IRuntimeAssignArg arg) => this.ImplicitConvertTo(typeOfType);
+        public virtual IType ImplicitConvertTo(TTypeOfType targetType)
+        {
+            if (targetType.IsTypeEquals(this))
+            {
+                return this;
+            }
+            else
+            {
+                //convert if possible & not losing any information
+                throw new Exception($"Can not implicit convert to type \"{ this.TypeCodeName }\" from \"{targetType.TypeCodeName}\".");
+            }
+        }
+
+        public virtual IType ExplicitConvertTo(TTypeOfType targetType)
+        {
+            if (targetType.IsTypeEquals(this))
+            {
+                return this;
+            }
+            else
+            {
+                //convert if possible
+                throw new Exception($"Can not explicit convert to type \"{ this.TypeCodeName }\" from \"{targetType.TypeCodeName}\".");
+            }
+        }
+        public virtual Dictionary<UnaryOperation, (UnaryOperationDescription Description, Func<IType> OperationFunc)> UnaryOperations { get; } = new Dictionary<UnaryOperation, (UnaryOperationDescription Description, Func<IType> OperationFunc)>();
+        public virtual Dictionary<BinaryOperation, (BinaryOperationDescription Description, Func<IType, IType> OperationFunc)> BinaryOperations { get; } = new Dictionary<BinaryOperation, (BinaryOperationDescription Description, Func<IType, IType> OperationFunc)>();
 
     }
 }
