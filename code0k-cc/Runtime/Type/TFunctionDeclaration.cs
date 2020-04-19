@@ -14,10 +14,10 @@ namespace code0k_cc.Runtime.Type
 
         public ParseInstance Instance;
         public string FunctionName;
-        public TTypeOfType ReturnType;
+        public TType ReturnType;
         public TFunctionDeclarationArguments Arguments;
 
-        public override IType Execute(EnvironmentBlock block, IRuntimeExecuteArg arg)
+        public override IType Execute(EnvironmentBlock block, FunctionExecuteArg funcArg, AssignExecuteArg assignArg)
         {
             // call the function
 
@@ -30,9 +30,8 @@ namespace code0k_cc.Runtime.Type
             };
 
             // load function arguments if available
-            if (arg != null)
+            if (assignArg != null)
             {
-                var funcArg = (FunctionExecuteArg) arg;
                 if (this.Arguments.Arguments.Count != funcArg.Parameters.Parameters.Count)
                 {
                     throw new Exception($"Unexpected function arguments of function \"{this.FunctionName}\".");
@@ -43,10 +42,9 @@ namespace code0k_cc.Runtime.Type
                     var (value, argVarName) = funcArg.Parameters.Parameters[i];
 
                     // implicit convert
-                    var newValue = value.ImplicitConvertTo(this.Arguments.Arguments[i].Type);
+                    var newValue = value.Assign(block, this.Arguments.Arguments[i].Type, assignArg);
 
                     newBlock.Variables.Add(argVarName, newValue);
-
                 }
             }
 
@@ -55,7 +53,7 @@ namespace code0k_cc.Runtime.Type
                 throw new Exception($"Unimplemented function \"{this.FunctionName}\"");
             }
 
-            return this.Instance.Execute(newBlock, null);
+            return this.Instance.Execute(newBlock, null, assignArg);
         }
 
 

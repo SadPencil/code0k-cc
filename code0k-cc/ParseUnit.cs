@@ -15,6 +15,6 @@ namespace code0k_cc
         public TokenType TerminalTokenType;
         public string Name;
 
-        public Func<ParseInstance, EnvironmentBlock, FunctionExecuteArg, IType> Execute;
+        public Func<ParseInstance, EnvironmentBlock, FunctionExecuteArg, AssignExecuteArg, IType> Execute;
     }
 }

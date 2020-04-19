@@ -10,7 +10,7 @@ namespace code0k_cc.Runtime.Type
     abstract class IType
     {
         public abstract string TypeCodeName { get; }
-        public virtual IType Execute(EnvironmentBlock block, IRuntimeExecuteArg arg) { throw new Exception($"Type \"{this.TypeCodeName} \" can't be executed."); }
+        public virtual IType Execute(EnvironmentBlock block, FunctionExecuteArg funcArg, AssignExecuteArg assignArg) { throw new Exception($"Type \"{this.TypeCodeName} \" can't be executed."); }
         public virtual IType Assign(EnvironmentBlock block, TType type, AssignExecuteArg assignArg) => this.ImplicitConvertTo(type);
         protected virtual IType ImplicitConvertTo(TType targetType)
         {

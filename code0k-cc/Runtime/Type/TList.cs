@@ -19,34 +19,89 @@ namespace code0k_cc.Runtime.Type
                 PropertyName = "Length",
                 ReturnType = TType.UInt32,
                 Arguments = new TFunctionDeclarationArguments() {Arguments =  new List<(TType Type, string VarName)>()},
-                Execute =(block,arg)  => new TUInt32() {Value = (UInt32)this.list.Count}
+                Execute = (block,funcArg,assignArg) => new TUInt32() {Value = (UInt32)this.list.Count}
             }},
+
+            {"Clear", new PropertyOperationDescription()
+            {
+                PropertyName = "Clear",
+                ReturnType = TType.Void,
+                Arguments = new TFunctionDeclarationArguments() {Arguments =  new List<(TType Type, string VarName)>()},
+                Execute = (block, funcArg, assignArg) =>
+                {
+                    this.list.Clear();
+                    return new TVoid();
+                }
+            }},
+
             {"Append", new PropertyOperationDescription()
             {
                 PropertyName = "Append",
                 ReturnType = TType.Void,
                 Arguments = new TFunctionDeclarationArguments() {Arguments =  new List<(TType Type, string VarName)>() {(this.T[0],"Item"),}},
-                Execute = (block,arg)  =>
+                Execute = (block,funcArg,assignArg)  =>
                 {
-                    //todo do assign (nizk)
-                    this.list.Add(arg.Parameters.Parameters[0].Value.ImplicitConvertTo(this.T[0]).Assign());
+                    this.list.Add(funcArg.Parameters.Parameters[0].Value.Assign(block,this.T[0],assignArg));
                     return new TVoid();
                 }
             }},
+
             {"Get", new PropertyOperationDescription()
             {
                 PropertyName = "Get",
                 ReturnType = this.T[0],
                 Arguments = new TFunctionDeclarationArguments() {Arguments =  new List<(TType Type, string VarName)>() {(TType.UInt32, "Index"),}},
-                Execute = (block,arg) =>
+                Execute =  (block,funcArg,assignArg) =>
                 {
+                    UInt32 index = ((TUInt32) funcArg.Parameters.Parameters[0].Value).Value;
+                    if (index > Int32.MaxValue)
+                    {
+                        throw new Exception($"The list can't hold more than {Int32.MinValue} items.");
+                    }
 
+                    return this.list[(Int32) index];
                 }
             }},
 
+            {"Set", new PropertyOperationDescription()
+            {
+                PropertyName = "Set",
+                ReturnType = TType.Void,
+                Arguments = new TFunctionDeclarationArguments() {Arguments =  new List<(TType Type, string VarName)>() {(TType.UInt32, "Index"),(this.T[0], "Item")}},
+                Execute =  (block,funcArg,assignArg) =>
+                {
+                    UInt32 index = ((TUInt32) funcArg.Parameters.Parameters[0].Value).Value;
+                    if (index > Int32.MaxValue)
+                    {
+                        throw new Exception($"The list can't hold more than {Int32.MinValue} items.");
+                    }
+
+                     this.list[(Int32) index] = funcArg.Parameters.Parameters[1].Value.Assign(block,this.T[0],assignArg);
+                     return new TVoid();
+                },
+            }},
+
+            {"RemoteAt", new PropertyOperationDescription()
+            {
+                PropertyName = "RemoteAt",
+                ReturnType = TType.Void,
+                Arguments = new TFunctionDeclarationArguments() {Arguments =  new List<(TType Type, string VarName)>() {(TType.UInt32, "Index"),}},
+                Execute =  (block,funcArg,assignArg) =>
+                {
+                    UInt32 index = ((TUInt32) funcArg.Parameters.Parameters[0].Value).Value;
+                    if (index > Int32.MaxValue)
+                    {
+                        throw new Exception($"The list can't hold more than {Int32.MinValue} items.");
+                    }
+
+                    this.list.RemoveAt((Int32) index);
+                    return new TVoid();
+                }
+            }},
+
+
         };
 
-
-        //todo property
+         
     }
 }
