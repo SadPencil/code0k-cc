@@ -388,6 +388,12 @@ namespace code0k_cc.Parse
                            { ReturnVariableRefRef = funRet.ReturnVariableRefRef, Type = StatementResultType.Return }
                        };
                        break;
+                   case StatementResultType.Normal:
+                       return new ExeResult()
+                       {
+                           StatementResult = new StatementResult()
+                           { ReturnVariableRefRef = new VariableRefRef(new VariableRef() { Variable = NType.Void.NewValue() }), Type = StatementResultType.Return }
+                       };
                    case StatementResultType.Break:
                        throw new Exception($"Unexpected \"break\" without loop statement while executing function \"{mainFunc.FunctionName}\"");
                        break;
@@ -587,7 +593,28 @@ namespace code0k_cc.Parse
             };
             StatementBody.Execute = arg =>
             {
-                //todo
+                var stmtIns = arg.Instance.Children[0];
+                var loopIns = arg.Instance.Children[1];
+                while (true)
+                {
+                    var stmtRet = stmtIns.Execute(arg).StatementResult;
+                    switch (stmtRet.Type)
+                    {
+                        case StatementResultType.Normal:
+                            break;
+                        case StatementResultType.Continue:
+                        case StatementResultType.Break:
+                        case StatementResultType.Return:
+                            return new ExeResult() { StatementResult = stmtRet };
+                        default:
+                            throw new Exception("Assert failed!");
+                    }
+
+                    if (loopIns == null) break;
+                    loopIns = loopIns.Children[1];
+                    stmtIns = loopIns.Children[0];
+                }
+                return new ExeResult() { StatementResult = new StatementResult() { Type = StatementResultType.Normal } };
             };
 
             StatementSemicolon.Name = "Statement Semicolon";
@@ -985,6 +1012,12 @@ namespace code0k_cc.Parse
                             case StatementResultType.Return:
                                 exp = new ExpressionResult() { VariableRefRef = funRet.ReturnVariableRefRef };
                                 break;
+                            case StatementResultType.Normal:
+                                return new ExeResult()
+                                {
+                                    StatementResult = new StatementResult()
+                                    { ReturnVariableRefRef = new VariableRefRef(new VariableRef() { Variable = NType.Void.NewValue() }), Type = StatementResultType.Return }
+                                };
                             case StatementResultType.Break:
                                 throw new Exception($"Unexpected \"break\" without loop statement while executing function \"{funcStruct.FunctionName}\"");
                                 break;

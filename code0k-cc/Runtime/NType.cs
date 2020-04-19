@@ -46,6 +46,10 @@ namespace code0k_cc.Runtime
         {
             //todo
         };
+        public static readonly NType Void = new NType()
+        {
+            //todo
+        };
 
         public static readonly NType Function = new NType()
         {

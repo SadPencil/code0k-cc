@@ -9,5 +9,6 @@ namespace code0k_cc.Runtime.ExeResult
         Return,
         Break,
         Continue,
+        Normal
     }
 }
