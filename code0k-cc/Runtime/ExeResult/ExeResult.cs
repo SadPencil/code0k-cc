@@ -11,5 +11,6 @@ namespace code0k_cc.Runtime.ExeResult
         public ExpressionResult ExpressionResult;
         public TokenResult TokenResult;
         public FunctionDeclarationValue FunctionDeclarationValue;
+        public StatementResult StatementResult;
     }
 }

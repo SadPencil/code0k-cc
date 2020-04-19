@@ -378,7 +378,25 @@ namespace code0k_cc.Parse
                };
 
                // execute function
-               return mainFunc.Instance.Execute(new ExeArg() { Block = newFuncBlock });
+               var funRet = mainFunc.Instance.Execute(arg).StatementResult;
+               switch (funRet.Type)
+               {
+                   case StatementResultType.Return:
+                       return new ExeResult()
+                       {
+                           StatementResult = new StatementResult()
+                           { ReturnVariableRefRef = funRet.ReturnVariableRefRef, Type = StatementResultType.Return }
+                       };
+                       break;
+                   case StatementResultType.Break:
+                       throw new Exception($"Unexpected \"break\" without loop statement while executing function \"{mainFunc.FunctionName}\"");
+                       break;
+                   case StatementResultType.Continue:
+                       throw new Exception($"Unexpected \"continue\" without loop statement while executing function \"{mainFunc.FunctionName}\"");
+                       break;
+                   default:
+                       throw new Exception("Assert failed!");
+               }
            };
 
             MainProgramItem.Name = "Main Program Item";
@@ -770,6 +788,15 @@ namespace code0k_cc.Parse
                 TokenUnits[TokenType.Identifier],
                 LeftValueSuffixLoop,
             };
+            LeftValue.Execute = arg =>
+            {
+                //todo LeftValueSuffixItem
+                string varName = arg.Instance.Children[0].Token.Value;
+                var varRefRef = arg.Block.GetVariableRefRef(varName, true);
+                return new ExeResult() { ExpressionResult = new ExpressionResult() { VariableRefRef = varRefRef } };
+            };
+
+
             LeftValueSuffixLoop.Name = "Left Value Suffix";
             LeftValueSuffixLoop.Type = ParseUnitType.SingleOptional;
             LeftValueSuffixLoop.ChildType = ParseUnitChildType.AllChild;
@@ -803,7 +830,7 @@ namespace code0k_cc.Parse
             {
                 Expressions[OPERATOR_PRECEDENCE_LEVEL - 1]
             };
-            Expression.Execute = arg => new ExeResult() { ExpressionResult = arg.Instance.Children[0].Execute(new ExeArg() { Block = arg.Block }).ExpressionResult };
+            Expression.Execute = arg => new ExeResult() { ExpressionResult = arg.Instance.Children[0].Execute(arg).ExpressionResult };
 
             BracketExpression.Name = "Bracket Expression";
             BracketExpression.Type = ParseUnitType.Single;
@@ -814,7 +841,7 @@ namespace code0k_cc.Parse
                 Expression,
                 TokenUnits[TokenType.RightBracket]
             };
-            BracketExpression.Execute = arg => new ExeResult() { ExpressionResult = arg.Instance.Children[1].Execute(new ExeArg() { Block = arg.Block }).ExpressionResult };
+            BracketExpression.Execute = arg => new ExeResult() { ExpressionResult = arg.Instance.Children[1].Execute(arg).ExpressionResult };
 
 
             foreach (var i in Enumerable.Range(0, OPERATOR_PRECEDENCE_LEVEL))
@@ -952,7 +979,23 @@ namespace code0k_cc.Parse
                         }
 
                         // execute function
-                        return funcStruct.Instance.Execute(new ExeArg() { Block = newBlock });
+                        var funRet = funcStruct.Instance.Execute(arg).StatementResult;
+                        switch (funRet.Type)
+                        {
+                            case StatementResultType.Return:
+                                exp = new ExpressionResult() { VariableRefRef = funRet.ReturnVariableRefRef };
+                                break;
+                            case StatementResultType.Break:
+                                throw new Exception($"Unexpected \"break\" without loop statement while executing function \"{funcStruct.FunctionName}\"");
+                                break;
+                            case StatementResultType.Continue:
+                                throw new Exception($"Unexpected \"continue\" without loop statement while executing function \"{funcStruct.FunctionName}\"");
+                                break;
+                            default:
+                                throw new Exception("Assert failed!");
+                        }
+
+
                     }
                     else if (op.ParseUnit == MemberAccess)
                     {
