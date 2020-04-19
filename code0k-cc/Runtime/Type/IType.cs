@@ -11,10 +11,10 @@ namespace code0k_cc.Runtime.Type
     {
         public abstract string TypeCodeName { get; }
         public virtual IType Execute(EnvironmentBlock block, IRuntimeExecuteArg arg) { throw new Exception($"Type \"{this.TypeCodeName} \" can't be executed."); }
-        public virtual IType Assign(EnvironmentBlock block, TTypeOfType typeOfType, IRuntimeAssignArg arg) => this.ImplicitConvertTo(typeOfType);
-        public virtual IType ImplicitConvertTo(TTypeOfType targetType)
+        public virtual IType Assign(EnvironmentBlock block, TType type, AssignExecuteArg assignArg) => this.ImplicitConvertTo(type);
+        protected virtual IType ImplicitConvertTo(TType targetType)
         {
-            if (targetType.IsTypeEquals(this))
+            if (targetType.TypeCodeName== this.TypeCodeName)
             {
                 return this;
             }
@@ -25,9 +25,9 @@ namespace code0k_cc.Runtime.Type
             }
         }
 
-        public virtual IType ExplicitConvertTo(TTypeOfType targetType)
+        public virtual IType ExplicitConvertTo(TType targetType)
         {
-            if (targetType.IsTypeEquals(this))
+            if (targetType.TypeCodeName == this.TypeCodeName)
             {
                 return this;
             }
@@ -39,6 +39,6 @@ namespace code0k_cc.Runtime.Type
         }
         public virtual Dictionary<UnaryOperation, (UnaryOperationDescription Description, Func<IType> OperationFunc)> UnaryOperations { get; } = new Dictionary<UnaryOperation, (UnaryOperationDescription Description, Func<IType> OperationFunc)>();
         public virtual Dictionary<BinaryOperation, (BinaryOperationDescription Description, Func<IType, IType> OperationFunc)> BinaryOperations { get; } = new Dictionary<BinaryOperation, (BinaryOperationDescription Description, Func<IType, IType> OperationFunc)>();
-
+        public virtual Dictionary<string, PropertyOperationDescription> PropertyDeclarations { get; } = new Dictionary<string, PropertyOperationDescription>();
     }
 }

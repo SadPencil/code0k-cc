@@ -414,7 +414,7 @@ namespace code0k_cc
                     argList.Arguments = funDeclareArgsT.Arguments;
                 }
 
-                var funT = new TFunction() { Arguments = argList, FunctionName = funName, ReturnType = funRetTypeT, Instance = null };
+                var funT = new TFunctionDeclaration() { Arguments = argList, FunctionName = funName, ReturnType = funRetTypeT, Instance = null };
 
                 block.Variables.Add(funName, funT);
 

@@ -11,6 +11,6 @@ namespace code0k_cc.Runtime.Type
     {
         public override string TypeCodeName => "__TFunctionDeclarationArguments"; 
 
-        public List<(TTypeOfType Type, string VarName)> Arguments = new List<(TTypeOfType Type, string VarName)>();
+        public List<(TType Type, string VarName)> Arguments = new List<(TType Type, string VarName)>();
     }
 }

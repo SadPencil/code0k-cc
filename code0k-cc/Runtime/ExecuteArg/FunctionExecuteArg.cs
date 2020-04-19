@@ -7,6 +7,6 @@ namespace code0k_cc.Runtime.ExecuteArg
 {
     class FunctionExecuteArg : IRuntimeExecuteArg
     {
-        public TFunctionInvokeArguments Arguments = new TFunctionInvokeArguments();
+        public TFunctionInvokeParameters Parameters = new TFunctionInvokeParameters();
     }
 }

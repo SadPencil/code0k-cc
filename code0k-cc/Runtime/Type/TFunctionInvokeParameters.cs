@@ -7,10 +7,10 @@ using code0k_cc.Runtime.Operation;
 
 namespace code0k_cc.Runtime.Type
 {
-    class TFunctionInvokeArguments : IType
+    class TFunctionInvokeParameters : IType
     {
         public override string TypeCodeName => "__TFunctionInvokeArguments"; 
 
-        public List<(IType Value, string VarName)> Arguments = new List<(IType Value, string VarName)>();
+        public List<(IType Value, string VarName)> Parameters = new List<(IType Value, string VarName)>();
     }
 }

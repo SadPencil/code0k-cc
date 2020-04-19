@@ -8,7 +8,7 @@ using code0k_cc.Runtime.Operation;
 
 namespace code0k_cc.Runtime.Type
 {
-    class TFunction : IType
+    class TFunctionDeclaration : IType
     {
         public override string TypeCodeName => "__Function";
 
@@ -33,14 +33,14 @@ namespace code0k_cc.Runtime.Type
             if (arg != null)
             {
                 var funcArg = (FunctionExecuteArg) arg;
-                if (this.Arguments.Arguments.Count != funcArg.Arguments.Arguments.Count)
+                if (this.Arguments.Arguments.Count != funcArg.Parameters.Parameters.Count)
                 {
                     throw new Exception($"Unexpected function arguments of function \"{this.FunctionName}\".");
                 }
 
-                foreach (var i in Enumerable.Range(0, funcArg.Arguments.Arguments.Count))
+                foreach (var i in Enumerable.Range(0, funcArg.Parameters.Parameters.Count))
                 {
-                    var (value, argVarName) = funcArg.Arguments.Arguments[i];
+                    var (value, argVarName) = funcArg.Parameters.Parameters[i];
 
                     // implicit convert
                     var newValue = value.ImplicitConvertTo(this.Arguments.Arguments[i].Type);
