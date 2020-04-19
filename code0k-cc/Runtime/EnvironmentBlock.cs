@@ -25,16 +25,14 @@ namespace code0k_cc.Runtime
         } 
 
         public VariableRef GetVariableRef(string name, bool recursively)
-        {
-            EnvironmentBlock block;
+        { 
             if (recursively)
             {
-                block = LocateVariableBlock(name);
+               var block = this.LocateVariableBlock(name);
                 return block.GetVariableRef(name, false);
             }
             else
-            {
-                block = this;
+            { 
                 if (this.Variables.ContainsKey(name))
                 {
                     return this.Variables[name];

@@ -422,21 +422,13 @@ namespace code0k_cc.Parse
 
                 var funName = arg.Instance.Children[1].Token.Value;
 
-                var funDeclareArgsRaw = instance.Children[3]?.Execute(block, null);
+                var funArgs = arg.Instance.Children[3]?.Execute(arg)?.FunctionDeclarationValue.Arguments;
 
-                var argList = new TFunctionDeclarationArguments();
-
-                if (funDeclareArgsRaw != null)
-                {
-                    var funDeclareArgsT = (TFunctionDeclarationArguments) funDeclareArgsRaw;
-                    argList.Arguments = funDeclareArgsT.Arguments;
-                }
-
-                var funT = new FunctionDeclarationValue() { Arguments = argList, FunctionName = funName, ReturnType = funRetNType, Instance = null };
+                var funT = new FunctionDeclarationValue() { Arguments = funArgs, FunctionName = funName, ReturnType = funRetNType, Instance = null };
 
                 arg.Block.AddVariable(funName, new Variable() { Type = NType.Function, Value = funT });
 
-                return null;
+                return new ExeResult() { FunctionDeclarationValue = funT };
             };
 
             TypeUnit.Name = "Type Unit";
@@ -521,20 +513,24 @@ namespace code0k_cc.Parse
                 FunctionDeclarationArgumentUnit,
                 FunctionDeclarationArgumentLoop,
             };
-            FunctionDeclarationArguments.Execute = (instance, block, arg) =>
+            FunctionDeclarationArguments.Execute = arg =>
             {
-                //link the list
-                var thisDecArgT = (TFunctionDeclarationArguments) instance.Children[0].Execute(block, arg);
-
-                var thatDecArgTRaw = instance.Children[1]?.Execute(block, arg);
-                if (thatDecArgTRaw != null)
+                List<(string VarName, NType Type)> arguments = new List<(string VarName, NType Type)>();
+                var unitIns = arg.Instance.Children[0];
+                var loopIns = arg.Instance.Children[1];
+                while (true)
                 {
-                    var thatDecArgT = (TFunctionDeclarationArguments) thatDecArgTRaw;
-                    // no clone at this time
-                    thisDecArgT.Arguments = thisDecArgT.Arguments.Concat(thatDecArgT.Arguments).ToList();
+                    var typeResult = unitIns.Children[0].Execute(arg).TypeUnitResult;
+                    var argNType = NType.GetNType(typeResult);
+                    var argName = unitIns.Children[1].Token.Value;
+                    arguments.Add((VarName: argName, Type: argNType));
+
+                    if (loopIns == null) break;
+                    unitIns = loopIns.Children[1];
+                    loopIns = loopIns.Children[2];
                 }
 
-                return thisDecArgT;
+                return new ExeResult() { FunctionDeclarationValue = new FunctionDeclarationValue() { Arguments = arguments } };
             };
 
             FunctionDeclarationArgumentUnit.Name = "Function Declaration Argument Unit";
@@ -545,13 +541,7 @@ namespace code0k_cc.Parse
                 TypeUnit,
                 TokenUnits[TokenType.Identifier]
             };
-            FunctionDeclarationArgumentUnit.Execute = (instance, block, arg) =>
-            {
-                var funDecArgT = (TTypeOfType) instance.Children[0].Execute(block, null);
-                var funArgNameT = (TString) instance.Children[1].Execute(block, null);
-                var retT = new TFunctionDeclarationArguments() { Arguments = new List<(TTypeOfType Type, string VarName)>() { (funDecArgT, funArgNameT.Value) } };
-                return retT;
-            };
+            FunctionDeclarationArgumentUnit.Execute = null;
 
             FunctionDeclarationArgumentLoop.Name = "Function Declaration Argument Loop";
             FunctionDeclarationArgumentLoop.Type = ParseUnitType.SingleOptional;
@@ -559,9 +549,10 @@ namespace code0k_cc.Parse
             FunctionDeclarationArgumentLoop.Children = new List<ParseUnit>()
             {
                 TokenUnits[TokenType.Comma],
-                FunctionDeclarationArguments
+                FunctionDeclarationArgumentUnit,
+                FunctionDeclarationArgumentLoop,
             };
-            FunctionDeclarationArgumentLoop.Execute = (instance, block, arg) => instance.Children[1]?.Execute(block, arg);
+            FunctionDeclarationArgumentLoop.Execute = null;
 
 
             StatementBody.Name = "Statement Body";
@@ -572,7 +563,10 @@ namespace code0k_cc.Parse
                 Statement,
                 StatementBody
             };
-            StatementBody.Execute = (instance, block, arg) => new TVoid();
+            StatementBody.Execute = arg =>
+            {
+                //todo
+            };
 
             StatementSemicolon.Name = "Statement Semicolon";
             StatementSemicolon.Type = ParseUnitType.Single;

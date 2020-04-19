@@ -10,6 +10,6 @@ namespace code0k_cc.Runtime.ExeResult
         public GenericsTypeResult GenericsTypeResult;
         public ExpressionResult ExpressionResult;
         public TokenResult TokenResult;
-        public FunctionCallParamsResult FunctionCallParamsResult;
+        public FunctionDeclarationValue FunctionDeclarationValue;
     }
 }
