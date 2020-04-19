@@ -11,6 +11,6 @@ namespace code0k_cc.Runtime.Type
     {
         public override string TypeCodeName => "__BinaryOperation"; 
           
-        public UnaryOperation Operation;
+        public BinaryOperation Operation;
     }
 }

@@ -8,7 +8,7 @@ namespace code0k_cc.Runtime.Operation
     class UnaryOperationDescription
     {
         public UnaryOperation Operation;
-        public TType OP1Type;
+        public TType Op1Type;
         public TType RetType;
     }
 }

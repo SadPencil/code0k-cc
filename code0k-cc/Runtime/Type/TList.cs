@@ -19,7 +19,7 @@ namespace code0k_cc.Runtime.Type
                 PropertyName = "Length",
                 ReturnType = TType.UInt32,
                 Arguments = new TFunctionDeclarationArguments() {Arguments =  new List<(TType Type, string VarName)>()},
-                Execute = (block,funcArg,assignArg) => new TUInt32() {Value = (UInt32)this.list.Count}
+                Execute = (block,funcArg,assignArg) => new TUInt32((UInt32)this.list.Count)
             }},
 
             {"Clear", new PropertyOperationDescription()
@@ -102,6 +102,6 @@ namespace code0k_cc.Runtime.Type
 
         };
 
-         
+
     }
 }

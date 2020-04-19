@@ -15,15 +15,15 @@ namespace code0k_cc.Runtime.Type
            new Dictionary<UnaryOperation, (UnaryOperationDescription Description, Func<IType> OperationFunc)>() {
                 {UnaryOperation.LogicalNot, (new UnaryOperationDescription() {
             Operation = UnaryOperation.LogicalNot,
-                                OP1Type = TType.Bool,
+                                Op1Type = TType.Bool,
                                 RetType = TType.Bool,
-                        }, ()=>new TBool() { Value = !this.Value }) },
+                        }, ()=>new TBool( !this.Value) )},
 
                 {UnaryOperation.BitwiseNot, (new UnaryOperationDescription() {
-        Operation = UnaryOperation.BitwiseNot,
-                    OP1Type = TType.Bool,
+             Operation = UnaryOperation.BitwiseNot,
+                    Op1Type = TType.Bool,
                     RetType = TType.Bool,
-                }, ()=>new TBool() { Value = !this.Value }) },
+                }, ()=>new TBool( !this.Value) ) },
            };
 
 
@@ -31,38 +31,46 @@ namespace code0k_cc.Runtime.Type
             new Dictionary<BinaryOperation, (BinaryOperationDescription Description, Func<IType, IType> OperationFunc)>() {
             {BinaryOperation.LogicalAnd, (new BinaryOperationDescription() {
                 Operation = BinaryOperation.LogicalAnd,
-                OP1Type = TType.Bool,
-                OP2Type = TType.Bool,
+                Op1Type = TType.Bool,
+                Op2Type = TType.Bool,
                 RetType = TType.Bool,
-            }, (o) => new TBool(){Value=this.Value && ((TBool)o).Value})},
+            }, (o) => new TBool(this.Value && ((TBool)o).Value) )},
             {BinaryOperation.LogicalXor, (new BinaryOperationDescription() {
                 Operation = BinaryOperation.LogicalXor,
-                OP1Type = TType.Bool,
-                OP2Type = TType.Bool,
+                Op1Type = TType.Bool,
+                Op2Type = TType.Bool,
                 RetType = TType.Bool,
-            }, (o) => new TBool(){Value=this.Value != ((TBool)o).Value})},
+            }, (o) => new TBool(this.Value != ((TBool)o).Value) )},
             {BinaryOperation.LogicalOr, (new BinaryOperationDescription() {
                 Operation = BinaryOperation.LogicalOr,
-                OP1Type = TType.Bool,
-                OP2Type = TType.Bool,
+                Op1Type = TType.Bool,
+                Op2Type = TType.Bool,
                 RetType = TType.Bool,
-            }, (o) => new TBool(){Value=this.Value || ((TBool)o).Value})},
+            }, (o) => new TBool(this.Value || ((TBool)o).Value) )},
 
             {BinaryOperation.EqualTo, (new BinaryOperationDescription() {
                 Operation = BinaryOperation.EqualTo,
-                OP1Type = TType.Bool,
-                OP2Type = TType.Bool,
+                Op1Type = TType.Bool,
+                Op2Type = TType.Bool,
                 RetType = TType.Bool,
-            }, (o) => new TBool(){Value=this.Value==((TBool)o).Value})},
+            }, (o) => new TBool(this.Value==((TBool)o).Value) )},
             {BinaryOperation.NotEqualTo, (new BinaryOperationDescription() {
                 Operation = BinaryOperation.NotEqualTo,
-                OP1Type = TType.Bool,
-                OP2Type = TType.Bool,
+                Op1Type = TType.Bool,
+                Op2Type = TType.Bool,
                 RetType = TType.Bool,
-            }, (o) => new TBool(){Value=this.Value!=((TBool)o).Value})},
+            }, (o) => new TBool(this.Value!=((TBool)o).Value) )},
 
         };
 
-        public bool Value;
+        public readonly bool Value;
+
+        public TBool() { }
+
+        public TBool(bool value)
+        {
+            this.Value = value;
+        }
+
     }
 }

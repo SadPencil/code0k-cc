@@ -15,19 +15,19 @@ namespace code0k_cc.Runtime.Type
         {
             {UnaryOperation.UnaryPlus,( new UnaryOperationDescription() {
                 Operation = UnaryOperation.UnaryPlus,
-                OP1Type = TType.UInt32,
+                Op1Type = TType.UInt32,
                 RetType = TType.UInt32,
-                }, () =>  new TUInt32(){Value = this.Value} )},
+                }, () =>  new TUInt32(+this.Value) )},
             {UnaryOperation.BitwiseNot,( new UnaryOperationDescription() {
                 Operation = UnaryOperation.BitwiseNot,
-                OP1Type = TType.UInt32,
+                Op1Type = TType.UInt32,
                 RetType = TType.UInt32,
-            }, () => new TUInt32(){Value = ~this.Value} )},
+            }, () => new TUInt32( ~this.Value) )},
             {UnaryOperation.UnaryMinus,( new UnaryOperationDescription() {
                 Operation = UnaryOperation.UnaryMinus,
-                OP1Type = TType.UInt32,
+                Op1Type = TType.UInt32,
                 RetType = TType.UInt32,
-            }, () => new TUInt32(){Value = 0 - this.Value} )},
+            }, () => new TUInt32( 0 - this.Value) )},
         };
 
         public override Dictionary<BinaryOperation, (BinaryOperationDescription Description, Func<IType, IType> OperationFunc)> BinaryOperations =>
@@ -35,91 +35,98 @@ namespace code0k_cc.Runtime.Type
         {
             {BinaryOperation.Addition, (new BinaryOperationDescription() {
                         Operation = BinaryOperation.Addition,
-                        OP1Type = TType.UInt32,
-                        OP2Type = TType.UInt32,
+                        Op1Type = TType.UInt32,
+                        Op2Type = TType.UInt32,
                         RetType = TType.UInt32,
-                    }, (o) => new TUInt32(){Value=this.Value+((TUInt32)o).Value})},
+                    }, (o) => new TUInt32(this.Value+((TUInt32)o).Value) )},
             {BinaryOperation.Subtract, (new BinaryOperationDescription() {
                         Operation = BinaryOperation.Subtract,
-                        OP1Type = TType.UInt32,
-                        OP2Type = TType.UInt32,
+                        Op1Type = TType.UInt32,
+                        Op2Type = TType.UInt32,
                         RetType = TType.UInt32,
-                    }, (o) => new TUInt32(){Value=this.Value-((TUInt32)o).Value})},
+                    }, (o) => new TUInt32(this.Value-((TUInt32)o).Value) )},
             {BinaryOperation.Multiplication, (new BinaryOperationDescription() {
                         Operation = BinaryOperation.Multiplication,
-                        OP1Type = TType.UInt32,
-                        OP2Type = TType.UInt32,
+                        Op1Type = TType.UInt32,
+                        Op2Type = TType.UInt32,
                         RetType = TType.UInt32,
-                    }, (o) => new TUInt32(){Value=this.Value*((TUInt32)o).Value})},
+                    }, (o) => new TUInt32(this.Value*((TUInt32)o).Value) )},
             {BinaryOperation.Division, (new BinaryOperationDescription() {
                         Operation = BinaryOperation.Division,
-                        OP1Type = TType.UInt32,
-                        OP2Type = TType.UInt32,
+                        Op1Type = TType.UInt32,
+                        Op2Type = TType.UInt32,
                         RetType = TType.UInt32,
-                    }, (o) => new TUInt32(){Value=this.Value/((TUInt32)o).Value})},
+                    }, (o) => new TUInt32( this.Value/((TUInt32)o).Value))},
             {BinaryOperation.Remainder, (new BinaryOperationDescription() {
                         Operation = BinaryOperation.Remainder,
-                        OP1Type = TType.UInt32,
-                        OP2Type = TType.UInt32,
+                        Op1Type = TType.UInt32,
+                        Op2Type = TType.UInt32,
                         RetType = TType.UInt32,
-                    }, (o) => new TUInt32(){Value=this.Value%((TUInt32)o).Value})},
+                    }, (o) => new TUInt32(this.Value%((TUInt32)o).Value) )},
             {BinaryOperation.BitwiseAnd, (new BinaryOperationDescription() {
                         Operation = BinaryOperation.BitwiseAnd,
-                        OP1Type = TType.UInt32,
-                        OP2Type = TType.UInt32,
+                        Op1Type = TType.UInt32,
+                        Op2Type = TType.UInt32,
                         RetType = TType.UInt32,
-                    }, (o) => new TUInt32(){Value=this.Value&((TUInt32)o).Value})},
+                    }, (o) => new TUInt32(this.Value&((TUInt32)o).Value) )},
             {BinaryOperation.BitwiseOr, (new BinaryOperationDescription() {
                 Operation = BinaryOperation.BitwiseOr,
-                OP1Type = TType.UInt32,
-                OP2Type = TType.UInt32,
+                Op1Type = TType.UInt32,
+                Op2Type = TType.UInt32,
                 RetType = TType.UInt32,
-            }, (o) => new TUInt32(){Value=this.Value|((TUInt32)o).Value})},
+            }, (o) => new TUInt32(this.Value|((TUInt32)o).Value) )},
             {BinaryOperation.BitwiseXor, (new BinaryOperationDescription() {
                 Operation = BinaryOperation.BitwiseOr,
-                OP1Type = TType.UInt32,
-                OP2Type = TType.UInt32,
+                Op1Type = TType.UInt32,
+                Op2Type = TType.UInt32,
                 RetType = TType.UInt32,
-            }, (o) => new TUInt32(){Value=this.Value^((TUInt32)o).Value})},
+            }, (o) => new TUInt32(this.Value^((TUInt32)o).Value) )},
 
             {BinaryOperation.EqualTo, (new BinaryOperationDescription() {
                 Operation = BinaryOperation.EqualTo,
-                OP1Type = TType.UInt32,
-                OP2Type = TType.UInt32,
+                Op1Type = TType.UInt32,
+                Op2Type = TType.UInt32,
                 RetType = TType.Bool,
-            }, (o) => new TBool(){Value=this.Value==((TUInt32)o).Value})},
+            }, (o) => new TBool(this.Value==((TUInt32)o).Value))},
             {BinaryOperation.NotEqualTo, (new BinaryOperationDescription() {
                 Operation = BinaryOperation.NotEqualTo,
-                OP1Type = TType.UInt32,
-                OP2Type = TType.UInt32,
+                Op1Type = TType.UInt32,
+                Op2Type = TType.UInt32,
                 RetType = TType.Bool,
-            }, (o) => new TBool(){Value=this.Value!=((TUInt32)o).Value})},
+            }, (o) => new TBool(this.Value!=((TUInt32)o).Value) )},
             {BinaryOperation.LessThan, (new BinaryOperationDescription() {
                 Operation = BinaryOperation.LessThan,
-                OP1Type = TType.UInt32,
-                OP2Type = TType.UInt32,
+                Op1Type = TType.UInt32,
+                Op2Type = TType.UInt32,
                 RetType = TType.Bool,
-            }, (o) => new TBool(){Value=this.Value<((TUInt32)o).Value})},
+            }, (o) => new TBool(this.Value<((TUInt32)o).Value) )},
             {BinaryOperation.GreaterThan, (new BinaryOperationDescription() {
                 Operation = BinaryOperation.GreaterThan,
-                OP1Type = TType.UInt32,
-                OP2Type = TType.UInt32,
+                Op1Type = TType.UInt32,
+                Op2Type = TType.UInt32,
                 RetType = TType.Bool,
-            }, (o) => new TBool(){Value=this.Value>((TUInt32)o).Value})},
+            }, (o) => new TBool(this.Value>((TUInt32)o).Value) )},
             {BinaryOperation.LessEqualThan, (new BinaryOperationDescription() {
                 Operation = BinaryOperation.LessEqualThan,
-                OP1Type = TType.UInt32,
-                OP2Type = TType.UInt32,
+                Op1Type = TType.UInt32,
+                Op2Type = TType.UInt32,
                 RetType = TType.Bool,
-            }, (o) => new TBool(){Value=this.Value<=((TUInt32)o).Value})},
+            }, (o) => new TBool(this.Value<=((TUInt32)o).Value) )},
             {BinaryOperation.GreaterEqualThan, (new BinaryOperationDescription() {
                 Operation = BinaryOperation.GreaterEqualThan,
-                OP1Type = TType.UInt32,
-                OP2Type = TType.UInt32,
+                Op1Type = TType.UInt32,
+                Op2Type = TType.UInt32,
                 RetType = TType.Bool,
-            }, (o) => new TBool(){Value=this.Value>=((TUInt32)o).Value})},
+            }, (o) => new TBool(this.Value>=((TUInt32)o).Value) )},
         };
 
-        public UInt32 Value;
+        public readonly UInt32 Value;
+
+        public TUInt32() { }
+
+        public TUInt32(UInt32 value)
+        {
+            this.Value = value;
+        }
     }
 }

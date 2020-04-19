@@ -8,8 +8,8 @@ namespace code0k_cc.Runtime.Operation
     class BinaryOperationDescription
     {
         public BinaryOperation Operation;
-        public TType OP1Type;
-        public TType OP2Type;
+        public TType Op1Type;
+        public TType Op2Type;
         public TType RetType;
 
     }
