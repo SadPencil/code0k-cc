@@ -5,7 +5,7 @@ using code0k_cc.Runtime.Type;
 
 namespace code0k_cc.Runtime
 {
-    struct Variable
+    class Variable
     {
         public NType Type;
         public object Value; //remember to clone the object

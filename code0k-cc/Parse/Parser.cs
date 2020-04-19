@@ -1201,8 +1201,16 @@ namespace code0k_cc.Parse
             };
             ExpressionsHelper[17].Execute = arg =>
             {
-                var leftVexp =
+                Debug.Assert(arg.Instance.Children[1].Token.TokenType== TokenType.Assign);
 
+                var leftVar = arg.Instance.Children[0].Execute(arg).ExpressionResult.VariableRef;
+
+                var rightExp = arg.Instance.Children[2].Execute(arg).ExpressionResult;
+
+                //assign
+                leftVar.Variable = rightExp.VariableRef.Variable.Assign(leftVar.Variable.Type);
+
+                return new ExeResult(){ExpressionResult = new ExpressionResult(){ VariableRef = leftVar}};
             };
 
             Expressions[17].ChildType = ParseUnitChildType.OneChild;

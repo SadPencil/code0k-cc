@@ -4,7 +4,7 @@ using System.Text;
 
 namespace code0k_cc.Runtime
 {
-    struct VariableRefRef
+    class VariableRefRef
     {
         public VariableRef VariableRef;
 
