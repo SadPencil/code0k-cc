@@ -1,18 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-namespace code0k_cc
+namespace code0k_cc.Lex
 {
     class TokenType
     {
 
-        public readonly TokenTypeProperty Property; 
+        public readonly TokenTypeProperty Property;
         private readonly string Pattern;
         public readonly string Name;
-        
+
         private TokenType() { }
 
         public override string ToString()
@@ -38,14 +35,14 @@ namespace code0k_cc
             return Regex.IsMatch(str, pattern);
         }
 
-        public static readonly TokenType EOL = new TokenType("\\b", "EOL"); 
+        public static readonly TokenType EOL = new TokenType("\\b", "EOL");
 
-        public static readonly TokenType Input = new TokenType("input", "input", new TokenTypeProperty() { IsDescriptionWord = true });
-        public static readonly TokenType Output = new TokenType("output", "output", new TokenTypeProperty() { IsDescriptionWord = true });
-        public static readonly TokenType NizkInput = new TokenType("nizkinput", "nizkinput", new TokenTypeProperty() { IsDescriptionWord = true });
-        public static readonly TokenType Const = new TokenType("const", "const", new TokenTypeProperty() { IsDescriptionWord = true });
+        //public static readonly TokenType Input = new TokenType("input", "input", new TokenTypeProperty() { IsDescriptionWord = true });
+        //public static readonly TokenType Output = new TokenType("output", "output", new TokenTypeProperty() { IsDescriptionWord = true });
+        //public static readonly TokenType NizkInput = new TokenType("nizkinput", "nizkinput", new TokenTypeProperty() { IsDescriptionWord = true });
+        //public static readonly TokenType Const = new TokenType("const", "const", new TokenTypeProperty() { IsDescriptionWord = true });
         public static readonly TokenType Var = new TokenType("var", "var", new TokenTypeProperty() { IsDescriptionWord = true });
-        public static readonly TokenType Ref = new TokenType("ref", "ref", new TokenTypeProperty() { IsDescriptionWord = true });
+        //public static readonly TokenType Ref = new TokenType("ref", "ref", new TokenTypeProperty() { IsDescriptionWord = true });
 
         //public static readonly TokenType Call = new TokenType("call", "call");
         public static readonly TokenType Return = new TokenType("return", "return");
@@ -90,7 +87,7 @@ namespace code0k_cc
         public static readonly TokenType GreaterEqualThan = new TokenType("\\>\\=", ">=", new TokenTypeProperty() { IsBinaryOperator = true });
         public static readonly TokenType NotEqualTo = new TokenType("\\!\\=", "!=", new TokenTypeProperty() { IsBinaryOperator = true });
 
-        public static readonly TokenType BitwiseAnd = new TokenType("\\&", "&", new TokenTypeProperty() { IsBinaryOperator = true });
+        public static readonly TokenType BitwiseAnd = new TokenType("\\&", "&", new TokenTypeProperty() { IsUnaryOperator = true, IsBinaryOperator = true });
         public static readonly TokenType BitwiseOr = new TokenType("\\|", "|", new TokenTypeProperty() { IsBinaryOperator = true });
         public static readonly TokenType BitwiseXor = new TokenType("\\^", "^", new TokenTypeProperty() { IsBinaryOperator = true });
         public static readonly TokenType BitwiseNot = new TokenType("\\~", "~", new TokenTypeProperty() { IsUnaryOperator = true });
@@ -112,24 +109,19 @@ namespace code0k_cc
         public static IEnumerable<TokenType> GetAll()
         {
             // no EOL
-
-            yield return Input;
-            yield return Output;
-            yield return NizkInput;
-            yield return Const;
-            yield return Var;
-            yield return Ref;
              
+            yield return Var; 
+
             yield return Return;
 
             yield return If;
             yield return Then;
             yield return Else;
 
-            yield return While; 
+            yield return While;
             yield return Max;
 
-            yield return For; 
+            yield return For;
 
             yield return Break;
             yield return Continue;

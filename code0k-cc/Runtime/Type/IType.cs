@@ -13,7 +13,7 @@ namespace code0k_cc.Runtime.Type
         /// To determine whether two types are actually the same.
         /// </summary>
         public abstract string TypeCodeName { get; }
-        public virtual IType Execute(EnvironmentBlock block, FunctionExecuteArg funcArg, AssignExecuteArg assignArg) { throw new Exception($"Type \"{this.TypeCodeName} \" can't be executed."); }
+        
         /// <summary>
         /// Given target type <paramref name="type"/>, implicit convert to a new value of this type.
         /// Specially, if the type <paramref name="type"/> is exactly the same type, it can return either itself or a new value.
@@ -23,7 +23,7 @@ namespace code0k_cc.Runtime.Type
         /// <param name="assignArg"></param>
         /// <returns></returns>
         public virtual IType Assign(EnvironmentBlock block, TType type, AssignExecuteArg assignArg) => this.ImplicitConvertTo(type); 
-
+        
         protected virtual IType ImplicitConvertTo(TType targetType)
         {
             if (targetType.TypeCodeName == this.TypeCodeName)

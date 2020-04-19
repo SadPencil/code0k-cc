@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using code0k_cc.Parse;
 
 namespace code0k_cc
 {
@@ -10,7 +11,7 @@ namespace code0k_cc
         {
             using (var fs = File.OpenRead("1.txt"))
             {
-                var tokens = Lex.Analyze(fs);
+                var tokens = Lex.Lex.Analyze(fs);
                 var tokenList = tokens.ToList();
                 //test
                 foreach (var token in tokenList)

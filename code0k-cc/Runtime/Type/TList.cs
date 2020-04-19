@@ -67,7 +67,7 @@ namespace code0k_cc.Runtime.Type
                 Arguments = new TFunctionDeclarationArguments() {Arguments =  new List<(TType Type, string VarName)>() {(this.T[0],"Item"),}},
                 Execute = (block,funcArg,assignArg)  =>
                 {
-                    this.Value.Add(funcArg.Parameters.Parameters[0].Value.Assign(block,this.T[0],assignArg));
+                    this.Value.Add(funcArg.Parameters.Parameters[0].LeftValue.Assign(block,this.T[0],assignArg));
                     return new TVoid();
                 }
             }},
@@ -79,13 +79,13 @@ namespace code0k_cc.Runtime.Type
                 Arguments = new TFunctionDeclarationArguments() {Arguments =  new List<(TType Type, string VarName)>() {(TType.UInt32, "Index"),}},
                 Execute =  (block,funcArg,assignArg) =>
                 {
-                    UInt32 index = ((TUInt32) funcArg.Parameters.Parameters[0].Value).Value;
+                    UInt32 index = ((TUInt32) funcArg.Parameters.Parameters[0].LeftValue).Value;
                     if (index > Int32.MaxValue)
                     {
                         throw new Exception($"The list can't hold more than {Int32.MinValue} items.");
                     }
 
-                    return this.Value[(Int32) index];
+                    return this.Value[(Int32) index]; 
                 }
             }},
 
@@ -96,13 +96,13 @@ namespace code0k_cc.Runtime.Type
                 Arguments = new TFunctionDeclarationArguments() {Arguments =  new List<(TType Type, string VarName)>() {(TType.UInt32, "Index"),(this.T[0], "Item")}},
                 Execute =  (block,funcArg,assignArg) =>
                 {
-                    UInt32 index = ((TUInt32) funcArg.Parameters.Parameters[0].Value).Value;
+                    UInt32 index = ((TUInt32) funcArg.Parameters.Parameters[0].LeftValue).Value;
                     if (index > Int32.MaxValue)
                     {
                         throw new Exception($"The list can't hold more than {Int32.MinValue} items.");
                     }
 
-                     this.Value[(Int32) index] = funcArg.Parameters.Parameters[1].Value.Assign(block,this.T[0],assignArg);
+                     this.Value[(Int32) index] = funcArg.Parameters.Parameters[1].LeftValue.Assign(block,this.T[0],assignArg);
                      return new TVoid();
                 },
             }},
@@ -114,7 +114,7 @@ namespace code0k_cc.Runtime.Type
                 Arguments = new TFunctionDeclarationArguments() {Arguments =  new List<(TType Type, string VarName)>() {(TType.UInt32, "Index"),}},
                 Execute =  (block,funcArg,assignArg) =>
                 {
-                    UInt32 index = ((TUInt32) funcArg.Parameters.Parameters[0].Value).Value;
+                    UInt32 index = ((TUInt32) funcArg.Parameters.Parameters[0].LeftValue).Value;
                     if (index > Int32.MaxValue)
                     {
                         throw new Exception($"The list can't hold more than {Int32.MinValue} items.");

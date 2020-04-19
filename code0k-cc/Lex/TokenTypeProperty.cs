@@ -1,4 +1,4 @@
-﻿namespace code0k_cc
+﻿namespace code0k_cc.Lex
 {
     class TokenTypeProperty
     {

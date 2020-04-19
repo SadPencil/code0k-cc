@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 using System.IO;
 using System.Linq;
+using System.Text;
 
-namespace code0k_cc
+namespace code0k_cc.Lex
 {
     static class Lex
     {

@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using code0k_cc.Lex;
 using code0k_cc.Runtime;
-using code0k_cc.Runtime.ExecuteArg;
+using code0k_cc.Runtime.ExeArg;
+using code0k_cc.Runtime.ExeResult;
 using code0k_cc.Runtime.Type;
 
-namespace code0k_cc
+namespace code0k_cc.Parse
 {
     class ParseUnit
     {
@@ -15,6 +16,6 @@ namespace code0k_cc
         public TokenType TerminalTokenType;
         public string Name;
 
-        public Func<ParseInstance, EnvironmentBlock, FunctionExecuteArg, AssignExecuteArg, IType> Execute;
+        public Func<ExeArg, ExeResult> Execute;
     }
 }

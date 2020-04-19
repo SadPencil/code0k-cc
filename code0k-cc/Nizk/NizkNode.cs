@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
-namespace code0k_cc
+namespace code0k_cc.Nizk
 {
     class NizkNode
     { 

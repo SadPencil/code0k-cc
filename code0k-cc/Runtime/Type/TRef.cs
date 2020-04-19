@@ -9,23 +9,18 @@ namespace code0k_cc.Runtime.Type
 {
     class TRef : IGenericsType
     {
+        //todo rewrite this
         public override string TypeCodeName => base.TypeCodeName + "__Ref";
-        private readonly EnvironmentBlock EnvironmentBlock;
-        private readonly string VariableName;
+        private readonly VariableRef VariableRef;
 
         public override Dictionary<string, TypeMethodDescription> InstanceMethodDeclarations { get; }
         public override Dictionary<string, TypeMethodDescription> StaticMethodDeclarations { get; }
 
         public TRef(IReadOnlyList<TType> T, EnvironmentBlock block, string varName) : this(T)
         {
-            // must be the exactly block
-            // in case of same-name var
-            block = block.LocateVariable(varName);
+            var variableRef = block.GetVariableRef(varName, true);
 
-            Debug.Assert(block.Variables.ContainsKey(varName));
-
-            this.EnvironmentBlock = block;
-            this.VariableName = varName;
+            this.VariableRef = variableRef;
         }
         public TRef(IReadOnlyList<TType> T) : base(T)
         {
@@ -40,7 +35,7 @@ namespace code0k_cc.Runtime.Type
                         PropertyName = "New",
                         ReturnType = TType.GenericsType(typeof(TRef), this.T),
                         Arguments = new TFunctionDeclarationArguments(){Arguments = new List<(TType Type, string VarName)>(){(this.T[0],"Variable")}},
-                        Execute = (block, funcArg, assignArg) => new TRef(this.T,this.EnvironmentBlock, ((TString) funcArg.Parameters.Parameters[0].Value).Value)
+                        Execute = (block, funcArg, assignArg) =>  
                     }},
             };
 
@@ -50,7 +45,7 @@ namespace code0k_cc.Runtime.Type
                     PropertyName = "Value",//de-reference
                     ReturnType =  this.T[0],
                     Arguments =  new TFunctionDeclarationArguments(){Arguments = new List<(TType Type, string VarName)>()},
-                    Execute = (block, funcArg, assignArg) => this.EnvironmentBlock.Variables[this.VariableName]
+                    Execute = (block, funcArg, assignArg) => this.VariableRef.LeftValue
                 }},
             };
 

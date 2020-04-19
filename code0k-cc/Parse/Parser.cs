@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
+using code0k_cc.Lex;
 using code0k_cc.Runtime;
+using code0k_cc.Runtime.ExeArg;
+using code0k_cc.Runtime.ExeResult;
 using code0k_cc.Runtime.Type;
 
-namespace code0k_cc
+namespace code0k_cc.Parse
 {
     class Parser
     {
@@ -290,6 +289,8 @@ namespace code0k_cc
             ParseUnit FunctionImplementation = new ParseUnit();
 
             ParseUnit TypeUnit = new ParseUnit();
+            ParseUnit TypeUnitGenerics = new ParseUnit();
+            ParseUnit TypeUnitGenericsLoop = new ParseUnit();
 
             ParseUnit LeftValue = new ParseUnit();
             ParseUnit LeftValueSuffixLoop = new ParseUnit();
@@ -303,9 +304,6 @@ namespace code0k_cc
             ParseUnit Statement = new ParseUnit();
             ParseUnit StatementSemicolonCollection = new ParseUnit();
             ParseUnit StatementSemicolon = new ParseUnit();
-
-            ParseUnit DescriptionTokens = new ParseUnit();
-            ParseUnit DescriptionTokenUnit = new ParseUnit();
 
             ParseUnit DefinitionStatement = new ParseUnit();
             ParseUnit IfStatement = new ParseUnit();
@@ -349,17 +347,38 @@ namespace code0k_cc
                 MainProgramLoop,
                 eolUnit,
             };
-            MainProgram.Execute = (instance, unwantedBlock, unwantedArg) =>
+            MainProgram.Execute =  arg =>
             {
+                //block: provide built-in types
+
+                //todo: redundancy code here.
+
                 // prepare environment
-                EnvironmentBlock block = new EnvironmentBlock() { ParseInstance = instance };
-                foreach (var instanceChild in instance.Children)
+                var mainBlock = new EnvironmentBlock() { ParseInstance = arg.Instance, ParentBlock = arg.Block,ReturnBlock = arg.Block};
+
+                foreach (var instanceChild in arg.Instance.Children)
                 {
-                    _ = instanceChild?.Execute(block, null);
+                    _ = instanceChild?.Execute(new ExeArg(){Block = mainBlock});
                 }
+
                 // find & execute "main"
-                var main = block.GetVariableValue("main");
-                return main.Execute(block, null);
+                var mainFunc = (FunctionDeclarationValue) mainBlock.GetVariableRef("main", false).Variable.Value;
+
+                if (mainFunc.Instance == null)
+                {
+                    throw new Exception($"Unimplemented function \"{mainFunc.FunctionName}\"");
+                }
+                
+                // create new block
+                EnvironmentBlock newFuncBlock = new EnvironmentBlock()
+                {
+                    ParentBlock = mainFunc.ParentBlock,
+                    ParseInstance = mainFunc.Instance,
+                    ReturnBlock = mainBlock,
+                };
+
+                // execute function
+                return mainFunc.Instance.Execute(new ExeArg() { Block = newFuncBlock });
             };
 
             MainProgramItem.Name = "Main Program Item";
@@ -371,7 +390,7 @@ namespace code0k_cc
                 FunctionDeclaration,
                 FunctionImplementation,
             };
-            MainProgramItem.Execute = (instance, block, arg) => instance.Children[0].Execute(block, arg);
+            MainProgramItem.Execute = arg =>arg.Instance.Children[0].Execute(arg);
 
             MainProgramLoop.Name = "Main Program Loop";
             MainProgramLoop.Type = ParseUnitType.SingleOptional;
@@ -381,7 +400,7 @@ namespace code0k_cc
                 MainProgramItem,
                 MainProgramLoop,
             };
-            MainProgramItem.Execute = (instance, block, arg) => instance.Children[0].Execute(block, arg);
+            MainProgramLoop.Execute = arg => arg.Instance.Children[0].Execute(arg);
 
 
             FunctionDeclaration.Name = "Function Declaration";
@@ -421,19 +440,57 @@ namespace code0k_cc
                 return null;
             };
 
-            TypeUnit.Name = "Type Name";
+            TypeUnit.Name = "Type Unit";
             TypeUnit.Type = ParseUnitType.Single;
             TypeUnit.ChildType = ParseUnitChildType.AllChild;
             TypeUnit.Children = new List<ParseUnit>()
             {
-                DescriptionTokens,
-                TokenUnits[TokenType.Identifier]
+                TokenUnits[TokenType.Identifier],
+                TypeUnitGenerics,
             };
-            TypeUnit.Execute = (instance, block, arg) =>
+            TypeUnit.Execute = arg => new ExeResult()
             {
-                //todo
-
+                TypeUnitResult = new TypeResult()
+                {
+                    TypeName = arg.Instance.Children[0].Token.Value,
+                    Generics = arg.Instance.Children[1]?.Execute(new ExeArg() { Block = arg.Block })?.GenericsTypeResult
+                }
             };
+
+            TypeUnitGenerics.Name = "Type Unit Generics";
+            TypeUnitGenerics.Type = ParseUnitType.SingleOptional;
+            TypeUnitGenerics.ChildType = ParseUnitChildType.AllChild;
+            TypeUnitGenerics.Children = new List<ParseUnit>()
+            {
+                TokenUnits[TokenType.LessThan],
+                TypeUnit,
+                TypeUnitGenericsLoop,
+                TokenUnits[TokenType.GreaterThan],
+            };
+            TypeUnitGenerics.Execute = arg =>
+            {
+                TypeResult type1 = arg.Instance.Children[1].Execute(new ExeArg() { Block = arg.Block }).TypeUnitResult;
+                GenericsTypeResult typeRest = arg.Instance.Children[2]?.Execute(new ExeArg() { Block = arg.Block })?.GenericsTypeResult;
+
+                GenericsTypeResult retResult = new GenericsTypeResult() { Types = new List<TypeResult>() { type1 } };
+                if (( typeRest?.Types?.Count ).GetValueOrDefault(0) > 0)
+                {
+                    retResult.Types.AddRange(typeRest.Types);
+                }
+                return new ExeResult() { GenericsTypeResult = retResult };
+            };
+
+            TypeUnitGenericsLoop.Name = "Type Unit Generics Loop";
+            TypeUnitGenericsLoop.Type = ParseUnitType.SingleOptional;
+            TypeUnitGenericsLoop.ChildType = ParseUnitChildType.AllChild;
+            TypeUnitGenericsLoop.Children = new List<ParseUnit>()
+            {
+                TokenUnits[TokenType.Comma],
+                TypeUnit,
+                TypeUnitGenericsLoop
+            };
+            TypeUnitGenericsLoop.Execute = TypeUnitGenerics.Execute; //happened to be same
+
 
             FunctionImplementation.Name = "Function Implementation";
             FunctionImplementation.Type = ParseUnitType.Single;
@@ -448,7 +505,13 @@ namespace code0k_cc
                 FunctionDeclaration,
                 CompoundStatement
             };
-            FunctionImplementation.Execute = (instance, block, arg) => instance.Children[0].Execute(block, arg);
+            FunctionImplementation.Execute = arg =>
+            {
+                // 1. re-declare the function if it is already declared
+                // 2. set the FunctionDeclarationValue.Instance to the compound statement
+
+                //todo
+            };
 
 
             FunctionDeclarationArguments.Name = "Function Declaration Arguments";
@@ -631,74 +694,6 @@ namespace code0k_cc
 
             };
 
-            DescriptionTokens.Name = "Definition Description";
-            DescriptionTokens.Type = ParseUnitType.SingleOptional;
-            DescriptionTokens.ChildType = ParseUnitChildType.AllChild;
-            DescriptionTokens.Children = new List<ParseUnit>()
-            {
-                DescriptionTokenUnit,
-                DescriptionTokens,
-            };
-            DescriptionTokens.Execute = (instance, block, arg) =>
-            {
-                //link the list
-                var thisDecArgT = (TDescriptionWords) instance.Children[0].Execute(block, arg);
-
-                var thatDecArgTRaw = instance.Children[1]?.Execute(block, arg);
-                if (thatDecArgTRaw != null)
-                {
-                    var thatDecArgT = (TDescriptionWords) thatDecArgTRaw;
-                    // no clone at this time
-                    thisDecArgT.DescriptionWords = thisDecArgT.DescriptionWords.Concat(thatDecArgT.DescriptionWords).ToList();
-                }
-
-                return thisDecArgT;
-            };
-
-            DescriptionTokenUnit.Name = "Definition Description Unit";
-            DescriptionTokenUnit.Type = ParseUnitType.Single;
-            DescriptionTokenUnit.ChildType = ParseUnitChildType.OneChild;
-            DescriptionTokenUnit.Children = new List<ParseUnit>()
-            {
-                TokenUnits[TokenType.Input],
-                TokenUnits[TokenType.NizkInput],
-                TokenUnits[TokenType.Output],
-                TokenUnits[TokenType.Const],
-                TokenUnits[TokenType.Ref],
-            };
-            DescriptionTokenUnit.Execute = (instance, block, arg) =>
-            {
-                DescriptionWord des;
-                if (instance.Children[0].Token.TokenType == TokenType.Input)
-                {
-                    des = DescriptionWord.Input;
-                }
-                else if (instance.Children[0].Token.TokenType == TokenType.NizkInput)
-                {
-                    des = DescriptionWord.NizkInput;
-                }
-                else if (instance.Children[0].Token.TokenType == TokenType.Output)
-                {
-                    des = DescriptionWord.Output;
-                }
-                else if (instance.Children[0].Token.TokenType == TokenType.Const)
-                {
-                    des = DescriptionWord.Const;
-                }
-                else if (instance.Children[0].Token.TokenType == TokenType.Ref)
-                {
-                    des = DescriptionWord.Ref;
-                }
-                else
-                {
-                    throw new Exception("Assert failed!");
-                }
-
-                return new TDescriptionWords() { DescriptionWords = new List<DescriptionWord>() { des } };
-            };
-
-
-            //todo snark
 
             IfStatement.Name = "If Statement";
             IfStatement.Type = ParseUnitType.Single;
@@ -713,21 +708,6 @@ namespace code0k_cc
                 OptionalElseStatement
             };
 
-            IfStatement.Execute = (instance, block, arg) =>
-            {
-                var expressionValue = instance.Children[2].Execute(block, null);
-
-                if (expressionValue.Type.GetBool(expressionValue))
-                {
-                    return instance.Children[4].Execute(block, null);
-                }
-                else
-                {
-                    return instance.Children[5].Execute(block, null);
-                }
-            };
-
-
             OptionalElseStatement.Name = "Else Statement";
             OptionalElseStatement.Type = ParseUnitType.SingleOptional;
             OptionalElseStatement.ChildType = ParseUnitChildType.AllChild;
@@ -736,7 +716,6 @@ namespace code0k_cc
                 TokenUnits[TokenType.Else],
                 CompoundStatement
             };
-            OptionalElseStatement.Execute = (instance, block, arg) => instance.Children[1].Execute(block, null);
 
             ForStatement.Name = "For Statement";
             ForStatement.Type = ParseUnitType.Single;
@@ -757,24 +736,7 @@ namespace code0k_cc
                 TokenUnits[TokenType.RightBracket],
                 CompoundStatement
             };
-            ForStatement.Execute = (instance, block, arg) =>
-            {
-                var maxValue = instance.Children[10].Execute(block, null);
-                Int32 max = maxValue.Type.GetInt32(maxValue);
 
-                _ = instance.Children[2].Execute(block, null);
-
-                var expressionValue = instance.Children[4].Execute(block, null);
-                for (Int32 i = 0; i < max && expressionValue.Type.GetBool(expressionValue); ++i)
-                {
-                    _ = instance.Children[12].Execute(block, null);
-
-                    _ = instance.Children[6].Execute(block, null);
-
-                    expressionValue = instance.Children[4].Execute(block, null);
-                }
-                return new RuntimeValue() { Type = RuntimeType.Void };
-            };
 
             WhileStatement.Name = "While Statement";
             WhileStatement.Type = ParseUnitType.Single;
@@ -791,22 +753,6 @@ namespace code0k_cc
                 TokenUnits[TokenType.RightBracket],
                 CompoundStatement
             };
-            WhileStatement.Execute = (instance, block, arg) =>
-            {
-                var maxValue = instance.Children[6].Execute(block, null);
-                Int32 max = maxValue.Type.GetInt32(maxValue);
-
-                var expressionValue = instance.Children[2].Execute(block, null);
-                for (Int32 i = 0; i < max && expressionValue.Type.GetBool(expressionValue); ++i)
-                {
-                    _ = instance.Children[8].Execute(block, null);
-
-                    expressionValue = instance.Children[2].Execute(block, null);
-                }
-
-                return new RuntimeValue() { Type = RuntimeType.Void };
-            };
-
 
             CompoundStatement.Name = "Compound Statement";
             CompoundStatement.Type = ParseUnitType.Single;
@@ -860,6 +806,7 @@ namespace code0k_cc
             {
                 Expressions[OPERATOR_PRECEDENCE_LEVEL - 1]
             };
+            Expression.Execute = arg => new ExeResult() { ExpressionResult = arg.Instance.Children[0].Execute(new ExeArg() { Block = arg.Block }).ExpressionResult };
 
             BracketExpression.Name = "Bracket Expression";
             BracketExpression.Type = ParseUnitType.Single;
@@ -870,6 +817,8 @@ namespace code0k_cc
                 Expression,
                 TokenUnits[TokenType.RightBracket]
             };
+            BracketExpression.Execute = arg => new ExeResult() { ExpressionResult = arg.Instance.Children[1].Execute(new ExeArg() { Block = arg.Block }).ExpressionResult };
+
 
             foreach (var i in Enumerable.Range(0, OPERATOR_PRECEDENCE_LEVEL))
             {
@@ -890,14 +839,43 @@ namespace code0k_cc
             // most of them are associated left-to-right
             // except for level 3 and level 16, which are right-to-left
 
-            // level 0: Identifier or number
+            // level 0: Identifier or number 
             Expressions[0].Children = new List<ParseUnit>() { Operators[0] };
-            Operators[0].Children = new List<ParseUnit>() { TokenUnits[TokenType.Identifier], TokenUnits[TokenType.Number], BracketExpression };
+            Expressions[0].Execute = arg => arg.Instance.Children[0].Execute(arg);
 
+            Operators[0].Children = new List<ParseUnit>() { TokenUnits[TokenType.Identifier], TokenUnits[TokenType.Number], BracketExpression };
+            Operators[0].Execute = arg =>
+            {
+                if (arg.Instance.Children[0].ParseUnit == TokenUnits[TokenType.Identifier])
+                {
+                    return new ExeResult()
+                    {
+                        ExpressionResult = new ExpressionResult() { VariableRef = arg.Block.GetVariableRef(arg.Instance.Children[0].Execute(arg).TokenResult.Token.Value, false) }
+                    };
+                }
+                else if (arg.Instance.Children[0].ParseUnit == TokenUnits[TokenType.Number])
+                {
+                    string numberStr = arg.Instance.Children[0].Execute(arg).TokenResult.Token.Value;
+                    //todo: currently, only support UInt32, will add other number type later
+                    var retVar = NType.UInt32.Parse(numberStr);
+                    return new ExeResult()
+                    {
+                        ExpressionResult = new ExpressionResult() { VariableRef = retVar.GetVariableRef() }
+                    };
+                }
+                else if (arg.Instance.Children[0].ParseUnit == BracketExpression)
+                {
+                    return arg.Instance.Children[0].Execute(arg);
+                }
+                else
+                {
+                    throw new Exception("Assert failed!");
+                }
+            };
 
             // level 1: not used
             Expressions[1].Children = new List<ParseUnit>() { Expressions[0] };
-
+            Expressions[1].Execute = arg => arg.Instance.Children[0].Execute(arg);
 
             // level 2: Function call, Subscript, Member access
             //
@@ -916,8 +894,91 @@ namespace code0k_cc
             // R is ExpressionHelper[2]
 
             Expressions[2].Children = new List<ParseUnit>() { Expressions[1], ExpressionsHelper[2] };
-            ExpressionsHelper[2].Children = new List<ParseUnit>() { Operators[2], ExpressionsHelper[2] };
+            Expressions[2].Execute = arg =>
+            {
+                var exp = arg.Instance.Children[0].Execute(arg).ExpressionResult;
+                var ins = arg.Instance.Children[1];
+                while (true)
+                {
+                    var op = ins?.Children[0];
+                    ins = ins?.Children[1];
+                    if (op == null) break;
+                    //todo exp = op(exp)
+                    //todo!!
 
+                    if (op.ParseUnit == FunctionCall)
+                    {
+                        // get func
+                        var functionDefinitionRef = exp.VariableRef;
+                        var funcStruct = (FunctionDeclarationValue) functionDefinitionRef.Variable.Value;
+
+                        if (funcStruct.Instance == null)
+                        {
+                            throw new Exception($"Unimplemented function \"{funcStruct.FunctionName}\"");
+                        }
+
+                        // create new block
+                        EnvironmentBlock newBlock = new EnvironmentBlock()
+                        {
+                            ParentBlock = funcStruct.ParentBlock,
+                            ParseInstance = funcStruct.Instance,
+                            ReturnBlock = arg.Block,
+                        };
+
+                        // get & load all params 
+                        var paramLoopIns = op.Children[1];
+                        int argCount = 0;
+                        while (true)
+                        {
+                            var argItemIns = paramLoopIns?.Children[0];
+                            paramLoopIns = paramLoopIns?.Children[1];
+                            if (argItemIns == null) break;
+
+                            var argExp = argItemIns.Execute(arg).ExpressionResult;
+                            // ByVal : convert type when calling
+                            if (funcStruct.Arguments.Count - 1 < argCount)
+                            {
+                                throw new Exception($"Unexpected function arguments of function \"{funcStruct.FunctionName}\".");
+                            }
+
+                            (string argName, NType argNType) = funcStruct.Arguments[argCount];
+                            var newArgVal = argExp.VariableRef.Variable.Assign(argNType);
+
+                            //add params
+                            newBlock.AddVariable(argName, newArgVal);
+
+                            ++argCount;
+                        }
+
+                        if (argCount != funcStruct.Arguments.Count)
+                        {
+                            throw new Exception($"Unexpected function arguments of function \"{funcStruct.FunctionName}\".");
+                        }
+
+                        // execute function
+                        return funcStruct.Instance.Execute(new ExeArg() {Block = newBlock});
+                    }
+                    else if (op.ParseUnit == MemberAccess)
+                    {
+                        //todo
+
+                    }
+                    else if (op.ParseUnit == ArraySubscripting)
+                    {
+                        //todo
+                    }
+                    else
+                    {
+                        throw new Exception("Assert failed!");
+                    }
+
+
+                }
+
+                return new ExeResult() { ExpressionResult = exp };
+            };
+
+            ExpressionsHelper[2].Children = new List<ParseUnit>() { Operators[2], ExpressionsHelper[2] };
             Operators[2].Children = new List<ParseUnit>() { FunctionCall, ArraySubscripting, MemberAccess };
 
             FunctionCall.Name = "Function Call";
@@ -929,6 +990,7 @@ namespace code0k_cc
                 FunctionCallArgument,
                 TokenUnits[TokenType.RightBracket],
             };
+            FunctionCall.Execute = null;
 
             FunctionCallArgument.Name = "Function Call Argument";
             FunctionCallArgument.Type = ParseUnitType.SingleOptional;
@@ -938,6 +1000,7 @@ namespace code0k_cc
                 FunctionCallArgumentItem,
                 FunctionCallArgumentLoop
             };
+            FunctionCallArgument.Execute = null;
 
             FunctionCallArgumentLoop.Name = "Function Call Argument Loop";
             FunctionCallArgumentLoop.Type = ParseUnitType.SingleOptional;
@@ -947,6 +1010,7 @@ namespace code0k_cc
                 TokenUnits[TokenType.Comma],
                 FunctionCallArgument,
             };
+            FunctionCallArgument.Execute = null;
 
             FunctionCallArgumentItem.Name = "Function Call Argument Item";
             FunctionCallArgumentItem.Type = ParseUnitType.Single;
@@ -955,6 +1019,7 @@ namespace code0k_cc
             {
                 Expression,
             };
+            FunctionCallArgumentItem.Execute = arg => arg.Instance.Children[0].Execute(arg);
 
             ArraySubscripting.Name = "Array Subscripting";
             ArraySubscripting.Type = ParseUnitType.Single;
@@ -965,6 +1030,7 @@ namespace code0k_cc
                 Expression,
                 TokenUnits[TokenType.RightSquareBracket],
             };
+            //todo ArraySubscripting
 
             MemberAccess.Name = "Member Access";
             MemberAccess.Type = ParseUnitType.Single;
@@ -974,6 +1040,8 @@ namespace code0k_cc
                 TokenUnits[TokenType.Dot],
                 LeftValue,
             };
+            //todo MemberAccess
+
 
 
             // level-3 (RTL): Unary plus and minus, Logical NOT and bitwise NOT
@@ -1127,12 +1195,19 @@ namespace code0k_cc
 
             // level-17 (RTL) (corresponding 16): assign =
             ExpressionsHelper[17].Type = ParseUnitType.Single;
+            ExpressionsHelper[17].ChildType = ParseUnitChildType.AllChild;
             ExpressionsHelper[17].Children = new List<ParseUnit>()
             {
-                Expressions[16],
+                LeftValue,
                 Operators[17],
                 Expressions[17]
             };
+            ExpressionsHelper[17].Execute = arg =>
+            {
+                var leftVexp =
+
+            };
+
             Expressions[17].ChildType = ParseUnitChildType.OneChild;
             Expressions[17].Children = new List<ParseUnit>()
             {

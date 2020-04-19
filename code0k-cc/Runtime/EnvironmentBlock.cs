@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using code0k_cc.Parse;
 using code0k_cc.Runtime.Type;
 
 namespace code0k_cc.Runtime
@@ -8,32 +9,48 @@ namespace code0k_cc.Runtime
     {
         public EnvironmentBlock ReturnBlock;
         public EnvironmentBlock ParentBlock;
-        public readonly Dictionary<string, IType> Variables = new Dictionary<string, IType>();
+        private readonly Dictionary<string, VariableRef> Variables = new Dictionary<string, VariableRef>();
         public ParseInstance ParseInstance;
 
-        public EnvironmentBlock LocateVariable(string name)
+        public void AddVariable(string name, Variable value)
         {
             if (this.Variables.ContainsKey(name))
             {
-                return this ;
+                throw new Exception($"Variable \"{name}\" has already been declared at this scope.");
             }
             else
             {
-                if (this.ParentBlock == null)
+                this.Variables.Add(name, new VariableRef(value));
+            }
+        } 
+
+        public VariableRef GetVariableRef(string name, bool recursively)
+        {
+            EnvironmentBlock block;
+            if (recursively)
+            {
+                block = LocateVariableBlock(name);
+                return block.GetVariableRef(name, false);
+            }
+            else
+            {
+                block = this;
+                if (this.Variables.ContainsKey(name))
                 {
-                    throw new Exception($"Unexpected variable \"{name}\".");
+                    return this.Variables[name];
                 }
                 else
                 {
-                    return this.ParentBlock.LocateVariable(name);
+                    throw new Exception($"Unexpected variable \"{name}\".");
                 }
             }
         }
-        public IType GetVariableValue(string name)
+
+        public EnvironmentBlock LocateVariableBlock(string name)
         {
             if (this.Variables.ContainsKey(name))
             {
-                return this.Variables[name];
+                return this;
             }
             else
             {
@@ -43,7 +60,7 @@ namespace code0k_cc.Runtime
                 }
                 else
                 {
-                    return this.ParentBlock.GetVariableValue(name);
+                    return this.ParentBlock.LocateVariableBlock(name);
                 }
             }
         }

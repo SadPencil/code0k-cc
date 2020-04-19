@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace code0k_cc
+﻿namespace code0k_cc.Nizk
 {
     enum NizkConstraintType
     {
