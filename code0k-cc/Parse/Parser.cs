@@ -347,39 +347,39 @@ namespace code0k_cc.Parse
                 MainProgramLoop,
                 eolUnit,
             };
-            MainProgram.Execute =  arg =>
-            {
-                //block: provide built-in types
+            MainProgram.Execute = arg =>
+           {
+               //block: provide built-in types
 
-                //todo: redundancy code here.
+               //todo: redundancy code here.
 
-                // prepare environment
-                var mainBlock = new EnvironmentBlock() { ParseInstance = arg.Instance, ParentBlock = arg.Block,ReturnBlock = arg.Block};
+               // prepare environment
+               var mainBlock = new EnvironmentBlock() { ParseInstance = arg.Instance, ParentBlock = arg.Block, ReturnBlock = arg.Block };
 
-                foreach (var instanceChild in arg.Instance.Children)
-                {
-                    _ = instanceChild?.Execute(new ExeArg(){Block = mainBlock});
-                }
+               foreach (var instanceChild in arg.Instance.Children)
+               {
+                   _ = instanceChild?.Execute(new ExeArg() { Block = mainBlock });
+               }
 
-                // find & execute "main"
-                var mainFunc = (FunctionDeclarationValue) mainBlock.GetVariableRef("main", false).Variable.Value;
+               // find & execute "main"
+               var mainFunc = (FunctionDeclarationValue) mainBlock.GetVariableRef("main", false).Variable.Value;
 
-                if (mainFunc.Instance == null)
-                {
-                    throw new Exception($"Unimplemented function \"{mainFunc.FunctionName}\"");
-                }
-                
-                // create new block
-                EnvironmentBlock newFuncBlock = new EnvironmentBlock()
-                {
-                    ParentBlock = mainFunc.ParentBlock,
-                    ParseInstance = mainFunc.Instance,
-                    ReturnBlock = mainBlock,
-                };
+               if (mainFunc.Instance == null)
+               {
+                   throw new Exception($"Unimplemented function \"{mainFunc.FunctionName}\"");
+               }
 
-                // execute function
-                return mainFunc.Instance.Execute(new ExeArg() { Block = newFuncBlock });
-            };
+               // create new block
+               EnvironmentBlock newFuncBlock = new EnvironmentBlock()
+               {
+                   ParentBlock = mainFunc.ParentBlock,
+                   ParseInstance = mainFunc.Instance,
+                   ReturnBlock = mainBlock,
+               };
+
+               // execute function
+               return mainFunc.Instance.Execute(new ExeArg() { Block = newFuncBlock });
+           };
 
             MainProgramItem.Name = "Main Program Item";
             MainProgramItem.Type = ParseUnitType.Single;
@@ -390,7 +390,7 @@ namespace code0k_cc.Parse
                 FunctionDeclaration,
                 FunctionImplementation,
             };
-            MainProgramItem.Execute = arg =>arg.Instance.Children[0].Execute(arg);
+            MainProgramItem.Execute = arg => arg.Instance.Children[0].Execute(arg);
 
             MainProgramLoop.Name = "Main Program Loop";
             MainProgramLoop.Type = ParseUnitType.SingleOptional;
@@ -415,13 +415,12 @@ namespace code0k_cc.Parse
                 TokenUnits[TokenType.RightBracket],
                 TokenUnits[TokenType.Semicolon]
             };
-            FunctionDeclaration.Execute = (instance, block, unwantedArg) =>
+            FunctionDeclaration.Execute = (arg) =>
             {
-                var funNameT = (TString) ( instance.Children[1].Execute(block, null) );
+                var typeUnitResult = arg.Instance.Children[0].Execute(arg).TypeUnitResult;
+                var funRetNType = NType.GetNType(typeUnitResult);
 
-                var funName = funNameT.Value;
-
-                var funRetTypeT = (TTypeOfType) ( instance.Children[0].Execute(block, null) );
+                var funName = arg.Instance.Children[1].Token.Value;
 
                 var funDeclareArgsRaw = instance.Children[3]?.Execute(block, null);
 
@@ -433,9 +432,9 @@ namespace code0k_cc.Parse
                     argList.Arguments = funDeclareArgsT.Arguments;
                 }
 
-                var funT = new TFunctionDeclaration() { Arguments = argList, FunctionName = funName, ReturnType = funRetTypeT, Instance = null };
+                var funT = new FunctionDeclarationValue() { Arguments = argList, FunctionName = funName, ReturnType = funRetNType, Instance = null };
 
-                block.Variables.Add(funName, funT);
+                arg.Block.AddVariable(funName, new Variable() { Type = NType.Function, Value = funT });
 
                 return null;
             };
@@ -473,10 +472,15 @@ namespace code0k_cc.Parse
                 GenericsTypeResult typeRest = arg.Instance.Children[2]?.Execute(new ExeArg() { Block = arg.Block })?.GenericsTypeResult;
 
                 GenericsTypeResult retResult = new GenericsTypeResult() { Types = new List<TypeResult>() { type1 } };
-                if (( typeRest?.Types?.Count ).GetValueOrDefault(0) > 0)
+
+                if (typeRest != null)
                 {
-                    retResult.Types.AddRange(typeRest.Types);
+                    if (typeRest.Types.Count > 0)
+                    {
+                        retResult.Types.AddRange(typeRest.Types);
+                    }
                 }
+
                 return new ExeResult() { GenericsTypeResult = retResult };
             };
 
@@ -497,11 +501,6 @@ namespace code0k_cc.Parse
             FunctionImplementation.ChildType = ParseUnitChildType.AllChild;
             FunctionImplementation.Children = new List<ParseUnit>()
             {
-                //TypeUnit,
-                //TokenUnits[TokenType.Identifier],
-                //TokenUnits[TokenType.LeftBracket],
-                //FunctionDeclarationArguments,
-                //TokenUnits[TokenType.RightBracket],
                 FunctionDeclaration,
                 CompoundStatement
             };
@@ -562,7 +561,7 @@ namespace code0k_cc.Parse
                 TokenUnits[TokenType.Comma],
                 FunctionDeclarationArguments
             };
-            FunctionImplementation.Execute = (instance, block, arg) => instance.Children[1]?.Execute(block, arg);
+            FunctionDeclarationArgumentLoop.Execute = (instance, block, arg) => instance.Children[1]?.Execute(block, arg);
 
 
             StatementBody.Name = "Statement Body";
@@ -956,7 +955,7 @@ namespace code0k_cc.Parse
                         }
 
                         // execute function
-                        return funcStruct.Instance.Execute(new ExeArg() {Block = newBlock});
+                        return funcStruct.Instance.Execute(new ExeArg() { Block = newBlock });
                     }
                     else if (op.ParseUnit == MemberAccess)
                     {

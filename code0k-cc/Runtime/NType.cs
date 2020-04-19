@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
+using code0k_cc.Runtime.ExeResult;
 
 namespace code0k_cc.Runtime
 {
@@ -46,7 +47,15 @@ namespace code0k_cc.Runtime
             //todo
         };
 
+        public static readonly NType Function = new NType()
+        {
+            //todo
+        };
 
+        public static NType GetNType(TypeResult r)
+        {
+            //todo
+        }
 
         public override bool Equals(object obj)
         {
