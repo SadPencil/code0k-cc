@@ -9,12 +9,7 @@ namespace code0k_cc.Runtime
     {
         public NType Type;
         public object Value; //remember to clone the object
-
-        public VariableRef GetVariableRef()
-        {
-            return new VariableRef(this);
-        }
-
+         
         public string String()
         {
             return this.Type.String(this);

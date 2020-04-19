@@ -6,7 +6,7 @@ using code0k_cc.Runtime.Type;
 
 namespace code0k_cc.Runtime
 {
-    struct FunctionDeclarationValue
+    class FunctionDeclarationValue
     {
         /// <summary>
         /// Instance of CompoundStatement

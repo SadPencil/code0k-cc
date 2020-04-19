@@ -46,22 +46,22 @@ namespace code0k_cc.Runtime
             }
             else
             {
-                this.Variables.Add(name, new VariableRef(value));
+                this.Variables.Add(name, new VariableRef(){Variable = value});
             }
         }
 
-        public VariableRef GetVariableRef(string name, bool recursively)
+        public VariableRefRef GetVariableRefRef(string name, bool recursively)
         {
             if (recursively)
             {
                 var block = this.LocateVariableBlock(name);
-                return block.GetVariableRef(name, false);
+                return block.GetVariableRefRef(name, false);
             }
             else
             {
                 if (this.Variables.ContainsKey(name))
                 {
-                    return this.Variables[name];
+                    return new VariableRefRef(this.Variables[name]);
                 }
                 else
                 {

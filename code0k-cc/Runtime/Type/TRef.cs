@@ -18,7 +18,7 @@ namespace code0k_cc.Runtime.Type
 
         public TRef(IReadOnlyList<TType> T, EnvironmentBlock block, string varName) : this(T)
         {
-            var variableRef = block.GetVariableRef(varName, true);
+            var variableRef = block.GetVariableRefRef(varName, true);
 
             this.VariableRef = variableRef;
         }

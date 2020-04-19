@@ -362,7 +362,7 @@ namespace code0k_cc.Parse
                }
 
                // find & execute "main"
-               var mainFunc = (FunctionDeclarationValue) mainBlock.GetVariableRef("main", false).Variable.Value;
+               var mainFunc = (FunctionDeclarationValue) mainBlock.GetVariableRefRef("main", false).VariableRef.Variable.Value;
 
                if (mainFunc.Instance == null)
                {
@@ -501,7 +501,7 @@ namespace code0k_cc.Parse
                 // 1. re-declare the function if it is already declared
                 // 2. set the FunctionDeclarationValue.Instance to the compound statement
                 var functionName = arg.Instance.Children[0].Execute(arg).FunctionDeclarationValue.FunctionName;
-                var funT = (FunctionDeclarationValue) arg.Block.GetVariableRef(functionName, false).Variable.Value;
+                var funT = (FunctionDeclarationValue) arg.Block.GetVariableRefRef(functionName, false).VariableRef.Variable.Value;
 
                 funT.Instance = arg.Instance.Children[1];
 
@@ -847,7 +847,7 @@ namespace code0k_cc.Parse
                 {
                     return new ExeResult()
                     {
-                        ExpressionResult = new ExpressionResult() { VariableRef = arg.Block.GetVariableRef(arg.Instance.Children[0].Execute(arg).TokenResult.Token.Value, false) }
+                        ExpressionResult = new ExpressionResult() { VariableRefRef = arg.Block.GetVariableRefRef(arg.Instance.Children[0].Execute(arg).TokenResult.Token.Value, false) }
                     };
                 }
                 else if (arg.Instance.Children[0].ParseUnit == TokenUnits[TokenType.Number])
@@ -857,7 +857,7 @@ namespace code0k_cc.Parse
                     var retVar = NType.UInt32.Parse(numberStr);
                     return new ExeResult()
                     {
-                        ExpressionResult = new ExpressionResult() { VariableRef = retVar.GetVariableRef() }
+                        ExpressionResult = new ExpressionResult() { VariableRefRef = new VariableRefRef(new VariableRef() { Variable = retVar }) }
                     };
                 }
                 else if (arg.Instance.Children[0].ParseUnit == BracketExpression)
@@ -906,8 +906,7 @@ namespace code0k_cc.Parse
                     if (op.ParseUnit == FunctionCall)
                     {
                         // get func
-                        var functionDefinitionRef = exp.VariableRef;
-                        var funcStruct = (FunctionDeclarationValue) functionDefinitionRef.Variable.Value;
+                        var funcStruct = (FunctionDeclarationValue) exp.VariableRefRef.VariableRef.Variable.Value;
 
                         if (funcStruct.Instance == null)
                         {
@@ -939,7 +938,7 @@ namespace code0k_cc.Parse
                             }
 
                             (string argName, NType argNType) = funcStruct.Arguments[argCount];
-                            var newArgVal = argExp.VariableRef.Variable.Assign(argNType);
+                            var newArgVal = argExp.VariableRefRef.VariableRef.Variable.Assign(argNType);
 
                             //add params
                             newBlock.AddVariable(argName, newArgVal);
@@ -1201,16 +1200,17 @@ namespace code0k_cc.Parse
             };
             ExpressionsHelper[17].Execute = arg =>
             {
-                Debug.Assert(arg.Instance.Children[1].Token.TokenType== TokenType.Assign);
+                Debug.Assert(arg.Instance.Children[1].Token.TokenType == TokenType.Assign);
 
-                var leftVar = arg.Instance.Children[0].Execute(arg).ExpressionResult.VariableRef;
+                var leftVarRefRef = arg.Instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef;
 
-                var rightExp = arg.Instance.Children[2].Execute(arg).ExpressionResult;
+
+                var rightExpRefRef = arg.Instance.Children[2].Execute(arg).ExpressionResult.VariableRefRef;
 
                 //assign
-                leftVar.Variable = rightExp.VariableRef.Variable.Assign(leftVar.Variable.Type);
+                leftVarRefRef.VariableRef.Variable = rightExpRefRef.VariableRef.Variable.Assign(leftVarRefRef.VariableRef.Variable.Type);
 
-                return new ExeResult(){ExpressionResult = new ExpressionResult(){ VariableRef = leftVar}};
+                return new ExeResult() { ExpressionResult = new ExpressionResult() { VariableRefRef = leftVarRefRef } };
             };
 
             Expressions[17].ChildType = ParseUnitChildType.OneChild;

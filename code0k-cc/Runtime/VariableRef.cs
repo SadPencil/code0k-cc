@@ -8,10 +8,5 @@ namespace code0k_cc.Runtime
     class VariableRef
     {
         public Variable Variable;
-
-        public VariableRef(Variable var)
-        {
-            this.Variable = var;
-        }
     }
 }

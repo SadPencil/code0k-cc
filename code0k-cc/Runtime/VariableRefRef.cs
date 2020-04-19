@@ -6,7 +6,7 @@ namespace code0k_cc.Runtime
 {
     class VariableRefRef
     {
-        public VariableRef VariableRef;
+        public readonly VariableRef VariableRef;
 
         public VariableRefRef(VariableRef varRef)
         {

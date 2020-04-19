@@ -6,6 +6,6 @@ namespace code0k_cc.Runtime.ExeResult
 {
     class ExpressionResult
     {
-        public VariableRef VariableRef;
+        public VariableRefRef VariableRefRef;
     }
 }
