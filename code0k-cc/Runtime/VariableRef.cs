@@ -5,7 +5,7 @@ using code0k_cc.Runtime.Type;
 
 namespace code0k_cc.Runtime
 {
-    class VariableRef
+    struct VariableRef
     {
         public Variable Variable;
 

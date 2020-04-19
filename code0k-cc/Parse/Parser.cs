@@ -426,7 +426,7 @@ namespace code0k_cc.Parse
 
                 var funT = new FunctionDeclarationValue() { Arguments = funArgs, FunctionName = funName, ReturnType = funRetNType, Instance = null };
 
-                arg.Block.AddVariable(funName, new Variable() { Type = NType.Function, Value = funT });
+                arg.Block.ReAssignVariable(funName, new Variable() { Type = NType.Function, Value = funT });
 
                 return new ExeResult() { FunctionDeclarationValue = funT };
             };
@@ -500,8 +500,12 @@ namespace code0k_cc.Parse
             {
                 // 1. re-declare the function if it is already declared
                 // 2. set the FunctionDeclarationValue.Instance to the compound statement
+                var functionName = arg.Instance.Children[0].Execute(arg).FunctionDeclarationValue.FunctionName;
+                var funT = (FunctionDeclarationValue) arg.Block.GetVariableRef(functionName, false).Variable.Value;
 
-                //todo
+                funT.Instance = arg.Instance.Children[1];
+
+                return new ExeResult() { FunctionDeclarationValue = funT };
             };
 
 
