@@ -625,7 +625,7 @@ namespace code0k_cc.Parse
                 StatementSemicolonCollection,
                 TokenUnits[TokenType.Semicolon],
             };
-            StatementSemicolon.Execute = (instance, block, arg) => instance.Children[0].Execute(block, arg);
+            StatementSemicolon.Execute = arg => arg.Instance.Children[0].Execute(arg);
 
             StatementSemicolonCollection.Name = "Statement Semicolon Collection";
             StatementSemicolonCollection.Type = ParseUnitType.SingleOptional; // null statement included
@@ -638,17 +638,20 @@ namespace code0k_cc.Parse
                 DefinitionStatement,
                 Expression
             };
-            StatementSemicolonCollection.Execute = (instance, block, arg) =>
-            {
-                if (instance.Children.Count > 0)
-                {
-                    return instance.Children[0].Execute(block, arg);
-                }
-                else
-                {
-                    return new TVoid();
-                }
-            };
+            StatementSemicolonCollection.Execute = arg =>
+             {
+                 if (arg.Instance.Children[0].ParseUnit == Expression)
+                 {
+                     _ = arg.Instance.Children[0].Execute(arg);
+
+                     return new ExeResult() { StatementResult = new StatementResult() { Type = StatementResultType.Normal } };
+                 }
+                 else
+                 {
+                     return arg.Instance.Children[0].Execute(arg);
+
+                 }
+             };
 
 
             Statement.Name = "Statement";
@@ -662,7 +665,7 @@ namespace code0k_cc.Parse
                 WhileStatement,
                 StatementSemicolon,
             };
-            Statement.Execute = (instance, block, arg) => instance.Children[0].Execute(block, arg);
+            Statement.Execute = arg => arg.Instance.Children[0].Execute(arg);
 
             GlobalDefinitionStatement.Name = "Global Definition Statement";
             GlobalDefinitionStatement.Type = ParseUnitType.Single;
@@ -672,7 +675,7 @@ namespace code0k_cc.Parse
                 DefinitionStatement,
                 TokenUnits[TokenType.Semicolon],
             };
-            GlobalDefinitionStatement.Execute = (instance, block, arg) => instance.Children[0].Execute(block, arg);
+            GlobalDefinitionStatement.Execute = arg => arg.Instance.Children[0].Execute(arg);
 
             ReturnStatement.Name = "Return Statement";
             ReturnStatement.Type = ParseUnitType.Single;
@@ -682,7 +685,12 @@ namespace code0k_cc.Parse
                 TokenUnits[TokenType.Return],
                 Expression,
             };
-            //todo execute
+            ReturnStatement.Execute = arg =>
+            {
+                var expRefRef = arg.Instance.Children[1].Execute(arg).ExpressionResult.VariableRefRef;
+                return new ExeResult() { StatementResult = new StatementResult() { Type = StatementResultType.Return, ReturnVariableRefRef = expRefRef } };
+            };
+            //todo execute nizk
 
 
             BreakStatement.Name = "Break Statement";
@@ -692,7 +700,8 @@ namespace code0k_cc.Parse
             {
                 TokenUnits[TokenType.Break],
             };
-            //todo execute
+            BreakStatement.Execute = arg => new ExeResult() { StatementResult = new StatementResult() { Type = StatementResultType.Break } };
+            //todo execute nizk
 
             ContinueStatement.Name = "Continue Statement";
             ContinueStatement.Type = ParseUnitType.Single;
@@ -701,7 +710,8 @@ namespace code0k_cc.Parse
             {
                 TokenUnits[TokenType.Continue],
             };
-            //todo execute
+            ContinueStatement.Execute = arg => new ExeResult() { StatementResult = new StatementResult() { Type = StatementResultType.Continue } };
+            //todo execute nizk
 
             DefinitionStatement.Name = "Definition Statement";
             DefinitionStatement.Type = ParseUnitType.Single;
@@ -709,30 +719,23 @@ namespace code0k_cc.Parse
             DefinitionStatement.Children = new List<ParseUnit>()
             {
                 TypeUnit,
-                LeftValue,
+                TokenUnits[TokenType.Identifier],
                 TokenUnits[TokenType.Assign],
                 Expression
             };
-            DefinitionStatement.Execute = (instance, block, arg) =>
+            DefinitionStatement.Execute = arg =>
             {
-                var varNameT = (TString) ( instance.Children[1].Execute(block, null) );
-                var varName = varNameT.Value;
+                var typeR = arg.Instance.Children[0].Execute(arg).TypeUnitResult;
+                var ntype = NType.GetNType(typeR);
+                var varName = arg.Instance.Children[1].Token.Value;
 
-                var typeT = (TTypeOfType) ( instance.Children[0].Execute(block, null) );
+                var expRefRef = arg.Instance.Children[3].Execute(arg).ExpressionResult.VariableRefRef;
 
-                var expressionValueT = instance.Children[3].Execute(block, null);
+                var newExp = expRefRef.VariableRef.Variable.Assign(ntype);
 
-                if (!typeT.IsImplicitConvertible(expressionValueT))
-                {
-                    throw new Exception($"Unexpected type when assigning variable \"{varName}\"." + Environment.NewLine +
-                                        $"Supposed to be \"{ typeT.GetTypeCodeName() }\", got \"{typeT.TypeCodeName}\" here.");
-                }
+                arg.Block.AddVariable(varName, newExp);
 
-                //todo do Implicit Convert
-
-                block.Variables.Add(varName, expressionValueT);
-
-                return null;
+                return new ExeResult() { StatementResult = new StatementResult() { Type = StatementResultType.Normal } };
 
             };
 
@@ -805,7 +808,7 @@ namespace code0k_cc.Parse
                 StatementBody,
                 TokenUnits[TokenType.End],
             };
-            //todo exe
+            CompoundStatement.Execute = arg => arg.Instance.Children[1].Execute(arg);
 
             LeftValue.Name = "Left Value";
             LeftValue.Type = ParseUnitType.Single;
