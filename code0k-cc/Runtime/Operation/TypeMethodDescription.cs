@@ -6,7 +6,7 @@ using code0k_cc.Runtime.Type;
 
 namespace code0k_cc.Runtime.Operation
 {
-    class PropertyOperationDescription
+    class TypeMethodDescription
     {
         public string PropertyName;
         public TType ReturnType;

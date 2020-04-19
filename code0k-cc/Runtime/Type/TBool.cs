@@ -9,7 +9,7 @@ namespace code0k_cc.Runtime.Type
 {
     class TBool : IType
     {
-        public override string TypeCodeName => "bool";
+        public override string TypeCodeName => "bool"; 
 
         public override Dictionary<UnaryOperation, (UnaryOperationDescription Description, Func<IType> OperationFunc)> UnaryOperations =>
            new Dictionary<UnaryOperation, (UnaryOperationDescription Description, Func<IType> OperationFunc)>() {

@@ -7,28 +7,22 @@ namespace code0k_cc.Runtime.Type
 {
     abstract class IGenericsType : IType
     {
-        private string _TypeCodeName = "__GenericsType";
-        public override string TypeCodeName => this._TypeCodeName;
+        public override string TypeCodeName { get; }
+        
+        public IReadOnlyList<TType> T { get; }
+        
+        public IGenericsType() => throw new NotSupportedException();
 
-        private IReadOnlyList<TType> _T;
-
-        public IReadOnlyList<TType> T {
-            get => this._T;
-            set {
-                this._T = value;
-                this._TypeCodeName = "__GenericsType";
-                foreach (var t in value)
-                {
-                    this._TypeCodeName += t.TypeCodeName;
-                }
-            }
-        }
-
-        public IGenericsType() { }
-
-        public IGenericsType(IReadOnlyList<TType> T)
+        public IGenericsType(IReadOnlyList<TType> T) : base()
         {
             this.T = T;
+            var name = "__GenericsType";
+            foreach (var t in T)
+            {
+                name += t.TypeCodeName;
+            }
+
+            this.TypeCodeName = name;
         }
     }
 }

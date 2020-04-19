@@ -10,43 +10,69 @@ namespace code0k_cc.Runtime.Type
     {
         public override string TypeCodeName => base.TypeCodeName + "__List";
 
-        private List<IType> list = new List<IType>();
+        private readonly List<IType> Value = new List<IType>();
 
-        public override Dictionary<string, PropertyOperationDescription> PropertyDeclarations => new Dictionary<string, PropertyOperationDescription>()
+        //todo add new()
+
+        public override Dictionary<string, TypeMethodDescription> InstanceMethodDeclarations { get; }
+        public override Dictionary<string, TypeMethodDescription> StaticMethodDeclarations { get; }
+
+
+        public TList(IReadOnlyList<TType> T) : base(T)
         {
-            {"Length", new PropertyOperationDescription()
+            if (T.Count != 1)
+            {
+                throw new Exception($"Type \"{this.TypeCodeName} \" only accept a single generics type.");
+            }
+
+            this.StaticMethodDeclarations = new Dictionary<string, TypeMethodDescription>()
+            {
+                {
+                    "New",new TypeMethodDescription()
+                    {
+                        PropertyName = "New",
+                        ReturnType = TType.GenericsType(typeof(TList),this.T),
+                        Arguments = new TFunctionDeclarationArguments(){Arguments = new List<(TType Type, string VarName)>()},
+                        Execute = (block, funcArg, assignArg) => new TList(this.T)
+                    }
+                },
+            };
+
+
+            this.InstanceMethodDeclarations = new Dictionary<string, TypeMethodDescription>() {
+            {"Length", new TypeMethodDescription()
             {
                 PropertyName = "Length",
                 ReturnType = TType.UInt32,
                 Arguments = new TFunctionDeclarationArguments() {Arguments =  new List<(TType Type, string VarName)>()},
-                Execute = (block,funcArg,assignArg) => new TUInt32((UInt32)this.list.Count)
+                Execute = (block,funcArg,assignArg) => new TUInt32((UInt32)this.Value.Count)
             }},
 
-            {"Clear", new PropertyOperationDescription()
+            {"Clear", new TypeMethodDescription()
             {
                 PropertyName = "Clear",
                 ReturnType = TType.Void,
                 Arguments = new TFunctionDeclarationArguments() {Arguments =  new List<(TType Type, string VarName)>()},
                 Execute = (block, funcArg, assignArg) =>
                 {
-                    this.list.Clear();
+                    this.Value.Clear();
                     return new TVoid();
                 }
             }},
 
-            {"Append", new PropertyOperationDescription()
+            {"Append", new TypeMethodDescription()
             {
                 PropertyName = "Append",
                 ReturnType = TType.Void,
                 Arguments = new TFunctionDeclarationArguments() {Arguments =  new List<(TType Type, string VarName)>() {(this.T[0],"Item"),}},
                 Execute = (block,funcArg,assignArg)  =>
                 {
-                    this.list.Add(funcArg.Parameters.Parameters[0].Value.Assign(block,this.T[0],assignArg));
+                    this.Value.Add(funcArg.Parameters.Parameters[0].Value.Assign(block,this.T[0],assignArg));
                     return new TVoid();
                 }
             }},
 
-            {"Get", new PropertyOperationDescription()
+            {"Get", new TypeMethodDescription()
             {
                 PropertyName = "Get",
                 ReturnType = this.T[0],
@@ -59,11 +85,11 @@ namespace code0k_cc.Runtime.Type
                         throw new Exception($"The list can't hold more than {Int32.MinValue} items.");
                     }
 
-                    return this.list[(Int32) index];
+                    return this.Value[(Int32) index];
                 }
             }},
 
-            {"Set", new PropertyOperationDescription()
+            {"Set", new TypeMethodDescription()
             {
                 PropertyName = "Set",
                 ReturnType = TType.Void,
@@ -76,12 +102,12 @@ namespace code0k_cc.Runtime.Type
                         throw new Exception($"The list can't hold more than {Int32.MinValue} items.");
                     }
 
-                     this.list[(Int32) index] = funcArg.Parameters.Parameters[1].Value.Assign(block,this.T[0],assignArg);
+                     this.Value[(Int32) index] = funcArg.Parameters.Parameters[1].Value.Assign(block,this.T[0],assignArg);
                      return new TVoid();
                 },
             }},
 
-            {"RemoteAt", new PropertyOperationDescription()
+            {"RemoteAt", new TypeMethodDescription()
             {
                 PropertyName = "RemoteAt",
                 ReturnType = TType.Void,
@@ -94,7 +120,7 @@ namespace code0k_cc.Runtime.Type
                         throw new Exception($"The list can't hold more than {Int32.MinValue} items.");
                     }
 
-                    this.list.RemoveAt((Int32) index);
+                    this.Value.RemoveAt((Int32) index);
                     return new TVoid();
                 }
             }},
@@ -102,6 +128,6 @@ namespace code0k_cc.Runtime.Type
 
         };
 
-
+        }
     }
 }

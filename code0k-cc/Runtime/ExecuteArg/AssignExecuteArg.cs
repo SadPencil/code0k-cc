@@ -4,7 +4,8 @@ using System.Text;
 
 namespace code0k_cc.Runtime.ExecuteArg
 {
-    class AssignExecuteArg:IRuntimeExecuteArg
+    class AssignExecuteArg : IRuntimeExecuteArg
     {
+
     }
 }

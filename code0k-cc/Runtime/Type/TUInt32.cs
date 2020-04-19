@@ -9,7 +9,7 @@ namespace code0k_cc.Runtime.Type
 {
     class TUInt32 : IType
     {
-        public override string TypeCodeName => "uint32";
+        public override string TypeCodeName => "uint32"; 
         public override Dictionary<UnaryOperation, (UnaryOperationDescription Description, Func<IType> OperationFunc)> UnaryOperations =>
             new Dictionary<UnaryOperation, (UnaryOperationDescription Description, Func<IType> OperationFunc)>()
         {
@@ -128,5 +128,6 @@ namespace code0k_cc.Runtime.Type
         {
             this.Value = value;
         }
+         
     }
 }
