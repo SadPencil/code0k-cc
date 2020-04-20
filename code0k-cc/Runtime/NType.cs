@@ -1,8 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using code0k_cc.Runtime.ExeResult;
+using code0k_cc.Runtime.Operation;
 
 namespace code0k_cc.Runtime
 {
@@ -11,48 +16,153 @@ namespace code0k_cc.Runtime
         /// <summary>
         /// The one and only one field to determine whether two types are actually the same.
         /// </summary>
-        public string TypeCodeName { get; }
+        public string TypeCodeName { get; private set; }
+
+        public Variable NewValue()
+        {
+            return this.NewValueFunc();
+        }
         /// <summary>
         /// Method to get a new value. Throw exceptions.
         /// </summary>
-        public Func<Variable> NewValue { get; }
+        private Func<Variable> NewValueFunc;
+
+        public Variable Parse(string str)
+        {
+            return this.ParseFunc(str);
+        }
         /// <summary>
         /// Method to get a new value from a token string. Throw exceptions.
         /// </summary>
-        public Func<string, Variable> Parse { get; }
+        private Func<string, Variable> ParseFunc;
 
+        public string String(Variable var)
+        {
+            Debug.Assert(var.Type == this);
+            return this.StringFunc(var);
+        }
         /// <summary>
         /// Method to get a string from a value. Throw exceptions.
         /// </summary>
-        public Func<Variable, string> String { get; }
+        private Func<Variable, string> StringFunc;
 
         /// <summary>
         /// Generics Type Lists. Can be null.
         /// </summary>
-        public IReadOnlyList<NType> T { get; }
+        public IReadOnlyList<NType> GenericsTypes { get; private set; }
 
+        public Variable Assign(Variable var, NType type)
+        {
+            Debug.Assert(var.Type == this);
+            return this.AssignFunc(var, type);
+        }
         /// <summary>
         /// RightVal, LeftType, LeftVal
         /// </summary>
-        public Func<Variable, NType,  Variable> Assign { get; }
+        private Func<Variable, NType, Variable> AssignFunc;
+
+        public Variable ImplicitConvert(Variable var, NType type)
+        {
+            Debug.Assert(var.Type == this);
+            return this.ImplicitConvertFunc(var, type);
+        }
         /// <summary>
         /// RightVal, LeftType, LeftVal
         /// </summary>
-        private Func<Variable, NType, Variable> ImplicitConvert { get; }
+        private Func<Variable, NType, Variable> ImplicitConvertFunc;
 
-        private NType() { }
+        public Variable UnaryOperation(Variable var, UnaryOperation op)
+        {
+            Debug.Assert(var.Type == this);
+            if (( this.UnaryOperations?.ContainsKey(op) ).GetValueOrDefault())
+            {
+                return this.UnaryOperations[op](var);
+            }
+            else
+            {
+                throw new Exception($"Type \"{this.TypeCodeName}\" doesn't support \"{op.ToString()}\" operation.");
+            }
+        }
+
+        public IReadOnlyDictionary<UnaryOperation, Func<Variable, Variable>> UnaryOperations { get; private set; }
+        public Variable BinaryOperation(Variable var, Variable another, BinaryOperation op)
+        {
+            Debug.Assert(var.Type == this);
+            if (( this.BinaryOperations?.ContainsKey(op) ).GetValueOrDefault())
+            {
+                return this.BinaryOperations[op](var, another);
+            }
+            else
+            {
+                throw new Exception($"Type \"{this.TypeCodeName}\" doesn't support \"{op.ToString()}\" operation.");
+            }
+        }
+        public IReadOnlyDictionary<BinaryOperation, Func<Variable, Variable, Variable>> BinaryOperations { get; private set; }
+
+        private NType()
+        {
+            // default behaviors
+
+            this.AssignFunc = this.ImplicitConvert;
+            this.ImplicitConvertFunc = (variable, type) =>
+            {
+                Debug.Assert(variable.Type == this);
+                if (variable.Type == type)
+                {
+                    return variable;
+                }
+                else
+                {
+                    throw new Exception($"Can't implicit convert \"{this.TypeCodeName }\" to \"{type.TypeCodeName}\".");
+                }
+            };
+
+            this.StringFunc = variable => throw new Exception($"Type \"{this.TypeCodeName}\" doesn't support String().");
+            this.ParseFunc = s => throw new Exception($"Type \"{this.TypeCodeName}\" doesn't support Parse().");
+
+        }
 
         public static readonly NType UInt32 = new NType()
         {
-            //todo
+            TypeCodeName = "uint32",
+            NewValueFunc = () => new Variable() { Type = NType.UInt32, Value = System.UInt32.MinValue },
+            ParseFunc = (str) =>
+            {
+                if (System.UInt32.TryParse(str, out uint retUint))
+                {
+                    return new Variable() { Type = UInt32, Value = System.UInt32.Parse(str) };
+                }
+                else
+                {
+                    throw new Exception($"Can't parse \"{str}\" as \"{NType.UInt32.TypeCodeName}\".");
+                }
+            },
+            StringFunc = variable =>
+            {
+                return ( (System.UInt32) variable.Value ).ToString(CultureInfo.InvariantCulture);
+            },
+            GenericsTypes = null,
+            UnaryOperations = new Dictionary<UnaryOperation, Func<Variable, Variable>>()
+            {
+                //todo write unary operation
+            },
+            BinaryOperations = new Dictionary<BinaryOperation, Func<Variable, Variable, Variable>>()
+            {
+                //todo write binary operation
+            },
+
+
         };
+            
         public static readonly NType Void = new NType()
         {
-            //todo
+            TypeCodeName = "void",
+            NewValueFunc = () => new Variable() { Type = NType.Void, Value = null },
         };
 
         public static readonly NType Function = new NType()
         {
+
             //todo
         };
 
