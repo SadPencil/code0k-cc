@@ -128,9 +128,9 @@ namespace code0k_cc.Runtime
             NewValueFunc = () => new Variable() { Type = NType.UInt32, Value = System.UInt32.MinValue },
             ParseFunc = (str) =>
             {
-                if (System.UInt32.TryParse(str, out uint retUint))
+                if (System.UInt32.TryParse(str, out System.UInt32 retUint))
                 {
-                    return new Variable() { Type = UInt32, Value = System.UInt32.Parse(str) };
+                    return new Variable() { Type = NType.UInt32, Value = System.UInt32.Parse(str) };
                 }
                 else
                 {
@@ -138,7 +138,6 @@ namespace code0k_cc.Runtime
                 }
             },
             StringFunc = variable => ( (System.UInt32) variable.Value ).ToString(CultureInfo.InvariantCulture),
-            GenericsTypes = null,
             UnaryOperations = new Dictionary<UnaryOperation, Func<Variable, Variable>>()
             {
                 //todo write unary operation
@@ -148,6 +147,32 @@ namespace code0k_cc.Runtime
                 //todo write binary operation
             },
 
+
+        };
+
+        public static readonly NType Bool = new NType("bool")
+        {
+            NewValueFunc = () => new Variable() { Type = NType.Bool, Value = false },
+            ParseFunc = (str) =>
+            {
+                if (System.Boolean.TryParse(str, out System.Boolean retUint))
+                {
+                    return new Variable() { Type = NType.Bool, Value = System.Boolean.Parse(str) };
+                }
+                else
+                {
+                    throw new Exception($"Can't parse \"{str}\" as \"{NType.Bool.TypeCodeName}\".");
+                }
+            },
+            StringFunc = variable => ( (System.Boolean) variable.Value ).ToString(CultureInfo.InvariantCulture),
+            UnaryOperations = new Dictionary<UnaryOperation, Func<Variable, Variable>>()
+            {
+                //todo write unary operation
+            },
+            BinaryOperations = new Dictionary<BinaryOperation, Func<Variable, Variable, Variable>>()
+            {
+                //todo write binary operation
+            },
 
         };
 
@@ -163,8 +188,32 @@ namespace code0k_cc.Runtime
 
         public static NType GetNType(TypeResult r)
         {
+            if (r.Generics?.Types?.Count > 0)
+            {
+                //todo make generics type
+            }
+            else
+            {
+
+            }
             //todo
         }
+
+        public static IEnumerable<NType> GetNonGenericsNTypes()
+        {
+            yield return NType.Void;
+            yield return NType.UInt32;
+            yield return NType.Function;
+
+            yield break;
+        }
+
+        public static IEnumerable<NType> GetGenericsNTypes()
+        {
+            yield break;
+        }
+
+
 
         public override bool Equals(object obj)
         {
