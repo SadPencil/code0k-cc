@@ -16,7 +16,7 @@ namespace code0k_cc.Runtime
         /// <summary>
         /// The one and only one field to determine whether two types are actually the same.
         /// </summary>
-        public string TypeCodeName { get; private set; }
+        public string TypeCodeName { get; }
 
         public Variable NewValue()
         {
@@ -99,8 +99,9 @@ namespace code0k_cc.Runtime
         }
         public IReadOnlyDictionary<BinaryOperation, Func<Variable, Variable, Variable>> BinaryOperations { get; private set; }
 
-        private NType()
+        private NType(string TypeCodeName)
         {
+            this.TypeCodeName = TypeCodeName;
             // default behaviors
 
             this.AssignFunc = this.ImplicitConvert;
@@ -122,9 +123,8 @@ namespace code0k_cc.Runtime
 
         }
 
-        public static readonly NType UInt32 = new NType()
+        public static readonly NType UInt32 = new NType("uint32")
         {
-            TypeCodeName = "uint32",
             NewValueFunc = () => new Variable() { Type = NType.UInt32, Value = System.UInt32.MinValue },
             ParseFunc = (str) =>
             {
@@ -137,10 +137,7 @@ namespace code0k_cc.Runtime
                     throw new Exception($"Can't parse \"{str}\" as \"{NType.UInt32.TypeCodeName}\".");
                 }
             },
-            StringFunc = variable =>
-            {
-                return ( (System.UInt32) variable.Value ).ToString(CultureInfo.InvariantCulture);
-            },
+            StringFunc = variable => ( (System.UInt32) variable.Value ).ToString(CultureInfo.InvariantCulture),
             GenericsTypes = null,
             UnaryOperations = new Dictionary<UnaryOperation, Func<Variable, Variable>>()
             {
@@ -153,17 +150,15 @@ namespace code0k_cc.Runtime
 
 
         };
-            
-        public static readonly NType Void = new NType()
+
+        public static readonly NType Void = new NType("void")
         {
-            TypeCodeName = "void",
             NewValueFunc = () => new Variable() { Type = NType.Void, Value = null },
         };
 
-        public static readonly NType Function = new NType()
+        public static readonly NType Function = new NType("__Function")
         {
-
-            //todo
+            NewValueFunc = () => new Variable() { Type = NType.Function, Value = new FunctionDeclarationValue() },
         };
 
         public static NType GetNType(TypeResult r)
