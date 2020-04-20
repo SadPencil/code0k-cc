@@ -191,12 +191,19 @@ namespace code0k_cc.Runtime
             if (r.Generics?.Types?.Count > 0)
             {
                 //todo make generics type
+                throw new NotImplementedException();
             }
             else
             {
-
-            }
-            //todo
+                foreach (var nt in GetNonGenericsNTypes())
+                {
+                    if (r.TypeName == nt.TypeCodeName)
+                    {
+                        return nt;
+                    }
+                }
+                throw new Exception($"Unknown type \"{r.TypeName}\"");
+            } 
         }
 
         public static IEnumerable<NType> GetNonGenericsNTypes()
@@ -229,7 +236,7 @@ namespace code0k_cc.Runtime
 
         public override int GetHashCode()
         {
-            return this.TypeCodeName.GetHashCode();
+            return HashCode.Combine(this.TypeCodeName);
         }
 
         public static bool operator ==(NType op1, NType op2)

@@ -6,7 +6,7 @@ using System.Linq;
 using code0k_cc.Lex;
 using code0k_cc.Runtime;
 using code0k_cc.Runtime.ExeArg;
-using code0k_cc.Runtime.ExeResult; 
+using code0k_cc.Runtime.ExeResult;
 
 namespace code0k_cc.Parse
 {
@@ -378,30 +378,22 @@ namespace code0k_cc.Parse
 
                // execute function
                var funRet = mainFunc.Instance.Execute(arg).StatementResult;
-               switch (funRet.Type)
+               return funRet.Type switch
                {
-                   case StatementResultType.Return:
-                       return new ExeResult()
-                       {
-                           StatementResult = new StatementResult()
-                           { ReturnVariableRefRef = funRet.ReturnVariableRefRef, Type = StatementResultType.Return }
-                       };
-                       break;
-                   case StatementResultType.Normal:
-                       return new ExeResult()
-                       {
-                           StatementResult = new StatementResult()
-                           { ReturnVariableRefRef = new VariableRefRef(new VariableRef() { Variable = NType.Void.NewValue() }), Type = StatementResultType.Return }
-                       };
-                   case StatementResultType.Break:
-                       throw new Exception($"Unexpected \"break\" without loop statement while executing function \"{mainFunc.FunctionName}\"");
-                       break;
-                   case StatementResultType.Continue:
-                       throw new Exception($"Unexpected \"continue\" without loop statement while executing function \"{mainFunc.FunctionName}\"");
-                       break;
-                   default:
-                       throw new Exception("Assert failed!");
-               }
+                   StatementResultType.Return => new ExeResult()
+                   {
+                       StatementResult = new StatementResult()
+                       { ReturnVariableRefRef = funRet.ReturnVariableRefRef, Type = StatementResultType.Return }
+                   },
+                   StatementResultType.Normal => new ExeResult()
+                   {
+                       StatementResult = new StatementResult()
+                       { ReturnVariableRefRef = new VariableRefRef(new VariableRef() { Variable = NType.Void.NewValue() }), Type = StatementResultType.Return }
+                   },
+                   StatementResultType.Break => throw new Exception($"Unexpected \"break\" without loop statement while executing function \"{mainFunc.FunctionName}\""),
+                   StatementResultType.Continue => throw new Exception($"Unexpected \"continue\" without loop statement while executing function \"{mainFunc.FunctionName}\""),
+                   _ => throw new Exception("Assert failed!"),
+               };
            };
 
             MainProgramItem.Name = "Main Program Item";
@@ -1022,10 +1014,10 @@ namespace code0k_cc.Parse
                                 };
                             case StatementResultType.Break:
                                 throw new Exception($"Unexpected \"break\" without loop statement while executing function \"{funcStruct.FunctionName}\"");
-                                break;
+
                             case StatementResultType.Continue:
                                 throw new Exception($"Unexpected \"continue\" without loop statement while executing function \"{funcStruct.FunctionName}\"");
-                                break;
+
                             default:
                                 throw new Exception("Assert failed!");
                         }
