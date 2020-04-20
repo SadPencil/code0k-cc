@@ -6,8 +6,7 @@ using System.Linq;
 using code0k_cc.Lex;
 using code0k_cc.Runtime;
 using code0k_cc.Runtime.ExeArg;
-using code0k_cc.Runtime.ExeResult;
-using code0k_cc.Runtime.Type;
+using code0k_cc.Runtime.ExeResult; 
 
 namespace code0k_cc.Parse
 {

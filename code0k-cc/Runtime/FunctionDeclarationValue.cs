@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using code0k_cc.Parse;
-using code0k_cc.Runtime.Type;
+using code0k_cc.Parse;  
 
 namespace code0k_cc.Runtime
 {
