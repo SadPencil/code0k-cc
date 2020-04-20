@@ -283,6 +283,8 @@ namespace code0k_cc.Parse
             ParseUnit MainProgramLoop = new ParseUnit();
 
             ParseUnit GlobalDefinitionStatement = new ParseUnit();
+            ParseUnit GlobalFunctionDeclarationStatement = new ParseUnit();
+            ;
 
             ParseUnit FunctionDeclaration = new ParseUnit();
             ParseUnit FunctionImplementation = new ParseUnit();
@@ -402,7 +404,7 @@ namespace code0k_cc.Parse
             MainProgramItem.Children = new List<ParseUnit>()
             {
                 GlobalDefinitionStatement,
-                FunctionDeclaration,
+                GlobalFunctionDeclarationStatement,
                 FunctionImplementation,
             };
             MainProgramItem.Execute = arg => arg.Instance.Children[0].Execute(arg);
@@ -427,8 +429,7 @@ namespace code0k_cc.Parse
                 TokenUnits[TokenType.Identifier],
                 TokenUnits[TokenType.LeftBracket],
                 FunctionDeclarationArguments,
-                TokenUnits[TokenType.RightBracket],
-                TokenUnits[TokenType.Semicolon]
+                TokenUnits[TokenType.RightBracket], 
             };
             FunctionDeclaration.Execute = (arg) =>
             {
@@ -667,6 +668,17 @@ namespace code0k_cc.Parse
                 TokenUnits[TokenType.Semicolon],
             };
             GlobalDefinitionStatement.Execute = arg => arg.Instance.Children[0].Execute(arg);
+
+            GlobalFunctionDeclarationStatement.Name = "Global Function Declaration Statement";
+            GlobalFunctionDeclarationStatement.Type = ParseUnitType.Single;
+            GlobalFunctionDeclarationStatement.ChildType = ParseUnitChildType.AllChild;
+            GlobalFunctionDeclarationStatement.Children = new List<ParseUnit>()
+            {
+                FunctionDeclaration,
+                TokenUnits[TokenType.Semicolon],
+            };
+            GlobalFunctionDeclarationStatement.Execute = arg => arg.Instance.Children[0].Execute(arg);
+
 
             ReturnStatement.Name = "Return Statement";
             ReturnStatement.Type = ParseUnitType.Single;

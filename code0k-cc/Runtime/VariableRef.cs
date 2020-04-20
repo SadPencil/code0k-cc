@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
-using code0k_cc.Runtime.Type;
+using System.Text; 
 
 namespace code0k_cc.Runtime
 {
