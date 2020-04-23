@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using code0k_cc.Parse;
 using code0k_cc.Runtime.Block;
 
-namespace code0k_cc.Runtime
+namespace code0k_cc.Runtime.ValueOfType
 {
-    class FunctionDeclarationValue
+    class FunctionDeclarationValue : IValueOfType
     {
         /// <summary>
         /// Instance of CompoundStatement

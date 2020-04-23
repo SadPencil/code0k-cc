@@ -8,6 +8,7 @@ using code0k_cc.Runtime;
 using code0k_cc.Runtime.Block;
 using code0k_cc.Runtime.ExeArg;
 using code0k_cc.Runtime.ExeResult;
+using code0k_cc.Runtime.ValueOfType;
 
 namespace code0k_cc.Parse
 {
@@ -761,8 +762,17 @@ namespace code0k_cc.Parse
                 // record which variables have changed, and performs actions
                 // rollback to execute else statement
                 // in the end, combine the two results
+                var currentOverlay = arg.Block.Overlay;
+                var trueOverlay = new Overlay(currentOverlay);
+                var falseOverlay = new Overlay(currentOverlay);
+                var trueOverlayBlock = new OverlayBlock(trueOverlay, arg.Block.Block);
+                var falseOverlayBlock = new OverlayBlock(falseOverlay, arg.Block.Block);
 
+                arg.Instance.Children[4].Execute(new ExeArg() { Block = trueOverlayBlock });
+                arg.Instance.Children[5].Execute(new ExeArg() { Block = falseOverlayBlock });
 
+                // combine two overlay
+                //todo
 
             };
 

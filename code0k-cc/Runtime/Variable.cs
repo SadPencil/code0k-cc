@@ -1,14 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text; 
+using System.Text;
+using code0k_cc.Runtime.ValueOfType;
+using code0k_cc.Runtime.VariableMap;
 
 namespace code0k_cc.Runtime
 {
     class Variable
     {
         public NType Type;
-        public object Value; //remember to clone the object
-         
+        public IValueOfType Value;
+        public readonly List<VariableConnection> Connections = new List<VariableConnection>();
+
+        
         public string String()
         {
             return this.Type.String(this);

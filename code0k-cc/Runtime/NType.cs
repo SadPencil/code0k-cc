@@ -8,6 +8,7 @@ using System.Security.Cryptography;
 using System.Text;
 using code0k_cc.Runtime.ExeResult;
 using code0k_cc.Runtime.Operation;
+using code0k_cc.Runtime.ValueOfType;
 
 namespace code0k_cc.Runtime
 {
