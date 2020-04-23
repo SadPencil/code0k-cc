@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using code0k_cc.Runtime.ExeResult;
+using code0k_cc.Runtime.Nizk;
 using code0k_cc.Runtime.Operation;
 using code0k_cc.Runtime.ValueOfType;
 using code0k_cc.Runtime.VariableMap;
@@ -56,8 +58,8 @@ namespace code0k_cc.Runtime
         public IReadOnlyList<NType> GenericsTypes { get; private set; }
 
         public Variable Assign(Variable variable, NType type)
-        { 
-            return this.ImplicitConvert(variable, type); 
+        {
+            return this.ImplicitConvert(variable, type);
         }
 
         ///// <summary>
@@ -69,7 +71,7 @@ namespace code0k_cc.Runtime
         {
             Debug.Assert(variable.Type == this);
             //todo detect whether two variable are same? or not?
-            return this.ImplicitConvertFunc(variable, type); 
+            return this.ImplicitConvertFunc(variable, type);
         }
         /// <summary>
         /// RightVal, LeftType, LeftVal
@@ -81,14 +83,14 @@ namespace code0k_cc.Runtime
             Debug.Assert(variable.Type == this);
             if (( this.UnaryOperationFuncs?.ContainsKey(op) ).GetValueOrDefault())
             {
-                var retVariable =this.UnaryOperationFuncs[op](variable);
+                var retVariable = this.UnaryOperationFuncs[op](variable);
 
                 // add connection
-                var newCon = new VariableConnection(){Type = new VariableConnectionType(){UnaryOperation = op}};
-                
+                var newCon = new VariableConnection() { Type = new VariableConnectionType() { UnaryOperation = op } };
+
                 variable.Connections.Add(newCon);
                 newCon.InVariables.Add(variable);
-                
+
                 newCon.OutVariables.Add(retVariable);
 
                 // note: retVariable might be unused. The calculation of unused variables MUST be done, but the result will be cleared out later
@@ -101,13 +103,13 @@ namespace code0k_cc.Runtime
             }
         }
 
-        public IReadOnlyDictionary<UnaryOperation, Func<Variable, Variable>> UnaryOperationFuncs { get; private set; }
+        private IReadOnlyDictionary<UnaryOperation, Func<Variable, Variable>> UnaryOperationFuncs { get; private set; }
         public Variable BinaryOperation(Variable variable, Variable another, BinaryOperation op)
         {
             Debug.Assert(variable.Type == this);
             if (( this.BinaryOperationFuncs?.ContainsKey(op) ).GetValueOrDefault())
             {
-                var retVariable = this.BinaryOperationFuncs[op](variable,another);
+                var retVariable = this.BinaryOperationFuncs[op](variable, another);
                 // add connection
                 var newCon = new VariableConnection() { Type = new VariableConnectionType() { BinaryOperation = op } };
 
@@ -121,20 +123,20 @@ namespace code0k_cc.Runtime
 
                 // note: retVariable might be unused. The calculation of unused variables MUST be done, but the result will be cleared out later
 
-                return retVariable; 
+                return retVariable;
             }
             else
             {
                 throw new Exception($"Type \"{this.TypeCodeName}\" doesn't support \"{op.ToString()}\" operation.");
             }
         }
-        public IReadOnlyDictionary<BinaryOperation, Func<Variable, Variable, Variable>> BinaryOperationFuncs { get; private set; }
+        private IReadOnlyDictionary<BinaryOperation, Func<Variable, Variable, Variable>> BinaryOperationFuncs { get; private set; }
 
         private NType(string TypeCodeName)
         {
             this.TypeCodeName = TypeCodeName;
             // default behaviors
-             
+
             this.ImplicitConvertFunc = (variable, type) =>
             {
                 Debug.Assert(variable.Type == this);
@@ -155,25 +157,130 @@ namespace code0k_cc.Runtime
 
         public static readonly NType UInt32 = new NType("uint32")
         {
-            NewValueFunc = () => new Variable() { Type = NType.UInt32, Value = System.UInt32.MinValue },
+            NewValueFunc = () => new Variable() { Type = NType.UInt32, Value = new NizkUInt32Value() { IsConstant = true, Value = 0, VariableType = NizkVariableType.Intermediate } },
             ParseFunc = (str) =>
             {
                 if (System.UInt32.TryParse(str, out System.UInt32 retUint))
                 {
-                    return new Variable() { Type = NType.UInt32, Value = System.UInt32.Parse(str) };
+                    return new Variable()
+                    {
+                        Type = NType.UInt32,
+                        Value = new NizkUInt32Value()
+                        {
+                            IsConstant = true,
+                            Value = System.UInt32.Parse(str),
+                            VariableType = NizkVariableType.Intermediate
+                        }
+                    };
                 }
                 else
                 {
                     throw new Exception($"Can't parse \"{str}\" as \"{NType.UInt32.TypeCodeName}\".");
                 }
             },
-            StringFunc = variable => ( (System.UInt32) variable.Value ).ToString(CultureInfo.InvariantCulture),
+            StringFunc = variable => ( (NizkUInt32Value) variable.Value ).Value.ToString(CultureInfo.InvariantCulture),
             UnaryOperationFuncs = new Dictionary<UnaryOperation, Func<Variable, Variable>>()
             {
                 //todo write unary operation
             },
             BinaryOperationFuncs = new Dictionary<BinaryOperation, Func<Variable, Variable, Variable>>()
             {
+                {Operation.BinaryOperation.Addition, (var1, var2) =>
+                {
+                    var v1 = ((NizkUInt32Value) var1.Value);
+                    var v2 = ((NizkUInt32Value) var2.Value);
+                    return new Variable() {
+                        Type = NType.UInt32,
+                        Value =(v1.IsConstant && v2.IsConstant ) ?
+                            new NizkUInt32Value() {
+                            IsConstant = true,
+                            Value = v1.Value+v2.Value,
+                            VariableType = NizkVariableType.Intermediate,
+                        }
+                            : new NizkUInt32Value() {
+                                IsConstant = false,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                    };
+                }},
+
+                {Operation.BinaryOperation.Subtract, (var1, var2) =>
+                {
+                    var v1 = ((NizkUInt32Value) var1.Value);
+                    var v2 = ((NizkUInt32Value) var2.Value);
+                    return new Variable() {
+                        Type = NType.UInt32,
+                        Value =(v1.IsConstant && v2.IsConstant ) ?
+                            new NizkUInt32Value() {
+                                IsConstant = true,
+                                Value = v1.Value-v2.Value,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                            : new NizkUInt32Value() {
+                                IsConstant = false,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                    };
+                }},
+
+                {Operation.BinaryOperation.Multiplication, (var1, var2) =>
+                {
+                    var v1 = ((NizkUInt32Value) var1.Value);
+                    var v2 = ((NizkUInt32Value) var2.Value);
+                    return new Variable() {
+                        Type = NType.UInt32,
+                        Value =(v1.IsConstant && v2.IsConstant ) ?
+                            new NizkUInt32Value() {
+                                IsConstant = true,
+                                Value = v1.Value*v2.Value,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                            : new NizkUInt32Value() {
+                                IsConstant = false,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                    };
+                }},
+
+                {Operation.BinaryOperation.Division, (var1, var2) =>
+                {
+                    var v1 = ((NizkUInt32Value) var1.Value);
+                    var v2 = ((NizkUInt32Value) var2.Value);
+                    return new Variable() {
+                        Type = NType.UInt32,
+                        Value =(v1.IsConstant && v2.IsConstant ) ?
+                            new NizkUInt32Value() {
+                                IsConstant = true,
+                                Value = v1.Value/v2.Value,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                            : new NizkUInt32Value() {
+                                IsConstant = false,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                    };
+                }},
+
+                {Operation.BinaryOperation.Remainder, (var1, var2) =>
+                {
+                    var v1 = ((NizkUInt32Value) var1.Value);
+                    var v2 = ((NizkUInt32Value) var2.Value);
+                    return new Variable() {
+                        Type = NType.UInt32,
+                        Value =(v1.IsConstant && v2.IsConstant ) ?
+                            new NizkUInt32Value() {
+                                IsConstant = true,
+                                Value = v1.Value%v2.Value,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                            : new NizkUInt32Value() {
+                                IsConstant = false,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                    };
+                }},
+
+
                 //todo write binary operation
             },
 

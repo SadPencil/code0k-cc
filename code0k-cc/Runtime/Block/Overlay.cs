@@ -14,7 +14,7 @@ namespace code0k_cc.Runtime.Block
         {
             this.ParentOverlay = parent;
         }
-
+        
         public override bool Equals(object obj)
         {
             if (obj is Overlay overlay)

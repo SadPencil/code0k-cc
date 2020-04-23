@@ -44,7 +44,7 @@ namespace code0k_cc.Runtime.Block
 
         }
 
-
+        //todo make varRefRef constant, i.e. varRefRef.VariableRef.Variable not changeable
         public VariableRefRef GetVariableRefRef(string name, bool recursively, bool throwException)
         {
             VariableRef varRef = null;

@@ -11,8 +11,7 @@ namespace code0k_cc.Runtime
         public NType Type;
         public IValueOfType Value;
         public readonly List<VariableConnection> Connections = new List<VariableConnection>();
-
-        
+         
         public string String()
         {
             return this.Type.String(this);

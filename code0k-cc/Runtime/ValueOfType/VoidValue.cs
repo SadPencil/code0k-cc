@@ -4,8 +4,7 @@ using System.Text;
 
 namespace code0k_cc.Runtime.ValueOfType
 {
-    class NizkBool : IValueOfType
+    class VoidValue : IValueOfType
     {
-        public Boolean Value;
     }
 }
