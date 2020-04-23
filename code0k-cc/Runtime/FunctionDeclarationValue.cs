@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using code0k_cc.Parse;  
+using code0k_cc.Parse;
+using code0k_cc.Runtime.Block;
 
 namespace code0k_cc.Runtime
 {
@@ -18,6 +19,6 @@ namespace code0k_cc.Runtime
         /// VarName is from FunctionImplementation
         /// </summary>
         public List<(string VarName, NType Type)> Arguments;
-        public EnvironmentBlock ParentBlock;
+        public BasicBlock ParentBlock;
     }
 }

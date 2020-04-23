@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using code0k_cc.Lex;
 using code0k_cc.Runtime;
+using code0k_cc.Runtime.Block;
 using code0k_cc.Runtime.ExeArg;
 using code0k_cc.Runtime.ExeResult;
 
@@ -355,15 +356,17 @@ namespace code0k_cc.Parse
                //todo: redundancy code here.
 
                // prepare environment
-               var mainBlock = new EnvironmentBlock() { ParseInstance = arg.Instance, ParentBlock = arg.Block, ReturnBlock = arg.Block };
+               var mainBlock = new BasicBlock(arg.Block.Block);
+
+               var mainBlockOverlay = new OverlayBlock(arg.Block.Overlay, mainBlock);
 
                foreach (var instanceChild in arg.Instance.Children)
                {
-                   _ = instanceChild?.Execute(new ExeArg() { Block = mainBlock });
+                   _ = instanceChild?.Execute(new ExeArg() { Block = mainBlockOverlay });
                }
 
                // find & execute "main"
-               var mainFunc = (FunctionDeclarationValue) mainBlock.GetVariableRefRef("main", false).VariableRef.Variable.Value;
+               var mainFunc = (FunctionDeclarationValue) mainBlockOverlay.GetVariableRefRef("main", false, true).VariableRef.Variable.Value;
 
                if (mainFunc.Instance == null)
                {
@@ -371,15 +374,10 @@ namespace code0k_cc.Parse
                }
 
                // create new block
-               EnvironmentBlock newFuncBlock = new EnvironmentBlock()
-               {
-                   ParentBlock = mainFunc.ParentBlock,
-                   ParseInstance = mainFunc.Instance,
-                   ReturnBlock = mainBlock,
-               };
-
+               var newFuncBlock = new BasicBlock(mainBlock);
+               var newFuncBlockOverlay = new OverlayBlock(arg.Block.Overlay, newFuncBlock);
                // execute function
-               var funRet = mainFunc.Instance.Execute(arg).StatementResult;
+               var funRet = mainFunc.Instance.Execute(new ExeArg() { Block = newFuncBlockOverlay }).StatementResult;
                return funRet.Type switch
                {
                    StatementResultType.Return => new ExeResult()
@@ -429,7 +427,7 @@ namespace code0k_cc.Parse
                 TokenUnits[TokenType.Identifier],
                 TokenUnits[TokenType.LeftBracket],
                 FunctionDeclarationArguments,
-                TokenUnits[TokenType.RightBracket], 
+                TokenUnits[TokenType.RightBracket],
             };
             FunctionDeclaration.Execute = (arg) =>
             {
@@ -442,7 +440,7 @@ namespace code0k_cc.Parse
 
                 var funT = new FunctionDeclarationValue() { Arguments = funArgs, FunctionName = funName, ReturnType = funRetNType, Instance = null };
 
-                arg.Block.ReAssignVariable(funName, new Variable() { Type = NType.Function, Value = funT });
+                arg.Block.AddVariable(funName, new Variable() { Type = NType.Function, Value = funT }, true);
 
                 return new ExeResult() { FunctionDeclarationValue = funT };
             };
@@ -517,7 +515,7 @@ namespace code0k_cc.Parse
                 // 1. re-declare the function if it is already declared
                 // 2. set the FunctionDeclarationValue.Instance to the compound statement
                 var functionName = arg.Instance.Children[0].Execute(arg).FunctionDeclarationValue.FunctionName;
-                var funT = (FunctionDeclarationValue) arg.Block.GetVariableRefRef(functionName, false).VariableRef.Variable.Value;
+                var funT = (FunctionDeclarationValue) arg.Block.GetVariableRefRef(functionName, false, false).VariableRef.Variable.Value;
 
                 funT.Instance = arg.Instance.Children[1];
 
@@ -736,7 +734,7 @@ namespace code0k_cc.Parse
 
                 var newExp = expRefRef.VariableRef.Variable.Assign(ntype);
 
-                arg.Block.AddVariable(varName, newExp);
+                arg.Block.AddVariable(varName, newExp, false);
 
                 return new ExeResult() { StatementResult = new StatementResult() { Type = StatementResultType.Normal } };
 
@@ -754,6 +752,18 @@ namespace code0k_cc.Parse
                 TokenUnits[TokenType.RightBracket],
                 CompoundStatement,
                 OptionalElseStatement
+            };
+            IfStatement.Execute = arg =>
+            {
+                // first : judge whether the expression is nizk node
+                //todo
+                // if it is nizk node, take control of assignment/declaration statement
+                // record which variables have changed, and performs actions
+                // rollback to execute else statement
+                // in the end, combine the two results
+
+
+
             };
 
             OptionalElseStatement.Name = "Else Statement";
@@ -825,7 +835,7 @@ namespace code0k_cc.Parse
             {
                 //todo LeftValueSuffixItem
                 string varName = arg.Instance.Children[0].Token.Value;
-                var varRefRef = arg.Block.GetVariableRefRef(varName, true);
+                var varRefRef = arg.Block.GetVariableRefRef(varName, true, true);
                 return new ExeResult() { ExpressionResult = new ExpressionResult() { VariableRefRef = varRefRef } };
             };
 
@@ -907,7 +917,10 @@ namespace code0k_cc.Parse
                 {
                     return new ExeResult()
                     {
-                        ExpressionResult = new ExpressionResult() { VariableRefRef = arg.Block.GetVariableRefRef(arg.Instance.Children[0].Execute(arg).TokenResult.Token.Value, false) }
+                        ExpressionResult = new ExpressionResult()
+                        {
+                            VariableRefRef = arg.Block.GetVariableRefRef(arg.Instance.Children[0].Execute(arg).TokenResult.Token.Value, false, false)
+                        }
                     };
                 }
                 else if (arg.Instance.Children[0].ParseUnit == TokenUnits[TokenType.Number])
@@ -974,12 +987,8 @@ namespace code0k_cc.Parse
                         }
 
                         // create new block
-                        EnvironmentBlock newBlock = new EnvironmentBlock()
-                        {
-                            ParentBlock = funcStruct.ParentBlock,
-                            ParseInstance = funcStruct.Instance,
-                            ReturnBlock = arg.Block,
-                        };
+                        var newBlock = new BasicBlock(funcStruct.ParentBlock);
+                        var newBlockOverlay = new OverlayBlock(arg.Block.Overlay, newBlock);
 
                         // get & load all params 
                         var paramLoopIns = op.Children[1];
@@ -1001,7 +1010,7 @@ namespace code0k_cc.Parse
                             var newArgVal = argExp.VariableRefRef.VariableRef.Variable.Assign(argNType);
 
                             //add params
-                            newBlock.AddVariable(argName, newArgVal);
+                            newBlockOverlay.AddVariable(argName, newArgVal, false);
 
                             ++argCount;
                         }
@@ -1012,7 +1021,7 @@ namespace code0k_cc.Parse
                         }
 
                         // execute function
-                        var funRet = funcStruct.Instance.Execute(arg).StatementResult;
+                        var funRet = funcStruct.Instance.Execute(new ExeArg() { Block = newBlockOverlay }).StatementResult;
                         switch (funRet.Type)
                         {
                             case StatementResultType.Return:
