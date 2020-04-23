@@ -33,7 +33,7 @@ namespace code0k_cc.Runtime.Nizk
                 Value = new NizkUInt32Value()
                 {
                     IsConstant = true,
-                    Value = -1,
+                    Value = -1, //todo how?
                     VariableType = NizkVariableType.Intermediate,
                 }
             }
@@ -69,7 +69,7 @@ namespace code0k_cc.Runtime.Nizk
                         falseVar = new VariableRef() { Variable = parentVar?.Variable };
                     }
 
-                    if (( parentVar != null ) && ( ( trueVar == null || trueVar?.Variable == parentVar.Variable ) && ( falseVar == null || falseVar?.Variable == parentVar.Variable ) ))
+                    if (( parentVar != null ) && ( ( trueVar?.Variable == parentVar.Variable ) && ( falseVar?.Variable == parentVar.Variable ) ))
                     {
                         // well, not actually changed
                         continue;
@@ -93,6 +93,7 @@ namespace code0k_cc.Runtime.Nizk
                         var var7 = NType.UInt32.BinaryOperation(var3, var6, BinaryOperation.Addition);
 
                         //todo var8: var8:=Bool(var7)
+                        //todo add var8 to retOverlay
                     }
                     else if (trueVar.Variable.Type == NType.UInt32)
                     {
@@ -106,6 +107,7 @@ namespace code0k_cc.Runtime.Nizk
                         var var7 = NType.UInt32.BinaryOperation(var3, var6, BinaryOperation.Addition);
 
                         //todo maybe needs a mod 2^32?
+                        //todo add var8 to retOverlay
                     }
                     else
                     {

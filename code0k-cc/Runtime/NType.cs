@@ -103,7 +103,7 @@ namespace code0k_cc.Runtime
             }
         }
 
-        private IReadOnlyDictionary<UnaryOperation, Func<Variable, Variable>> UnaryOperationFuncs { get; private set; }
+        private IReadOnlyDictionary<UnaryOperation, Func<Variable, Variable>> UnaryOperationFuncs { get; set; }
         public Variable BinaryOperation(Variable variable, Variable another, BinaryOperation op)
         {
             Debug.Assert(variable.Type == this);
@@ -130,7 +130,7 @@ namespace code0k_cc.Runtime
                 throw new Exception($"Type \"{this.TypeCodeName}\" doesn't support \"{op.ToString()}\" operation.");
             }
         }
-        private IReadOnlyDictionary<BinaryOperation, Func<Variable, Variable, Variable>> BinaryOperationFuncs { get; private set; }
+        private IReadOnlyDictionary<BinaryOperation, Func<Variable, Variable, Variable>> BinaryOperationFuncs { get; set; }
 
         private NType(string TypeCodeName)
         {

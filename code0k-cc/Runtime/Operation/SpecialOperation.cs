@@ -6,5 +6,7 @@ namespace code0k_cc.Runtime.Operation
 {
     enum SpecialOperation
     {
+        NizkTypeCast,
+
     }
 }
