@@ -9,6 +9,7 @@ using System.Text;
 using code0k_cc.Runtime.ExeResult;
 using code0k_cc.Runtime.Operation;
 using code0k_cc.Runtime.ValueOfType;
+using code0k_cc.Runtime.VariableMap;
 
 namespace code0k_cc.Runtime
 {
@@ -21,7 +22,8 @@ namespace code0k_cc.Runtime
 
         public Variable NewValue()
         {
-            return this.NewValueFunc();
+            var variable = this.NewValueFunc();
+            return variable;
         }
         /// <summary>
         /// Method to get a new value. Throw exceptions.
@@ -30,17 +32,18 @@ namespace code0k_cc.Runtime
 
         public Variable Parse(string str)
         {
-            return this.ParseFunc(str);
+            var variable = this.ParseFunc(str);
+            return variable;
         }
         /// <summary>
         /// Method to get a new value from a token string. Throw exceptions.
         /// </summary>
         private Func<string, Variable> ParseFunc;
 
-        public string String(Variable var)
+        public string String(Variable variable)
         {
-            Debug.Assert(var.Type == this);
-            return this.StringFunc(var);
+            Debug.Assert(variable.Type == this);
+            return this.StringFunc(variable);
         }
         /// <summary>
         /// Method to get a string from a value. Throw exceptions.
@@ -52,32 +55,45 @@ namespace code0k_cc.Runtime
         /// </summary>
         public IReadOnlyList<NType> GenericsTypes { get; private set; }
 
-        public Variable Assign(Variable var, NType type)
-        {
-            Debug.Assert(var.Type == this);
-            return this.AssignFunc(var, type);
+        public Variable Assign(Variable variable, NType type)
+        { 
+            return this.ImplicitConvert(variable, type); 
         }
-        /// <summary>
-        /// RightVal, LeftType, LeftVal
-        /// </summary>
-        private Func<Variable, NType, Variable> AssignFunc;
 
-        public Variable ImplicitConvert(Variable var, NType type)
+        ///// <summary>
+        ///// RightVal, LeftType, LeftVal
+        ///// </summary>
+        //private Func<Variable, NType, Variable> AssignFunc;
+
+        public Variable ImplicitConvert(Variable variable, NType type)
         {
-            Debug.Assert(var.Type == this);
-            return this.ImplicitConvertFunc(var, type);
+            Debug.Assert(variable.Type == this);
+            //todo detect whether two variable are same? or not?
+            return this.ImplicitConvertFunc(variable, type); 
         }
         /// <summary>
         /// RightVal, LeftType, LeftVal
         /// </summary>
         private Func<Variable, NType, Variable> ImplicitConvertFunc;
 
-        public Variable UnaryOperation(Variable var, UnaryOperation op)
+        public Variable UnaryOperation(Variable variable, UnaryOperation op)
         {
-            Debug.Assert(var.Type == this);
-            if (( this.UnaryOperations?.ContainsKey(op) ).GetValueOrDefault())
+            Debug.Assert(variable.Type == this);
+            if (( this.UnaryOperationFuncs?.ContainsKey(op) ).GetValueOrDefault())
             {
-                return this.UnaryOperations[op](var);
+                var retVariable =this.UnaryOperationFuncs[op](variable);
+
+                // add connection
+                var newCon = new VariableConnection(){Type = new VariableConnectionType(){UnaryOperation = op}};
+                
+                variable.Connections.Add(newCon);
+                newCon.InVariables.Add(variable);
+                
+                newCon.OutVariables.Add(retVariable);
+
+                // note: retVariable might be unused. The calculation of unused variables MUST be done, but the result will be cleared out later
+
+                return retVariable;
             }
             else
             {
@@ -85,27 +101,40 @@ namespace code0k_cc.Runtime
             }
         }
 
-        public IReadOnlyDictionary<UnaryOperation, Func<Variable, Variable>> UnaryOperations { get; private set; }
-        public Variable BinaryOperation(Variable var, Variable another, BinaryOperation op)
+        public IReadOnlyDictionary<UnaryOperation, Func<Variable, Variable>> UnaryOperationFuncs { get; private set; }
+        public Variable BinaryOperation(Variable variable, Variable another, BinaryOperation op)
         {
-            Debug.Assert(var.Type == this);
-            if (( this.BinaryOperations?.ContainsKey(op) ).GetValueOrDefault())
+            Debug.Assert(variable.Type == this);
+            if (( this.BinaryOperationFuncs?.ContainsKey(op) ).GetValueOrDefault())
             {
-                return this.BinaryOperations[op](var, another);
+                var retVariable = this.BinaryOperationFuncs[op](variable,another);
+                // add connection
+                var newCon = new VariableConnection() { Type = new VariableConnectionType() { BinaryOperation = op } };
+
+                variable.Connections.Add(newCon);
+                newCon.InVariables.Add(variable);
+
+                another.Connections.Add(newCon);
+                newCon.InVariables.Add(another);
+
+                newCon.OutVariables.Add(retVariable);
+
+                // note: retVariable might be unused. The calculation of unused variables MUST be done, but the result will be cleared out later
+
+                return retVariable; 
             }
             else
             {
                 throw new Exception($"Type \"{this.TypeCodeName}\" doesn't support \"{op.ToString()}\" operation.");
             }
         }
-        public IReadOnlyDictionary<BinaryOperation, Func<Variable, Variable, Variable>> BinaryOperations { get; private set; }
+        public IReadOnlyDictionary<BinaryOperation, Func<Variable, Variable, Variable>> BinaryOperationFuncs { get; private set; }
 
         private NType(string TypeCodeName)
         {
             this.TypeCodeName = TypeCodeName;
             // default behaviors
-
-            this.AssignFunc = this.ImplicitConvert;
+             
             this.ImplicitConvertFunc = (variable, type) =>
             {
                 Debug.Assert(variable.Type == this);
@@ -139,11 +168,11 @@ namespace code0k_cc.Runtime
                 }
             },
             StringFunc = variable => ( (System.UInt32) variable.Value ).ToString(CultureInfo.InvariantCulture),
-            UnaryOperations = new Dictionary<UnaryOperation, Func<Variable, Variable>>()
+            UnaryOperationFuncs = new Dictionary<UnaryOperation, Func<Variable, Variable>>()
             {
                 //todo write unary operation
             },
-            BinaryOperations = new Dictionary<BinaryOperation, Func<Variable, Variable, Variable>>()
+            BinaryOperationFuncs = new Dictionary<BinaryOperation, Func<Variable, Variable, Variable>>()
             {
                 //todo write binary operation
             },
@@ -166,11 +195,11 @@ namespace code0k_cc.Runtime
                 }
             },
             StringFunc = variable => ( (System.Boolean) variable.Value ).ToString(CultureInfo.InvariantCulture),
-            UnaryOperations = new Dictionary<UnaryOperation, Func<Variable, Variable>>()
+            UnaryOperationFuncs = new Dictionary<UnaryOperation, Func<Variable, Variable>>()
             {
                 //todo write unary operation
             },
-            BinaryOperations = new Dictionary<BinaryOperation, Func<Variable, Variable, Variable>>()
+            BinaryOperationFuncs = new Dictionary<BinaryOperation, Func<Variable, Variable, Variable>>()
             {
                 //todo write binary operation
             },
@@ -204,7 +233,7 @@ namespace code0k_cc.Runtime
                     }
                 }
                 throw new Exception($"Unknown type \"{r.TypeName}\"");
-            } 
+            }
         }
 
         public static IEnumerable<NType> GetNonGenericsNTypes()
