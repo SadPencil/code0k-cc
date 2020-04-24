@@ -157,10 +157,19 @@ namespace code0k_cc.Runtime
 
         public static readonly NType UInt32 = new NType("uint32")
         {
-            NewValueFunc = () => new Variable() { Type = NType.UInt32, Value = new NizkUInt32Value() { IsConstant = true, Value = 0, VariableType = NizkVariableType.Intermediate } },
+            NewValueFunc = () => new Variable()
+            {
+                Type = NType.UInt32,
+                Value = new NizkUInt32Value()
+                {
+                    IsConstant = true,
+                    Value = 0,
+                    VariableType = NizkVariableType.Intermediate
+                }
+            },
             ParseFunc = (str) =>
             {
-                if (System.UInt32.TryParse(str, out System.UInt32 retUint))
+                if (System.UInt32.TryParse(str, out System.UInt32 retV))
                 {
                     return new Variable()
                     {
@@ -168,7 +177,7 @@ namespace code0k_cc.Runtime
                         Value = new NizkUInt32Value()
                         {
                             IsConstant = true,
-                            Value = System.UInt32.Parse(str),
+                            Value = retV,
                             VariableType = NizkVariableType.Intermediate
                         }
                     };
@@ -289,19 +298,37 @@ namespace code0k_cc.Runtime
 
         public static readonly NType Bool = new NType("bool")
         {
-            NewValueFunc = () => new Variable() { Type = NType.Bool, Value = false },
+            NewValueFunc = () => new Variable()
+            {
+                Type = NType.Bool,
+                Value = new NizkBoolValue()
+                {
+                    IsConstant = true,
+                    Value = false,
+                    VariableType = NizkVariableType.Intermediate
+                }
+            },
             ParseFunc = (str) =>
             {
-                if (System.Boolean.TryParse(str, out System.Boolean retUint))
+                if (System.Boolean.TryParse(str, out System.Boolean retV))
                 {
-                    return new Variable() { Type = NType.Bool, Value = System.Boolean.Parse(str) };
+                    return new Variable()
+                    {
+                        Type = NType.Bool,
+                        Value = new NizkBoolValue()
+                        {
+                            IsConstant = true,
+                            Value = retV,
+                            VariableType = NizkVariableType.Intermediate
+                        }
+                    };
                 }
                 else
                 {
                     throw new Exception($"Can't parse \"{str}\" as \"{NType.Bool.TypeCodeName}\".");
                 }
             },
-            StringFunc = variable => ( (System.Boolean) variable.Value ).ToString(CultureInfo.InvariantCulture),
+            StringFunc = variable => ( (NizkBoolValue) variable.Value ).Value.ToString(CultureInfo.InvariantCulture),
             UnaryOperationFuncs = new Dictionary<UnaryOperation, Func<Variable, Variable>>()
             {
                 //todo write unary operation

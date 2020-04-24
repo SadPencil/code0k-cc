@@ -11,6 +11,20 @@ namespace code0k_cc.Runtime.Nizk
 {
     static class NizkUtils
     {
+        public static readonly VariableRef UInt32Zero = new VariableRef()
+        {
+            Variable = new Variable()
+            {
+                Type = NType.UInt32,
+                Value = new NizkUInt32Value()
+                {
+                    IsConstant = true,
+                    Value = 0,
+                    VariableType = NizkVariableType.Intermediate,
+                }
+            }
+        };
+
         public static readonly VariableRef UInt32One = new VariableRef()
         {
             Variable = new Variable()
@@ -33,7 +47,7 @@ namespace code0k_cc.Runtime.Nizk
                 Value = new NizkUInt32Value()
                 {
                     IsConstant = true,
-                    Value = -1, //todo how?
+                    Value = System.UInt32.MaxValue, //todo 
                     VariableType = NizkVariableType.Intermediate,
                 }
             }
