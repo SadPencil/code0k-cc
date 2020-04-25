@@ -62,10 +62,10 @@ namespace code0k_cc.Runtime.Nizk
 
             Overlay trueOverlay = trueOverlayBlock.Overlay;
             Overlay falseOverlay = falseOverlayBlock.Overlay;
-            var retOverlayBlock = new OverlayBlock(retOverlay, trueOverlayBlock.Block);
 
             for (var block = trueOverlayBlock.Block; block != null; block = block.ParentBlock)
             {
+                var retOverlayBlock = new OverlayBlock(retOverlay, block);
                 var nameList = block.Variables[trueOverlay].Keys.Union(block.Variables[falseOverlay].Keys).ToList();
 
                 foreach (var name in nameList)
