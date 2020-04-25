@@ -8,6 +8,7 @@ using code0k_cc.Runtime;
 using code0k_cc.Runtime.Block;
 using code0k_cc.Runtime.ExeArg;
 using code0k_cc.Runtime.ExeResult;
+using code0k_cc.Runtime.Nizk;
 using code0k_cc.Runtime.ValueOfType;
 
 namespace code0k_cc.Parse
@@ -286,7 +287,7 @@ namespace code0k_cc.Parse
 
             ParseUnit GlobalDefinitionStatement = new ParseUnit();
             ParseUnit GlobalFunctionDeclarationStatement = new ParseUnit();
-            
+
             ParseUnit FunctionDeclaration = new ParseUnit();
             ParseUnit FunctionImplementation = new ParseUnit();
 
@@ -754,21 +755,40 @@ namespace code0k_cc.Parse
             IfStatement.Execute = arg =>
             {
                 // first : judge whether the expression is nizk node
-                //todo
-                // if it is nizk node, take control of assignment/declaration statement
-                // record which variables have changed, and performs actions
-                // rollback to execute else statement
-                // in the end, combine the two results
-                var currentOverlay = arg.Block.Overlay;
-                var trueOverlay = new Overlay(currentOverlay);
-                var falseOverlay = new Overlay(currentOverlay);
-                var trueOverlayBlock = new OverlayBlock(trueOverlay, arg.Block.Block);
-                var falseOverlayBlock = new OverlayBlock(falseOverlay, arg.Block.Block);
+                var conditionVar = arg.Instance.Children[2].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                if (conditionVar.Type != NType.Bool)
+                {
+                    //try implicit convert to bool type
+                    conditionVar = conditionVar.Assign(NType.Bool);
+                }
 
-                _ = arg.Instance.Children[4].Execute(new ExeArg() { Block = trueOverlayBlock });
-                _ = arg.Instance.Children[5].Execute(new ExeArg() { Block = falseOverlayBlock });
+                if (conditionVar.Value.IsConstant)
+                {
+                    // normal if-statement
+                    //todo
 
-                // combine two overlay
+                }
+                else
+                {
+                    // if it is nizk node, take control of assignment/declaration statement
+                    // record which variables have changed, and performs actions
+                    // rollback to execute else statement
+                    // in the end, combine the two results
+                    var currentOverlay = arg.Block.Overlay;
+                    var trueOverlay = new Overlay(currentOverlay);
+                    var falseOverlay = new Overlay(currentOverlay);
+                    var trueOverlayBlock = new OverlayBlock(trueOverlay, arg.Block.Block);
+                    var falseOverlayBlock = new OverlayBlock(falseOverlay, arg.Block.Block);
+
+                    _ = arg.Instance.Children[4].Execute(new ExeArg() { Block = trueOverlayBlock });
+                    _ = arg.Instance.Children[5].Execute(new ExeArg() { Block = falseOverlayBlock });
+
+                    // combine two overlay
+                    NizkUtils.NizkCombineOverlay(
+
+                    );
+                    //todo break- continue
+                }
 
 
                 //todo
@@ -925,19 +945,20 @@ namespace code0k_cc.Parse
             {
                 if (arg.Instance.Children[0].ParseUnit == TokenUnits[TokenType.Identifier])
                 {
+                    string str = arg.Instance.Children[0].Token.Value;
                     return new ExeResult()
                     {
                         ExpressionResult = new ExpressionResult()
                         {
-                            VariableRefRef = arg.Block.GetVariableRefRef(arg.Instance.Children[0].Execute(arg).TokenResult.Token.Value, false, false)
+                            VariableRefRef = arg.Block.GetVariableRefRef(str, false, false)
                         }
                     };
                 }
                 else if (arg.Instance.Children[0].ParseUnit == TokenUnits[TokenType.Number])
                 {
-                    string numberStr = arg.Instance.Children[0].Execute(arg).TokenResult.Token.Value;
+                    string str = arg.Instance.Children[0].Token.Value;
                     //todo: currently, only support UInt32, will add other number type later
-                    var retVar = NType.UInt32.Parse(numberStr);
+                    var retVar = NType.UInt32.Parse(str);
                     return new ExeResult()
                     {
                         ExpressionResult = new ExpressionResult() { VariableRefRef = new VariableRefRef(new VariableRef() { Variable = retVar }) }
@@ -1146,7 +1167,7 @@ namespace code0k_cc.Parse
             {
                 //todo
                 throw new NotImplementedException();
-            }; 
+            };
 
 
 

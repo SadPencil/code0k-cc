@@ -9,8 +9,7 @@ namespace code0k_cc.Runtime.ExeResult
     {
         public TypeResult TypeUnitResult;
         public GenericsTypeResult GenericsTypeResult;
-        public ExpressionResult ExpressionResult;
-        public TokenResult TokenResult;
+        public ExpressionResult ExpressionResult; 
         public FunctionDeclarationValue FunctionDeclarationValue;
         public StatementResult StatementResult;
     }

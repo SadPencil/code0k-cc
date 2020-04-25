@@ -4,9 +4,7 @@ using System.Text;
 
 namespace code0k_cc.Runtime.ExeResult
 {
-    class StatementResult
+    abstract class StatementResult
     {
-        public StatementResultType Type;
-        public VariableRefRef ReturnVariableRefRef;
     }
 }
