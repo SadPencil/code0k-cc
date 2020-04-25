@@ -6,7 +6,7 @@ namespace code0k_cc.Runtime.ExeResult
 {
     class StatementResultTwoCase : StatementResult
     {
-        public Variable Expression;
+        public Variable Condition;
         public StatementResult TrueCase;
         public StatementResult FalseCase;
     }

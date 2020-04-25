@@ -666,7 +666,7 @@ namespace code0k_cc.Parse
 
                             }
 
-                            //todo: optimization: if all the retRaw are the same type, i.e. all Break or all Continue, combining overlay can be done here
+                            //todo: optimization: if all the retRaw are all Break or all Continue, combining overlay can be done here
 
                             // now return the result
                             return new ExeResult() { StatementResult = stmtRet };
@@ -834,7 +834,7 @@ namespace code0k_cc.Parse
 
                 if (conditionVar.Value.IsConstant)
                 {
-                    // normal if-statement
+                    // normal if-statement  
                     //todo
 
                 }
@@ -850,18 +850,21 @@ namespace code0k_cc.Parse
                     var trueOverlayBlock = new OverlayBlock(trueOverlay, arg.Block.Block);
                     var falseOverlayBlock = new OverlayBlock(falseOverlay, arg.Block.Block);
 
-                    _ = arg.Instance.Children[4].Execute(new ExeArg() { Block = trueOverlayBlock });
-                    _ = arg.Instance.Children[5].Execute(new ExeArg() { Block = falseOverlayBlock });
+                    var trueRetRaw = arg.Instance.Children[4].Execute(new ExeArg() { Block = trueOverlayBlock }).StatementResult;
+                    var falseRetRaw = arg.Instance.Children[5].Execute(new ExeArg() { Block = falseOverlayBlock }).StatementResult;
 
-                    // combine two overlay
-                    NizkUtils.NizkCombineOverlay(
+                    //todo: optimization: if all the retRaw are all Break or all Continue or all normal, combining overlay can be done here
 
-                    );
-                    //todo break- continue
+                    return new ExeResult()
+                    {
+                        StatementResult = new StatementResultTwoCase()
+                        {
+                            Condition = conditionVar,
+                            FalseCase = falseRetRaw,
+                            TrueCase = trueRetRaw,
+                        }
+                    };
                 }
-
-
-                //todo
 
             };
 
