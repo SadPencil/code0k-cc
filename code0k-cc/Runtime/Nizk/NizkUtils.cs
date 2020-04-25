@@ -130,7 +130,7 @@ namespace code0k_cc.Runtime.Nizk
                     }
                     else
                     {
-                        throw new Exception($"Unsupported type \"{trueVar.Variable.Type}\" in a nizk-condition structure.");
+                        throw new Exception($"Unsupported type \"{trueVar.Variable.Type.TypeCodeName}\" in a nizk-condition structure.");
                     }
 
                     //add var to retOverlay

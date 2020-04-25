@@ -411,6 +411,10 @@ namespace code0k_cc.Runtime
         }
 
 
+        public override string ToString()
+        {
+            return this.TypeCodeName.ToString();
+        }
 
         public override bool Equals(object obj)
         {
