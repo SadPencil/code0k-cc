@@ -583,6 +583,7 @@ namespace code0k_cc.Parse
             };
             StatementBody.Execute = arg =>
             {
+                // note: adding block level is done at CompoundStatement instead of here
                 var stmtRawRet = arg.Instance.Children[0].Execute(arg).StatementResult;
                 var nextStmtInstance = arg.Instance.Children[1]?.Children[0];
                 switch (stmtRawRet)
@@ -620,20 +621,22 @@ namespace code0k_cc.Parse
                         {
                             // let the rest statements follow the condition where resultType == normal
                             // todo: this task can be done in parallel
-                            var queue = new List<StatementResult>
+                            var queue = new List<(StatementResult ItemRet, StatementResultTwoCase ItemParentRet, bool IsParentTrueCase)>
                             {
-                                stmtRet
+                                ( ItemRet: stmtRet.TrueCase,ItemParentRet:stmtRet,IsParentTrueCase: true),
+                                ( ItemRet: stmtRet.FalseCase,ItemParentRet:stmtRet,IsParentTrueCase:false),
                             };
+
                             while (queue.Count > 0)
                             {
-                                var itemRaw = queue[0];
+                                var (itemRet, itemParentRet, isParentTrueCase) = queue[0];
                                 queue.RemoveAt(0);
 
-                                switch (itemRaw)
+                                switch (itemRet)
                                 {
                                     case StatementResultTwoCase item:
-                                        queue.Add(item.TrueCase);
-                                        queue.Add(item.FalseCase);
+                                        queue.Add((ItemRet: item.TrueCase, ItemParentRet: item, IsParentTrueCase: true));
+                                        queue.Add((ItemRet: item.FalseCase, ItemParentRet: item, IsParentTrueCase: false));
                                         break;
 
                                     case StatementResultOneCase item:
@@ -652,7 +655,17 @@ namespace code0k_cc.Parse
                                                     Block = new OverlayBlock(item.Overlay, arg.Block.Block)
                                                 }).StatementResult;
 
-                                                //todo: save retRaw and do an optimization described below
+                                                //save retRaw to the parent
+                                                if (isParentTrueCase)
+                                                {
+                                                    itemParentRet.TrueCase = retRaw;
+                                                }
+                                                else
+                                                {
+                                                    itemParentRet.FalseCase = retRaw;
+                                                }
+
+                                                //todo: do an optimization described below
 
                                                 break;
                                             default:
@@ -915,6 +928,9 @@ namespace code0k_cc.Parse
             ForStatement.ChildType = ParseUnitChildType.AllChild;
             ForStatement.Children = new List<ParseUnit>()
             {
+                //todo change for statement parse unit
+                // for i = a to/downto b do
+                // where b-a (a-b for downto) must be a constant type and must be an integer with positive/zero value
                 TokenUnits[TokenType.For],
                 TokenUnits[TokenType.LeftBracket],
                 Expression,
@@ -929,7 +945,8 @@ namespace code0k_cc.Parse
                 TokenUnits[TokenType.RightBracket],
                 CompoundStatement
             };
-
+            //todo
+            ForStatement.Execute = arg => throw new NotImplementedException();
 
             WhileStatement.Name = "While Statement";
             WhileStatement.Type = ParseUnitType.Single;
@@ -945,6 +962,16 @@ namespace code0k_cc.Parse
                 Expression,
                 TokenUnits[TokenType.RightBracket],
                 CompoundStatement
+            };
+            WhileStatement.Execute = arg =>
+            {
+                var maxIntVar = arg.Instance.Children[6].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+
+                var conditionVar = arg.Instance.Children[2].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+
+                var queue = new List<(int i,)>();
+                //todo
+
             };
 
             CompoundStatement.Name = "Compound Statement";
