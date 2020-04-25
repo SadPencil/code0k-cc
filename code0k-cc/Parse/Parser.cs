@@ -704,7 +704,14 @@ namespace code0k_cc.Parse
                  {
                      _ = arg.Instance.Children[0].Execute(arg);
 
-                     return new ExeResult() { StatementResult = new StatementResult() { Type = StatementResultType.Normal } };
+                     return new ExeResult()
+                     {
+                         StatementResult = new StatementResultOneCase()
+                         {
+                             Overlay = arg.Block.Overlay,
+                             ExecutionResultType = StatementResultType.Normal,
+                         }
+                     };
                  }
                  else
                  {
@@ -758,10 +765,16 @@ namespace code0k_cc.Parse
             ReturnStatement.Execute = arg =>
             {
                 var expRefRef = arg.Instance.Children[1].Execute(arg).ExpressionResult.VariableRefRef;
-                return new ExeResult() { StatementResult = new StatementResult() { Type = StatementResultType.Return, ReturnVariableRefRef = expRefRef } };
+                return new ExeResult()
+                {
+                    StatementResult = new StatementResultOneCase()
+                    {
+                        Overlay = arg.Block.Overlay,
+                        ExecutionResultType = StatementResultType.Return,
+                        ReturnVariableRefRef = expRefRef,
+                    }
+                };
             };
-            //todo execute nizk
-
 
             BreakStatement.Name = "Break Statement";
             BreakStatement.Type = ParseUnitType.Single;
@@ -770,8 +783,14 @@ namespace code0k_cc.Parse
             {
                 TokenUnits[TokenType.Break],
             };
-            BreakStatement.Execute = arg => new ExeResult() { StatementResult = new StatementResult() { Type = StatementResultType.Break } };
-            //todo execute nizk
+            BreakStatement.Execute = arg => new ExeResult()
+            {
+                StatementResult = new StatementResultOneCase()
+                {
+                    Overlay = arg.Block.Overlay,
+                    ExecutionResultType = StatementResultType.Break,
+                }
+            };
 
             ContinueStatement.Name = "Continue Statement";
             ContinueStatement.Type = ParseUnitType.Single;
@@ -780,8 +799,14 @@ namespace code0k_cc.Parse
             {
                 TokenUnits[TokenType.Continue],
             };
-            ContinueStatement.Execute = arg => new ExeResult() { StatementResult = new StatementResult() { Type = StatementResultType.Continue } };
-            //todo execute nizk
+            ContinueStatement.Execute = arg => new ExeResult()
+            {
+                StatementResult = new StatementResultOneCase()
+                {
+                    Overlay = arg.Block.Overlay,
+                    ExecutionResultType = StatementResultType.Continue,
+                }
+            };
 
             DefinitionStatement.Name = "Definition Statement";
             DefinitionStatement.Type = ParseUnitType.Single;
@@ -805,7 +830,14 @@ namespace code0k_cc.Parse
 
                 arg.Block.AddVariable(varName, newExp, false);
 
-                return new ExeResult() { StatementResult = new StatementResult() { Type = StatementResultType.Normal } };
+                return new ExeResult()
+                {
+                    StatementResult = new StatementResultOneCase()
+                    {
+                        Overlay = arg.Block.Overlay,
+                        ExecutionResultType = StatementResultType.Normal,
+                    }
+                };
 
             };
 
