@@ -57,6 +57,7 @@ namespace code0k_cc.Runtime.Nizk
         {
             Debug.Assert(nizkConditionVariable.Type == NType.Bool);
             Debug.Assert(trueOverlayBlock.Block == falseOverlayBlock.Block);
+            Debug.Assert(trueOverlayBlock.Overlay.ParentOverlay == retOverlay.ParentOverlay && falseOverlayBlock.Overlay.ParentOverlay == retOverlay.ParentOverlay);
 
 
             Overlay trueOverlay = trueOverlayBlock.Overlay;
@@ -96,6 +97,7 @@ namespace code0k_cc.Runtime.Nizk
                         throw new Exception($"Type mismatched. Got \"{trueVar.Variable.Type.TypeCodeName}\" and \"{falseVar.Variable.Type.TypeCodeName}\"!");
                     }
 
+                    Variable retVar = null;
                     if (trueVar.Variable.Type == NType.Bool)
                     {
                         var var1 = nizkConditionVariable;
@@ -109,9 +111,7 @@ namespace code0k_cc.Runtime.Nizk
 
                         //let var8 = Bool(var7)
                         var var8 = NType.UInt32.ExplicitConvert(var7, NType.Bool);
-
-                        //add var8 to retOverlay
-                        retOverlayBlock.AddVariable(name, var8, true);
+                        retVar = var8;
                     }
                     else if (trueVar.Variable.Type == NType.UInt32)
                     {
@@ -125,15 +125,17 @@ namespace code0k_cc.Runtime.Nizk
                         var var7 = NType.UInt32.BinaryOperation(var3, var6, BinaryOperation.Addition);
 
                         // maybe needs a mod 2^32?
-                        // currently, maybe not
-                        var var8 = var7;
-                        //add var8 to retOverlay
-                        retOverlayBlock.AddVariable(name, var8, true);
+                        // currently, maybe not because it is handled at other operations
+                        retVar = var7;
                     }
                     else
                     {
                         throw new Exception($"Unsupported type \"{trueVar.Variable.Type}\" in a nizk-condition structure.");
                     }
+
+                    //add var to retOverlay
+                    Debug.Assert(retVar != null);
+                    retOverlayBlock.AddVariable(name, retVar, true);
                 }
 
 
