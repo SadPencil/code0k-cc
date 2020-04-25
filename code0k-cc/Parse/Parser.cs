@@ -583,28 +583,98 @@ namespace code0k_cc.Parse
             };
             StatementBody.Execute = arg =>
             {
-                var stmtIns = arg.Instance.Children[0];
-                var loopIns = arg.Instance.Children[1];
-                while (true)
+                var stmtRawRet = arg.Instance.Children[0].Execute(arg).StatementResult;
+                var nextStmtInstance = arg.Instance.Children[1]?.Children[0];
+                switch (stmtRawRet)
                 {
-                    var stmtRet = stmtIns.Execute(arg).StatementResult;
-                    switch (stmtRet.Type)
-                    {
-                        case StatementResultType.Normal:
-                            break;
-                        case StatementResultType.Continue:
-                        case StatementResultType.Break:
-                        case StatementResultType.Return:
+                    case StatementResultOneCase stmtRet:
+                        Debug.Assert(stmtRet.Overlay == arg.Block.Overlay);
+                        switch (stmtRet.ExecutionResultType)
+                        {
+                            case StatementResultType.Continue:
+                            case StatementResultType.Break:
+                            case StatementResultType.Return:
+                                return new ExeResult() { StatementResult = stmtRet };
+                            case StatementResultType.Normal:
+                                // execute the rest statements 
+                                if (nextStmtInstance == null)
+                                {
+                                    // great, normal exit. return as-is
+                                    return new ExeResult() { StatementResult = stmtRet };
+                                }
+                                else
+                                {
+                                    // execute next
+                                    return nextStmtInstance.Execute(arg);
+                                }
+                            default:
+                                throw new Exception("Assert failed!");
+                        }
+                    case StatementResultTwoCase stmtRet:
+                        if (nextStmtInstance == null)
+                        {
+                            // okay, return as-is
                             return new ExeResult() { StatementResult = stmtRet };
-                        default:
-                            throw new Exception("Assert failed!");
-                    }
+                        }
+                        else
+                        {
+                            // let the rest statements follow the condition where resultType == normal
+                            // todo: this task can be done in parallel
+                            var queue = new List<StatementResult>
+                            {
+                                stmtRet
+                            };
+                            while (queue.Count > 0)
+                            {
+                                var itemRaw = queue[0];
+                                queue.RemoveAt(0);
 
-                    if (loopIns == null) break;
-                    loopIns = loopIns.Children[1];
-                    stmtIns = loopIns.Children[0];
+                                switch (itemRaw)
+                                {
+                                    case StatementResultTwoCase item:
+                                        queue.Add(item.TrueCase);
+                                        queue.Add(item.FalseCase);
+                                        break;
+
+                                    case StatementResultOneCase item:
+                                        // needs more assert here to validate the tree structure. omit it
+                                        Debug.Assert(item.Overlay != arg.Block.Overlay);
+                                        switch (item.ExecutionResultType)
+                                        {
+                                            case StatementResultType.Continue:
+                                            case StatementResultType.Break:
+                                            case StatementResultType.Return:
+                                                break;
+                                            case StatementResultType.Normal:
+                                                // execute next statement at this overlay
+                                                var retRaw = nextStmtInstance.Execute(new ExeArg()
+                                                {
+                                                    Block = new OverlayBlock(item.Overlay, arg.Block.Block)
+                                                }).StatementResult;
+
+                                                //todo: save retRaw and do an optimization described below
+
+                                                break;
+                                            default:
+                                                throw new Exception("Assert failed!");
+
+                                        }
+                                        break;
+                                    default:
+                                        throw new Exception("Assert failed!");
+                                }
+
+                            }
+
+                            //todo: optimization: if all the retRaw are the same type, i.e. all Break or all Continue, combining overlay can be done here
+
+                            // now return the result
+                            return new ExeResult() { StatementResult = stmtRet };
+                        }
+                    default:
+                        throw new Exception("Assert failed!");
+
                 }
-                return new ExeResult() { StatementResult = new StatementResult() { Type = StatementResultType.Normal } };
             };
 
             StatementSemicolon.Name = "Statement Semicolon";

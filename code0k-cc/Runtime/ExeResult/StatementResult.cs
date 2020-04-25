@@ -6,5 +6,6 @@ namespace code0k_cc.Runtime.ExeResult
 {
     abstract class StatementResult
     {
+
     }
 }
