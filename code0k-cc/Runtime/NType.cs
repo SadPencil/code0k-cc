@@ -67,6 +67,14 @@ namespace code0k_cc.Runtime
         ///// </summary>
         //private Func<Variable, NType, Variable> AssignFunc;
 
+
+        public Variable ExplicitConvert(Variable variable, NType type)
+        {
+            Debug.Assert(variable.Type == this);
+            //todo detect whether two variable are same? or not?
+            return this.ExplicitConvertFunc(variable, type);
+        }
+
         public Variable ImplicitConvert(Variable variable, NType type)
         {
             Debug.Assert(variable.Type == this);
@@ -77,6 +85,11 @@ namespace code0k_cc.Runtime
         /// RightVal, LeftType, LeftVal
         /// </summary>
         private Func<Variable, NType, Variable> ImplicitConvertFunc;
+        /// <summary>
+        /// RightVal, LeftType, LeftVal
+        /// </summary>
+        private Func<Variable, NType, Variable> ExplicitConvertFunc;
+
 
         public Variable UnaryOperation(Variable variable, UnaryOperation op)
         {
@@ -147,6 +160,19 @@ namespace code0k_cc.Runtime
                 else
                 {
                     throw new Exception($"Can't implicit convert \"{this.TypeCodeName }\" to \"{type.TypeCodeName}\".");
+                }
+            };
+
+            this.ExplicitConvertFunc = (variable, type) =>
+            {
+                Debug.Assert(variable.Type == this);
+                if (variable.Type == type)
+                {
+                    return variable;
+                }
+                else
+                {
+                    throw new Exception($"Can't explicit convert \"{this.TypeCodeName }\" to \"{type.TypeCodeName}\".");
                 }
             };
 

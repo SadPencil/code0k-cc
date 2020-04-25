@@ -61,6 +61,7 @@ namespace code0k_cc.Runtime.Nizk
 
             Overlay trueOverlay = trueOverlayBlock.Overlay;
             Overlay falseOverlay = falseOverlayBlock.Overlay;
+            var retOverlayBlock = new OverlayBlock(retOverlay, trueOverlayBlock.Block);
 
             for (var block = trueOverlayBlock.Block; block != null; block = block.ParentBlock)
             {
@@ -106,8 +107,11 @@ namespace code0k_cc.Runtime.Nizk
                         var var6 = NType.UInt32.BinaryOperation(var5, var1, BinaryOperation.Multiplication);
                         var var7 = NType.UInt32.BinaryOperation(var3, var6, BinaryOperation.Addition);
 
-                        //todo var8: var8:=Bool(var7)
-                        //todo add var8 to retOverlay
+                        //let var8 = Bool(var7)
+                        var var8 = NType.UInt32.ExplicitConvert(var7, NType.Bool);
+
+                        //add var8 to retOverlay
+                        retOverlayBlock.AddVariable(name, var8, true);
                     }
                     else if (trueVar.Variable.Type == NType.UInt32)
                     {
@@ -120,8 +124,11 @@ namespace code0k_cc.Runtime.Nizk
                         var var6 = NType.UInt32.BinaryOperation(var5, var1, BinaryOperation.Multiplication);
                         var var7 = NType.UInt32.BinaryOperation(var3, var6, BinaryOperation.Addition);
 
-                        //todo maybe needs a mod 2^32?
-                        //todo add var8 to retOverlay
+                        // maybe needs a mod 2^32?
+                        // currently, maybe not
+                        var var8 = var7;
+                        //add var8 to retOverlay
+                        retOverlayBlock.AddVariable(name, var8, true);
                     }
                     else
                     {

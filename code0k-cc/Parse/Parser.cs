@@ -286,8 +286,7 @@ namespace code0k_cc.Parse
 
             ParseUnit GlobalDefinitionStatement = new ParseUnit();
             ParseUnit GlobalFunctionDeclarationStatement = new ParseUnit();
-            ;
-
+            
             ParseUnit FunctionDeclaration = new ParseUnit();
             ParseUnit FunctionImplementation = new ParseUnit();
 
@@ -430,7 +429,7 @@ namespace code0k_cc.Parse
                 FunctionDeclarationArguments,
                 TokenUnits[TokenType.RightBracket],
             };
-            FunctionDeclaration.Execute = (arg) =>
+            FunctionDeclaration.Execute = arg =>
             {
                 var typeUnitResult = arg.Instance.Children[0].Execute(arg).TypeUnitResult;
                 var funRetNType = NType.GetNType(typeUnitResult);
@@ -514,10 +513,9 @@ namespace code0k_cc.Parse
             FunctionImplementation.Execute = arg =>
             {
                 // 1. re-declare the function if it is already declared
-                // 2. set the FunctionDeclarationValue.Instance to the compound statement
                 var functionName = arg.Instance.Children[0].Execute(arg).FunctionDeclarationValue.FunctionName;
+                // 2. set the FunctionDeclarationValue.Instance to the compound statement
                 var funT = (FunctionDeclarationValue) arg.Block.GetVariableRefRef(functionName, false, false).VariableRef.Variable.Value;
-
                 funT.Instance = arg.Instance.Children[1];
 
                 return new ExeResult() { FunctionDeclarationValue = funT };
@@ -534,7 +532,7 @@ namespace code0k_cc.Parse
             };
             FunctionDeclarationArguments.Execute = arg =>
             {
-                List<(string VarName, NType Type)> arguments = new List<(string VarName, NType Type)>();
+                var arguments = new List<(string VarName, NType Type)>();
                 var unitIns = arg.Instance.Children[0];
                 var loopIns = arg.Instance.Children[1];
                 while (true)
@@ -640,7 +638,6 @@ namespace code0k_cc.Parse
                  else
                  {
                      return arg.Instance.Children[0].Execute(arg);
-
                  }
              };
 
@@ -786,6 +783,7 @@ namespace code0k_cc.Parse
                 TokenUnits[TokenType.Else],
                 CompoundStatement
             };
+            OptionalElseStatement.Execute = arg => arg.Instance.Children[1].Execute(arg);
 
             ForStatement.Name = "For Statement";
             ForStatement.Type = ParseUnitType.Single;
@@ -985,8 +983,8 @@ namespace code0k_cc.Parse
                     var op = ins?.Children[0];
                     ins = ins?.Children[1];
                     if (op == null) break;
-                    //todo exp = op(exp)
-                    //todo!!
+
+                    // let exp = op(exp) 
 
                     if (op.ParseUnit == FunctionCall)
                     {
@@ -1060,11 +1058,12 @@ namespace code0k_cc.Parse
                     else if (op.ParseUnit == MemberAccess)
                     {
                         //todo
-
+                        throw new NotImplementedException();
                     }
                     else if (op.ParseUnit == ArraySubscripting)
                     {
                         //todo
+                        throw new NotImplementedException();
                     }
                     else
                     {
@@ -1129,7 +1128,11 @@ namespace code0k_cc.Parse
                 Expression,
                 TokenUnits[TokenType.RightSquareBracket],
             };
-            //todo ArraySubscripting
+            ArraySubscripting.Execute = arg =>
+            {
+                //todo
+                throw new NotImplementedException();
+            };
 
             MemberAccess.Name = "Member Access";
             MemberAccess.Type = ParseUnitType.Single;
@@ -1139,7 +1142,11 @@ namespace code0k_cc.Parse
                 TokenUnits[TokenType.Dot],
                 LeftValue,
             };
-            //todo MemberAccess
+            MemberAccess.Execute = arg =>
+            {
+                //todo
+                throw new NotImplementedException();
+            }; 
 
 
 

@@ -16,7 +16,7 @@ namespace code0k_cc.Runtime.Block
             this.Block = block;
         }
 
-        public OverlayBlock LocateVariableBlock(string name, bool throwException)
+        private OverlayBlock LocateVariableBlock(string name, bool throwException)
         {
             // block first, overlay second
             for (var block = this.Block; block != null; block = block.ParentBlock)
@@ -44,7 +44,6 @@ namespace code0k_cc.Runtime.Block
 
         }
 
-        //todo make varRefRef constant, i.e. varRefRef.VariableRef.Variable not changeable
         public VariableRefRef GetVariableRefRef(string name, bool recursively, bool throwException)
         {
             VariableRef varRef = null;
@@ -63,6 +62,7 @@ namespace code0k_cc.Runtime.Block
                 overlay = overlayBlock.Overlay;
                 block = overlayBlock.Block;
                 varRef = block.Variables[overlay][name];
+
             }
             else
             {
@@ -89,15 +89,16 @@ namespace code0k_cc.Runtime.Block
                 }
             }
 
+            // important: copy the variableRef to this overlay
             if (overlay != this.Overlay)
             {
-                Debug.Assert(!this.Block.Variables[this.Overlay].ContainsKey(name));
+                Debug.Assert(! (block.Variables[this.Overlay].ContainsKey(name)));
 
                 // make a copy of this variableRef
                 var newRef = new VariableRef() { Variable = varRef.Variable };
-                this.Block.Variables[this.Overlay].Add(name, newRef);
+                block.Variables[this.Overlay].Add(name, newRef);
                 overlay = this.Overlay;
-                block = this.Block;
+                //block = block;
                 varRef = newRef;
             }
 
@@ -107,7 +108,9 @@ namespace code0k_cc.Runtime.Block
 
         public void AddVariable(string name, Variable value, bool updateIfExist)
         {
+            // GetVariableRefRef() ensures that `variableRefRef` must be contained in this overlay
             var variableRefRef = this.GetVariableRefRef(name, false, false);
+            
             if (variableRefRef != null)
             {
                 if (updateIfExist)
