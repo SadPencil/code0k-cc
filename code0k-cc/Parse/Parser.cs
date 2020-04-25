@@ -194,6 +194,8 @@ namespace code0k_cc.Parse
             }
             else if (unit.ChildType == ParseUnitChildType.OneChild)
             {
+                // todo: if all results are bad results, and unit.Type == ParseUnitType.Single, return the deepest bad result instead of the last one
+
                 ParseResult goodResult = null;
                 ParseResult lastResult = null;
                 foreach (var unitChild in unit.Children)
