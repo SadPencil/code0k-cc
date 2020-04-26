@@ -11,47 +11,37 @@ namespace code0k_cc.Runtime.Nizk
 {
     static class NizkUtils
     {
-        public static readonly VariableRef UInt32Zero = new VariableRef()
+        public static readonly Variable UInt32Zero = new Variable()
         {
-            Variable = new Variable()
+            Type = NType.UInt32,
+            Value = new NizkUInt32Value()
             {
-                Type = NType.UInt32,
-                Value = new NizkUInt32Value()
-                {
-                    IsConstant = true,
-                    Value = 0,
-                    VariableType = NizkVariableType.Intermediate,
-                }
+                IsConstant = true,
+                Value = 0,
+                VariableType = NizkVariableType.Intermediate,
             }
         };
 
-        public static readonly VariableRef UInt32One = new VariableRef()
+        public static readonly Variable UInt32One = new Variable()
         {
-            Variable = new Variable()
+            Type = NType.UInt32,
+            Value = new NizkUInt32Value()
             {
-                Type = NType.UInt32,
-                Value = new NizkUInt32Value()
-                {
-                    IsConstant = true,
-                    Value = 1,
-                    VariableType = NizkVariableType.Intermediate,
-                }
+                IsConstant = true,
+                Value = 1,
+                VariableType = NizkVariableType.Intermediate,
             }
         };
-
-        public static readonly VariableRef UInt32NegOne = new VariableRef()
+        public static readonly Variable UInt32NegOne = new Variable()
         {
-            Variable = new Variable()
+            Type = NType.UInt32,
+            Value = new NizkUInt32Value()
             {
-                Type = NType.UInt32,
-                Value = new NizkUInt32Value()
-                {
-                    IsConstant = true,
-                    Value = System.UInt32.MaxValue, //todo 
-                    VariableType = NizkVariableType.Intermediate,
-                }
+                IsConstant = true,
+                Value = System.UInt32.MaxValue, //todo 
+                VariableType = NizkVariableType.Intermediate,
             }
-        };
+        }; 
 
         public static void NizkCombineOverlay(Variable nizkConditionVariable, OverlayBlock trueOverlayBlock, OverlayBlock falseOverlayBlock, Overlay retOverlay)
         {
@@ -72,9 +62,11 @@ namespace code0k_cc.Runtime.Nizk
                 {
                     var trueVar = block.Variables[trueOverlay].GetValueOrDefault(name);
                     var falseVar = block.Variables[falseOverlay].GetValueOrDefault(name);
+
                     var parentVar = block.Variables[trueOverlay.ParentOverlay]?.GetValueOrDefault(name);
 
                     Debug.Assert(( trueVar != null ) || ( falseVar != null ));
+                    //todo !!! nested parent here ! use OverlayBlock to locate the variable!!
                     if (trueVar == null)
                     {
                         trueVar = new VariableRef() { Variable = parentVar?.Variable };
@@ -104,7 +96,7 @@ namespace code0k_cc.Runtime.Nizk
                         var var2 = trueVar.Variable;
                         var var3 = falseVar.Variable;
 
-                        var var4 = NType.UInt32.BinaryOperation(var3, UInt32NegOne.Variable, BinaryOperation.Multiplication);
+                        var var4 = NType.UInt32.BinaryOperation(var3, UInt32NegOne, BinaryOperation.Multiplication);
                         var var5 = NType.UInt32.BinaryOperation(var2, var4, BinaryOperation.Addition);
                         var var6 = NType.UInt32.BinaryOperation(var5, var1, BinaryOperation.Multiplication);
                         var var7 = NType.UInt32.BinaryOperation(var3, var6, BinaryOperation.Addition);
@@ -119,7 +111,7 @@ namespace code0k_cc.Runtime.Nizk
                         var var2 = trueVar.Variable;
                         var var3 = falseVar.Variable;
 
-                        var var4 = NType.UInt32.BinaryOperation(var3, UInt32NegOne.Variable, BinaryOperation.Multiplication);
+                        var var4 = NType.UInt32.BinaryOperation(var3, UInt32NegOne, BinaryOperation.Multiplication);
                         var var5 = NType.UInt32.BinaryOperation(var2, var4, BinaryOperation.Addition);
                         var var6 = NType.UInt32.BinaryOperation(var5, var1, BinaryOperation.Multiplication);
                         var var7 = NType.UInt32.BinaryOperation(var3, var6, BinaryOperation.Addition);

@@ -623,7 +623,7 @@ namespace code0k_cc.Parse
                         {
                             // let the rest statements follow the condition where resultType == normal
                             // todo: this task can be done in parallel
-                            var queue = new List<(StatementResult ItemRet, StatementResultTwoCase ItemParentRet, bool IsParentTrueCase)>
+                            var queue = new List<(StatementResult ItemRet, StatementResultTwoCase ItemParentRet, bool IsParentTrueCase)>()
                             {
                                 ( ItemRet: stmtRet.TrueCase,ItemParentRet:stmtRet,IsParentTrueCase: true),
                                 ( ItemRet: stmtRet.FalseCase,ItemParentRet:stmtRet,IsParentTrueCase:false),
@@ -967,12 +967,185 @@ namespace code0k_cc.Parse
             };
             WhileStatement.Execute = arg =>
             {
+                // get max loop count
                 var maxIntVar = arg.Instance.Children[6].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                if (maxIntVar.Type != NType.Bool)
+                {
+                    //try implicit convert to bool type
+                    maxIntVar = maxIntVar.Assign(NType.Bool);
+                }
+
+                if (!maxIntVar.Value.IsConstant)
+                {
+                    throw new Exception("Can't the determinate max loop count of where statement.");
+                }
+
+                UInt32 maxInt = ( (NizkUInt32Value) maxIntVar.Value ).Value;
 
                 var conditionVar = arg.Instance.Children[2].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                if (conditionVar.Type != NType.Bool)
+                {
+                    //try implicit convert to bool type
+                    conditionVar = conditionVar.Assign(NType.Bool);
+                }
 
-                var queue = new List<(int i,)>();
-                //todo
+                // while false: break
+                if (conditionVar.Value.IsConstant)
+                {
+                    if (!( ( (NizkBoolValue) conditionVar.Value ).Value ))
+                    {
+                        return new ExeResult()
+                        {
+                            StatementResult = new StatementResultOneCase()
+                            {
+                                Overlay = arg.Block.Overlay,
+                                ExecutionResultType = StatementResultType.Normal,
+                            }
+                        };
+                    }
+                }
+
+                // dummy StatementResultTwoCase in order to achieve pointer to a StatementResult
+                // do NOT return stmtRetPointer, be sure to return stmtRetPointer.TrueCase
+                var stmtRetPointer = new StatementResultTwoCase()
+                {
+                    Condition = null, // unused
+                    FalseCase = null, // unused
+                    TrueCase = new StatementResultOneCase()
+                    {
+                        ExecutionResultType = StatementResultType.Normal,
+                        Overlay = arg.Block.Overlay,
+                    },
+                };
+
+                for (UInt32 i = 0; i < maxInt; ++i)
+                {
+
+                    var queue = new List<(StatementResult ItemRet, StatementResultTwoCase ItemParentRet, bool IsParentTrueCase)>()
+                    {
+                        ( ItemRet: stmtRetPointer.TrueCase,ItemParentRet:stmtRetPointer,IsParentTrueCase: true),
+                    };
+
+                    while (queue.Count > 0)
+                    {
+                        var (itemRet, itemParentRet, isParentTrueCase) = queue[0];
+                        queue.RemoveAt(0);
+                        switch (itemRet)
+                        {
+                            case StatementResultTwoCase item:
+                                queue.Add((ItemRet: item.TrueCase, ItemParentRet: item, IsParentTrueCase: true));
+                                queue.Add((ItemRet: item.FalseCase, ItemParentRet: item, IsParentTrueCase: false));
+                                break;
+
+                            case StatementResultOneCase item:
+                                switch (item.ExecutionResultType)
+                                {
+                                    case StatementResultType.Break:
+                                    case StatementResultType.Return:
+                                        break;
+
+                                    // note that the behavior of continue is different from compound statement
+                                    case StatementResultType.Continue:
+                                    case StatementResultType.Normal:
+                                        StatementResult retSave;
+                                        if (conditionVar.Value.IsConstant)
+                                        {
+                                            Debug.Assert(( (NizkBoolValue) conditionVar.Value ).Value);
+                                            retSave = arg.Instance.Children[8].Execute(new ExeArg()
+                                            {
+                                                Block = new OverlayBlock(item.Overlay, arg.Block.Block)
+                                            }).StatementResult;
+                                        }
+                                        else
+                                        {
+                                            // while (condition) is just like while (true){if (condition) do_something; else break;} 
+
+                                            retSave = new StatementResultTwoCase()
+                                            {
+                                                Condition = conditionVar,
+                                                FalseCase = new StatementResultOneCase()
+                                                {
+                                                    ExecutionResultType = StatementResultType.Break,
+                                                    Overlay = new Overlay(item.Overlay),
+                                                },
+                                                // execute
+                                                TrueCase = arg.Instance.Children[8].Execute(new ExeArg()
+                                                {
+                                                    Block = new OverlayBlock(new Overlay(item.Overlay), arg.Block.Block)
+                                                }).StatementResult,
+                                            };
+
+                                        }
+
+                                        //save retSave to the parent
+                                        if (isParentTrueCase)
+                                        {
+                                            itemParentRet.TrueCase = retSave;
+                                        }
+                                        else
+                                        {
+                                            itemParentRet.FalseCase = retSave;
+                                        }
+
+                                        break;
+                                    default:
+                                        throw new Exception("Assert failed!");
+                                }
+
+                                break;
+
+                            default:
+                                throw new Exception("Assert failed!");
+                        }
+
+
+                    }
+
+                }
+
+                // now change continue and break to normal, but leave return alone
+                {
+                    var queue = new List<(StatementResult ItemRet, StatementResultTwoCase ItemParentRet, bool IsParentTrueCase)>()
+                    {
+                        (ItemRet: stmtRetPointer.TrueCase, ItemParentRet: stmtRetPointer, IsParentTrueCase: true),
+                    };
+
+                    while (queue.Count > 0)
+                    {
+                        var (itemRet, itemParentRet, isParentTrueCase) = queue[0];
+                        queue.RemoveAt(0);
+                        switch (itemRet)
+                        {
+                            case StatementResultTwoCase item:
+                                queue.Add((ItemRet: item.TrueCase, ItemParentRet: item, IsParentTrueCase: true));
+                                queue.Add((ItemRet: item.FalseCase, ItemParentRet: item, IsParentTrueCase: false));
+                                break;
+
+                            case StatementResultOneCase item:
+                                if (item.ExecutionResultType == StatementResultType.Break ||
+                                    item.ExecutionResultType == StatementResultType.Continue)
+                                {
+                                    item.ExecutionResultType = StatementResultType.Normal;
+                                }
+                                else if (item.ExecutionResultType == StatementResultType.Return ||
+                                         item.ExecutionResultType == StatementResultType.Normal)
+                                {
+                                    // leave the ExecutionResultType alone
+                                }
+                                else
+                                {
+                                    throw new Exception("Assert failed!");
+                                }
+
+                                break;
+                            default:
+                                throw new Exception("Assert failed!");
+                        }
+                    }
+                }
+
+                //return ret
+                return new ExeResult() { StatementResult = stmtRetPointer.TrueCase };
 
             };
 
@@ -985,7 +1158,11 @@ namespace code0k_cc.Parse
                 StatementBody,
                 TokenUnits[TokenType.End],
             };
-            CompoundStatement.Execute = arg => arg.Instance.Children[1].Execute(arg);
+            CompoundStatement.Execute = arg =>
+            {
+                //todo new block
+                return arg.Instance.Children[1].Execute(arg);
+            };
 
             LeftValue.Name = "Left Value";
             LeftValue.Type = ParseUnitType.Single;
