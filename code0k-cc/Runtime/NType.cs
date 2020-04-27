@@ -216,8 +216,62 @@ namespace code0k_cc.Runtime
             StringFunc = variable => ( (NizkUInt32Value) variable.Value ).Value.ToString(CultureInfo.InvariantCulture),
             UnaryOperationFuncs = new Dictionary<UnaryOperation, Func<Variable, Variable>>()
             {
-                //todo write unary operation
+                {Operation.UnaryOperation.UnaryPlus, (var1) =>
+                {
+                    var v1 = ((NizkUInt32Value) var1.Value);
+                    return new Variable() {
+                        Type = NType.UInt32,
+                        Value =(v1.IsConstant  ) ?
+                            new NizkUInt32Value() {
+                                IsConstant = true,
+                                Value = + v1.Value ,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                            : new NizkUInt32Value() {
+                                IsConstant = false,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                    };
+                }},
+
+                {Operation.UnaryOperation.UnaryMinus, (var1) =>
+                {
+                    var v1 = ((NizkUInt32Value) var1.Value);
+                    return new Variable() {
+                        Type = NType.UInt32,
+                        Value =(v1.IsConstant  ) ?
+                            new NizkUInt32Value() {
+                                IsConstant = true,
+                                Value = ((UInt32)0) - v1.Value ,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                            : new NizkUInt32Value() {
+                                IsConstant = false,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                    };
+                }},
+
+                {Operation.UnaryOperation.BitwiseNot, (var1) =>
+                {
+                    var v1 = ((NizkUInt32Value) var1.Value);
+                    return new Variable() {
+                        Type = NType.UInt32,
+                        Value =(v1.IsConstant  ) ?
+                            new NizkUInt32Value() {
+                                IsConstant = true,
+                                Value = ~ v1.Value ,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                            : new NizkUInt32Value() {
+                                IsConstant = false,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                    };
+                }},
+
             },
+
             BinaryOperationFuncs = new Dictionary<BinaryOperation, Func<Variable, Variable, Variable>>()
             {
                 {Operation.BinaryOperation.Addition, (var1, var2) =>
@@ -315,8 +369,179 @@ namespace code0k_cc.Runtime
                     };
                 }},
 
+                {Operation.BinaryOperation.EqualTo, (var1, var2) =>
+                {
+                    var v1 = ((NizkUInt32Value) var1.Value);
+                    var v2 = ((NizkUInt32Value) var2.Value);
+                    return new Variable() {
+                        Type = NType.Bool,
+                        Value =(v1.IsConstant && v2.IsConstant ) ?
+                            new NizkBoolValue() {
+                                IsConstant = true,
+                                Value = v1.Value==v2.Value,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                            : new NizkBoolValue() {
+                                IsConstant = false,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                    };
+                }},
 
-                //todo write binary operation
+                {Operation.BinaryOperation.LessThan, (var1, var2) =>
+                {
+                    var v1 = ((NizkUInt32Value) var1.Value);
+                    var v2 = ((NizkUInt32Value) var2.Value);
+                    return new Variable() {
+                        Type = NType.Bool,
+                        Value =(v1.IsConstant && v2.IsConstant ) ?
+                            new NizkBoolValue() {
+                                IsConstant = true,
+                                Value = v1.Value<v2.Value,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                            : new NizkBoolValue() {
+                                IsConstant = false,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                    };
+                }},
+
+                {Operation.BinaryOperation.LessEqualThan, (var1, var2) =>
+                {
+                    var v1 = ((NizkUInt32Value) var1.Value);
+                    var v2 = ((NizkUInt32Value) var2.Value);
+                    return new Variable() {
+                        Type = NType.Bool,
+                        Value =(v1.IsConstant && v2.IsConstant ) ?
+                            new NizkBoolValue() {
+                                IsConstant = true,
+                                Value = v1.Value<=v2.Value,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                            : new NizkBoolValue() {
+                                IsConstant = false,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                    };
+                }},
+
+                {Operation.BinaryOperation.GreaterThan, (var1, var2) =>
+                {
+                    var v1 = ((NizkUInt32Value) var1.Value);
+                    var v2 = ((NizkUInt32Value) var2.Value);
+                    return new Variable() {
+                        Type = NType.Bool,
+                        Value =(v1.IsConstant && v2.IsConstant ) ?
+                            new NizkBoolValue() {
+                                IsConstant = true,
+                                Value = v1.Value>v2.Value,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                            : new NizkBoolValue() {
+                                IsConstant = false,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                    };
+                }},
+
+                {Operation.BinaryOperation.GreaterEqualThan, (var1, var2) =>
+                {
+                    var v1 = ((NizkUInt32Value) var1.Value);
+                    var v2 = ((NizkUInt32Value) var2.Value);
+                    return new Variable() {
+                        Type = NType.Bool,
+                        Value =(v1.IsConstant && v2.IsConstant ) ?
+                            new NizkBoolValue() {
+                                IsConstant = true,
+                                Value = v1.Value>=v2.Value,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                            : new NizkBoolValue() {
+                                IsConstant = false,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                    };
+                }},
+
+                {Operation.BinaryOperation.NotEqualTo, (var1, var2) =>
+                {
+                    var v1 = ((NizkUInt32Value) var1.Value);
+                    var v2 = ((NizkUInt32Value) var2.Value);
+                    return new Variable() {
+                        Type = NType.Bool,
+                        Value =(v1.IsConstant && v2.IsConstant ) ?
+                            new NizkBoolValue() {
+                                IsConstant = true,
+                                Value = v1.Value!=v2.Value,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                            : new NizkBoolValue() {
+                                IsConstant = false,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                    };
+                }},
+
+                {Operation.BinaryOperation.BitwiseAnd, (var1, var2) =>
+                {
+                    var v1 = ((NizkUInt32Value) var1.Value);
+                    var v2 = ((NizkUInt32Value) var2.Value);
+                    return new Variable() {
+                        Type = NType.UInt32,
+                        Value =(v1.IsConstant && v2.IsConstant ) ?
+                            new NizkUInt32Value() {
+                                IsConstant = true,
+                                Value = v1.Value&v2.Value,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                            : new NizkUInt32Value() {
+                                IsConstant = false,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                    };
+                }},
+
+                {Operation.BinaryOperation.BitwiseOr, (var1, var2) =>
+                {
+                    var v1 = ((NizkUInt32Value) var1.Value);
+                    var v2 = ((NizkUInt32Value) var2.Value);
+                    return new Variable() {
+                        Type = NType.UInt32,
+                        Value =(v1.IsConstant && v2.IsConstant ) ?
+                            new NizkUInt32Value() {
+                                IsConstant = true,
+                                Value = v1.Value|v2.Value,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                            : new NizkUInt32Value() {
+                                IsConstant = false,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                    };
+                }},
+
+                {Operation.BinaryOperation.BitwiseXor, (var1, var2) =>
+                {
+                    var v1 = ((NizkUInt32Value) var1.Value);
+                    var v2 = ((NizkUInt32Value) var2.Value);
+                    return new Variable() {
+                        Type = NType.UInt32,
+                        Value =(v1.IsConstant && v2.IsConstant ) ?
+                            new NizkUInt32Value() {
+                                IsConstant = true,
+                                Value = v1.Value^v2.Value,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                            : new NizkUInt32Value() {
+                                IsConstant = false,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                    };
+                }}, 
+                
+
+                //todo implement Bitwise Shift
             },
 
 
@@ -357,11 +582,121 @@ namespace code0k_cc.Runtime
             StringFunc = variable => ( (NizkBoolValue) variable.Value ).Value.ToString(CultureInfo.InvariantCulture),
             UnaryOperationFuncs = new Dictionary<UnaryOperation, Func<Variable, Variable>>()
             {
-                //todo write unary operation
+                {Operation.UnaryOperation.LogicalNot, (var1) =>
+                {
+                    var v1 = ((NizkBoolValue) var1.Value);
+                    return new Variable() {
+                        Type = NType.Bool,
+                        Value =(v1.IsConstant  ) ?
+                            new NizkBoolValue() {
+                                IsConstant = true,
+                                Value = ! v1.Value ,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                            : new NizkBoolValue() {
+                                IsConstant = false,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                    };
+                }},
             },
             BinaryOperationFuncs = new Dictionary<BinaryOperation, Func<Variable, Variable, Variable>>()
             {
-                //todo write binary operation
+                {Operation.BinaryOperation.EqualTo, (var1, var2) =>
+                {
+                    var v1 = ((NizkBoolValue) var1.Value);
+                    var v2 = ((NizkBoolValue) var2.Value);
+                    return new Variable() {
+                        Type = NType.Bool,
+                        Value =(v1.IsConstant && v2.IsConstant ) ?
+                            new NizkBoolValue() {
+                                IsConstant = true,
+                                Value = v1.Value==v2.Value,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                            : new NizkBoolValue() {
+                                IsConstant = false,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                    };
+                }},
+
+                {Operation.BinaryOperation.NotEqualTo, (var1, var2) =>
+                {
+                    var v1 = ((NizkBoolValue) var1.Value);
+                    var v2 = ((NizkBoolValue) var2.Value);
+                    return new Variable() {
+                        Type = NType.Bool,
+                        Value =(v1.IsConstant && v2.IsConstant ) ?
+                            new NizkBoolValue() {
+                                IsConstant = true,
+                                Value = v1.Value!=v2.Value,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                            : new NizkBoolValue() {
+                                IsConstant = false,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                    };
+                }},
+
+                {Operation.BinaryOperation.LogicalAnd, (var1, var2) =>
+                {
+                    var v1 = ((NizkBoolValue) var1.Value);
+                    var v2 = ((NizkBoolValue) var2.Value);
+                    return new Variable() {
+                        Type = NType.Bool,
+                        Value =(v1.IsConstant && v2.IsConstant ) ?
+                            new NizkBoolValue() {
+                                IsConstant = true,
+                                Value = v1.Value&&v2.Value,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                            : new NizkBoolValue() {
+                                IsConstant = false,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                    };
+                }},
+
+                {Operation.BinaryOperation.LogicalOr, (var1, var2) =>
+                {
+                    var v1 = ((NizkBoolValue) var1.Value);
+                    var v2 = ((NizkBoolValue) var2.Value);
+                    return new Variable() {
+                        Type = NType.Bool,
+                        Value =(v1.IsConstant && v2.IsConstant ) ?
+                            new NizkBoolValue() {
+                                IsConstant = true,
+                                Value = v1.Value||v2.Value,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                            : new NizkBoolValue() {
+                                IsConstant = false,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                    };
+                }},
+
+                {Operation.BinaryOperation.LogicalXor, (var1, var2) =>
+                {
+                    var v1 = ((NizkBoolValue) var1.Value);
+                    var v2 = ((NizkBoolValue) var2.Value);
+                    return new Variable() {
+                        Type = NType.Bool,
+                        Value =(v1.IsConstant && v2.IsConstant ) ?
+                            new NizkBoolValue() {
+                                IsConstant = true,
+                                Value = v1.Value!=v2.Value,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                            : new NizkBoolValue() {
+                                IsConstant = false,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                    };
+                }},
+
             },
 
         };
