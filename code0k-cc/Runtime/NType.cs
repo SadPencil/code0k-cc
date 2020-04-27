@@ -70,16 +70,43 @@ namespace code0k_cc.Runtime
 
         public Variable ExplicitConvert(Variable variable, NType type)
         {
-            Debug.Assert(variable.Type == this);
-            //todo detect whether two variable are same? or not?
-            return this.ExplicitConvertFunc(variable, type);
+            Debug.Assert(variable.Type == this); 
+            if (variable.Type == type)
+            {
+                return variable;
+            }
+
+            var retVariable = this.ExplicitConvertFunc(variable, type);
+            // add connection
+            var newCon = new VariableConnection() { Type = new VariableConnectionType() { SpecialOperation = SpecialOperation.TypeCast } };
+
+            variable.Connections.Add(newCon);
+            newCon.InVariables.Add(variable);
+
+            newCon.OutVariables.Add(retVariable);
+
+            return retVariable;
         }
 
         public Variable ImplicitConvert(Variable variable, NType type)
         {
             Debug.Assert(variable.Type == this);
-            //todo detect whether two variable are same? or not?
-            return this.ImplicitConvertFunc(variable, type);
+            if (variable.Type == type)
+            {
+                return variable;
+            }
+
+            var retVariable = this.ImplicitConvertFunc(variable, type);
+            
+            // add connection
+            var newCon = new VariableConnection() { Type = new VariableConnectionType() { SpecialOperation = SpecialOperation.TypeCast } };
+
+            variable.Connections.Add(newCon);
+            newCon.InVariables.Add(variable);
+
+            newCon.OutVariables.Add(retVariable);
+
+            return retVariable;
         }
         /// <summary>
         /// RightVal, LeftType, LeftVal
