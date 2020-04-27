@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.Versioning;
 using System.Text;
 
 namespace code0k_cc.Lex
@@ -13,13 +14,13 @@ namespace code0k_cc.Lex
         {
             return Analyze(stream, new UTF8Encoding(false));
         }
-
+         
         internal static IEnumerable<Token> Analyze(Stream stream, Encoding encoding)
         {
             StreamReader reader = new StreamReader(stream, encoding);
 
             StringBuilder sb = new StringBuilder();
-            LexCharType state = LexCharType.WhileSpace;
+            LexState state = LexState.Empty;
 
             int row = 1;
             int column = 0;
@@ -32,13 +33,17 @@ namespace code0k_cc.Lex
                 char nextChar = Char.MinValue;
                 LexCharType nextCharType = LexCharType.Unknown;
 
-                Debug.Assert(( sb.Length == 0 ) == ( state == LexCharType.WhileSpace ));
+                Debug.Assert(( sb.Length == 0 ) == ( state == LexState.Empty ));
 
                 if (nextCharInt == -1) // EOL
                 {
-                    if (state == LexCharType.WhileSpace)
+                    if (state == LexState.Empty)
                     {
                         choice = LexChoice.Terminate;
+                    }
+                    else if (state == LexState.String || state == LexState.StringEscaping)
+                    {
+                        throw new Exception("Unexpected end of line. The string is not closed.");
                     }
                     else
                     {
@@ -57,34 +62,62 @@ namespace code0k_cc.Lex
                     }
 
                     nextCharType = GetCharType(nextChar);
-                    if (nextCharType == LexCharType.Unknown)
-                    {
-                        throw new Exception("Unrecognized character \"" + nextChar.ToString() + "\"");
-                    }
 
-                    switch (state)
+                    switch (state) // a 5 by 6 table
                     {
-                        case LexCharType.WhileSpace when nextCharType == LexCharType.WhileSpace:
+                        case LexState.LetterOrDigitOrUnderscore when nextCharType == LexCharType.Unknown:
+                        case LexState.Empty when nextCharType == LexCharType.Unknown:
+                        case LexState.Punctuation when nextCharType == LexCharType.Unknown:
+                            throw new Exception("Unrecognized character \"" + nextChar.ToString() + "\"");
+                        case LexState.Empty when nextCharType == LexCharType.WhiteSpace:
                             choice = LexChoice.Drop;
                             break;
 
-                        case LexCharType.LetterOrDigitOrUnderscore when nextCharType == LexCharType.LetterOrDigitOrUnderscore:
-                        case LexCharType.WhileSpace when nextCharType == LexCharType.LetterOrDigitOrUnderscore:
-                        case LexCharType.WhileSpace when nextCharType == LexCharType.Punctuation:
+
+                        case LexState.LetterOrDigitOrUnderscore when nextCharType == LexCharType.LetterOrDigitOrUnderscore:
+                        case LexState.Empty when nextCharType == LexCharType.QuotationMark:
+                        case LexState.Empty when nextCharType == LexCharType.Backslash:
+                        case LexState.Empty when nextCharType == LexCharType.LetterOrDigitOrUnderscore:
+                        case LexState.Empty when nextCharType == LexCharType.OtherPunctuation:
+                        case LexState.String when nextCharType == LexCharType.Unknown:
+                        case LexState.String when nextCharType == LexCharType.WhiteSpace:
+                        case LexState.String when nextCharType == LexCharType.LetterOrDigitOrUnderscore:
+                        case LexState.String when nextCharType == LexCharType.OtherPunctuation:
                             choice = LexChoice.ReadAppend;
                             break;
 
-                        case LexCharType.Punctuation when nextCharType == LexCharType.WhileSpace:
-                        case LexCharType.LetterOrDigitOrUnderscore when nextCharType == LexCharType.WhileSpace:
+                        case LexState.String when nextCharType == LexCharType.QuotationMark:
+                            choice = LexChoice.ReadAppendReturn;
+                            break;
+
+                        case LexState.String when nextCharType == LexCharType.Backslash:
+                            choice = LexChoice.ReadAppendStringEscapeIn;
+                            break;
+
+                        case LexState.StringEscaping when nextCharType == LexCharType.Unknown:
+                        case LexState.StringEscaping when nextCharType == LexCharType.WhiteSpace:
+                        case LexState.StringEscaping when nextCharType == LexCharType.Backslash:
+                        case LexState.StringEscaping when nextCharType == LexCharType.QuotationMark:
+                        case LexState.StringEscaping when nextCharType == LexCharType.LetterOrDigitOrUnderscore:
+                        case LexState.StringEscaping when nextCharType == LexCharType.OtherPunctuation:
+                            choice = LexChoice.ReadAppendStringEscapeOut;
+                            break;
+
+                        case LexState.Punctuation when nextCharType == LexCharType.WhiteSpace:
+                        case LexState.LetterOrDigitOrUnderscore when nextCharType == LexCharType.WhiteSpace:
                             choice = LexChoice.DropReturn;
                             break;
 
-                        case LexCharType.Punctuation when nextCharType == LexCharType.LetterOrDigitOrUnderscore:
-                        case LexCharType.LetterOrDigitOrUnderscore when nextCharType == LexCharType.Punctuation:
+                        case LexState.Punctuation when nextCharType == LexCharType.LetterOrDigitOrUnderscore:
+                        case LexState.LetterOrDigitOrUnderscore when nextCharType == LexCharType.OtherPunctuation:
+                        case LexState.LetterOrDigitOrUnderscore when nextCharType == LexCharType.Backslash:
+                        case LexState.LetterOrDigitOrUnderscore when nextCharType == LexCharType.QuotationMark:
                             choice = LexChoice.PeekReturn;
                             break;
 
-                        case LexCharType.Punctuation when nextCharType == LexCharType.Punctuation:
+                        case LexState.Punctuation when nextCharType == LexCharType.Backslash:
+                        case LexState.Punctuation when nextCharType == LexCharType.QuotationMark:
+                        case LexState.Punctuation when nextCharType == LexCharType.OtherPunctuation:
                             // consider '&' and '&&'
                             if (GetTokenType(sb.ToString()) != null)
                             {
@@ -113,25 +146,61 @@ namespace code0k_cc.Lex
                     case LexChoice.PeekReturn:
                         yield return GetToken(sb.ToString(), row, column);
                         _ = sb.Clear();
-                        state = LexCharType.WhileSpace;
+                        state = LexState.Empty;
                         break;
                     case LexChoice.DropReturn:
                         _ = reader.Read();
                         yield return GetToken(sb.ToString(), row, column);
                         _ = sb.Clear();
-                        state = LexCharType.WhileSpace;
+                        state = LexState.Empty;
                         break;
                     case LexChoice.Drop:
                         _ = reader.Read();
                         break;
+                    case LexChoice.ReadAppendStringEscapeOut:
+                    case LexChoice.ReadAppendReturn:
+                    case LexChoice.ReadAppendStringEscapeIn:
                     case LexChoice.ReadAppend:
                         _ = reader.Read();
-                        if (state == LexCharType.WhileSpace)
+                        if (state == LexState.Empty)
                         {
-                            state = nextCharType;
+                            switch (nextCharType)
+                            {
+                                case LexCharType.QuotationMark:
+                                    state = LexState.String;
+                                    break;
+                                case LexCharType.LetterOrDigitOrUnderscore:
+                                    state = LexState.LetterOrDigitOrUnderscore;
+                                    break;
+                                case LexCharType.Backslash:
+                                case LexCharType.OtherPunctuation:
+                                    state = LexState.Punctuation;
+                                    break;
+                                default:
+                                    throw new Exception("Assert failed!");
+                            }
                         }
                         _ = sb.Append(nextChar);
+
+                        if (choice == LexChoice.ReadAppendReturn)
+                        {
+                            yield return GetToken(sb.ToString(), row, column);
+                            _ = sb.Clear();
+                            state = LexState.Empty;
+                        }
+                        else if (choice == LexChoice.ReadAppendStringEscapeIn)
+                        {
+                            Debug.Assert(state == LexState.String);
+                            state = LexState.StringEscaping;
+                        }
+                        else if (choice == LexChoice.ReadAppendStringEscapeOut)
+                        {
+                            Debug.Assert(state == LexState.StringEscaping);
+                            state = LexState.String;
+                        }
+
                         break;
+
                     case LexChoice.Terminate:
                         yield return GetEOL(row, column);
                         yield break;
@@ -163,15 +232,23 @@ namespace code0k_cc.Lex
         {
             if (Char.IsWhiteSpace(ch))
             {
-                return LexCharType.WhileSpace;
+                return LexCharType.WhiteSpace;
             }
             else if (Char.IsLetter(ch) || Char.IsDigit(ch) || ch == '_')
             {
                 return LexCharType.LetterOrDigitOrUnderscore;
             }
-            else if ('!' <= ch && ch <= '/' || ':' <= ch && ch <= '@' || '[' <= ch && ch <= '`' && ch != '_' || '{' <= ch && ch <= '~')
+            else if (ch == '\"')
             {
-                return LexCharType.Punctuation;
+                return LexCharType.QuotationMark;
+            }
+            else if (ch == '\\')
+            {
+                return LexCharType.Backslash;
+            }
+            else if (( '!' <= ch && ch <= '/' || ':' <= ch && ch <= '@' || '[' <= ch && ch <= '`' || '{' <= ch && ch <= '~' ) && ch != '_' && ch != '\"')
+            {
+                return LexCharType.OtherPunctuation;
             }
             else
             {

@@ -3,8 +3,10 @@
     enum LexCharType
     {
         Unknown,
-        WhileSpace,
-        Punctuation,
+        WhiteSpace,
+        QuotationMark,
+        Backslash,
         LetterOrDigitOrUnderscore,
+        OtherPunctuation,
     }
 }

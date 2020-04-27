@@ -6,6 +6,9 @@
         DropReturn,
         PeekReturn,
         ReadAppend,
+        ReadAppendReturn,
+        ReadAppendStringEscapeIn,
+        ReadAppendStringEscapeOut,
         Terminate
     }
 }
