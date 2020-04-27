@@ -71,8 +71,9 @@ namespace code0k_cc.Runtime.Nizk
                         parentVar = block.Variables[trueOverlay.ParentOverlay]?.GetValueOrDefault(name).Variable;
                         if (parentVar != null) break;
                     }
-
                     Debug.Assert(( trueVar != null ) || ( falseVar != null ));
+
+                    // note that parentVar is nullable
                     if (trueVar == null)
                     {
                         trueVar = parentVar;
