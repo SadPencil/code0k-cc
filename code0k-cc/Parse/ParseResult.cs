@@ -5,6 +5,9 @@
         public bool Success;
         public ParseInstance ResultInstance;
         public int Position;
+
+        public int Depth;
+
         public int Row;
         public int Column;
     }

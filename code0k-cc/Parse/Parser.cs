@@ -78,6 +78,7 @@ namespace code0k_cc.Parse
                             ParseUnit = unit,
                             Token = token,
                         },
+                        Depth = depth,
                         Row = token.Row,
                         Column = token.Column,
                     };
@@ -95,6 +96,7 @@ namespace code0k_cc.Parse
                             Position = pos,
                             Success = true,
                             ResultInstance = null,
+                            Depth = depth,
                             Row = token.Row,
                             Column = token.Column,
                         };
@@ -113,6 +115,7 @@ namespace code0k_cc.Parse
                                 ParseUnit = unit,
                                 Token = null
                             },
+                            Depth = depth,
                             Row = token.Row,
                             Column = token.Column,
                         };
@@ -157,6 +160,7 @@ namespace code0k_cc.Parse
                             Position = pos,
                             Success = true,
                             ResultInstance = null,
+                            Depth = depth,
                             Row = token.Row,
                             Column = token.Column,
                         };
@@ -185,6 +189,7 @@ namespace code0k_cc.Parse
                             ParseUnit = unit,
                             Token = null
                         },
+                        Depth = depth,
                         Row = newRowCol.Row,
                         Column = newRowCol.Column,
                     };
@@ -194,18 +199,29 @@ namespace code0k_cc.Parse
             }
             else if (unit.ChildType == ParseUnitChildType.OneChild)
             {
-                // todo: if all results are bad results, and unit.Type == ParseUnitType.Single, return the deepest bad result instead of the last one
-
                 ParseResult goodResult = null;
-                ParseResult lastResult = null;
+                ParseResult badResult = null;
+                int badResultDepth = 0;
                 foreach (var unitChild in unit.Children)
                 {
-                    lastResult = Parse(unitChild, tokenList, pos, depth + 1);
-                    if (lastResult.Success)
+                    // if all results are bad results, and unit.Type == ParseUnitType.Single, return the deepest bad result instead of the last one
+                    var ret = Parse(unitChild, tokenList, pos, depth + 1);
+                    if (ret.Success)
                     {
-                        goodResult = lastResult;
+                        goodResult = ret;
                         break;
                     }
+
+                    if (ret.Depth >= badResultDepth)
+                    {
+                        badResultDepth = ret.Depth;
+                        badResult = ret;
+                    }
+                    else
+                    {
+                        Debug.Assert(badResult != null);
+                    }
+
                 }
 
                 if (goodResult == null)
@@ -219,6 +235,7 @@ namespace code0k_cc.Parse
                             Position = pos,
                             Success = true,
                             ResultInstance = null,
+                            Depth = depth,
                             Row = token.Row,
                             Column = token.Column,
                         };
@@ -227,7 +244,8 @@ namespace code0k_cc.Parse
                     else if (unit.Type == ParseUnitType.Single)
                     {
                         // failed
-                        return lastResult;
+                        Debug.Assert(badResult != null);
+                        return badResult;
                     }
                     else
                     {
@@ -247,6 +265,7 @@ namespace code0k_cc.Parse
                             ParseUnit = unit,
                             Token = null
                         },
+                        Depth = goodResult.Depth,
                         Row = goodResult.Row,
                         Column = goodResult.Column,
                     };
@@ -313,7 +332,7 @@ namespace code0k_cc.Parse
             ParseUnit DefinitionStatement = new ParseUnit();
             ParseUnit IfStatement = new ParseUnit();
             ParseUnit OptionalElseStatement = new ParseUnit();
-            ParseUnit ForStatement = new ParseUnit();
+            //ParseUnit ForStatement = new ParseUnit();
             ParseUnit WhileStatement = new ParseUnit();
             ParseUnit CompoundStatement = new ParseUnit();
             ParseUnit ReturnStatement = new ParseUnit();
@@ -352,52 +371,55 @@ namespace code0k_cc.Parse
                 MainProgramLoop,
                 eolUnit,
             };
-            MainProgram.Execute = arg =>
-           {
-               //block: provide built-in types
+            //todo
+            MainProgram.Execute = arg => throw new NotImplementedException();
 
-               //todo: redundancy code here.
+            // MainProgram.Execute = arg =>
+            //{
+            //    //block: provide built-in types
 
-               // prepare environment
-               var mainBlock = new BasicBlock(arg.Block.Block);
+            //    //todo: redundancy code here.
 
-               var mainBlockOverlay = new OverlayBlock(arg.Block.Overlay, mainBlock);
+            //    // prepare environment
+            //    var mainBlock = new BasicBlock(arg.Block.Block);
 
-               foreach (var instanceChild in arg.Instance.Children)
-               {
-                   _ = instanceChild?.Execute(new ExeArg() { Block = mainBlockOverlay });
-               }
+            //    var mainBlockOverlay = new OverlayBlock(arg.Block.Overlay, mainBlock);
 
-               // find & execute "main"
-               var mainFunc = (FunctionDeclarationValue) mainBlockOverlay.GetVariableRefRef("main", false, true).VariableRef.Variable.Value;
+            //    foreach (var instanceChild in arg.Instance.Children)
+            //    {
+            //        _ = instanceChild?.Execute(new ExeArg() { Block = mainBlockOverlay });
+            //    }
 
-               if (mainFunc.Instance == null)
-               {
-                   throw new Exception($"Unimplemented function \"{mainFunc.FunctionName}\"");
-               }
+            //    // find & execute "main"
+            //    var mainFunc = (FunctionDeclarationValue) mainBlockOverlay.GetVariableRefRef("main", false, true).VariableRef.Variable.Value;
 
-               // create new block
-               var newFuncBlock = new BasicBlock(mainBlock);
-               var newFuncBlockOverlay = new OverlayBlock(arg.Block.Overlay, newFuncBlock);
-               // execute function
-               var funRet = mainFunc.Instance.Execute(new ExeArg() { Block = newFuncBlockOverlay }).StatementResult;
-               return funRet.Type switch
-               {
-                   StatementResultType.Return => new ExeResult()
-                   {
-                       StatementResult = new StatementResult()
-                       { ReturnVariableRefRef = funRet.ReturnVariableRefRef, Type = StatementResultType.Return }
-                   },
-                   StatementResultType.Normal => new ExeResult()
-                   {
-                       StatementResult = new StatementResult()
-                       { ReturnVariableRefRef = new VariableRefRef(new VariableRef() { Variable = NType.Void.NewValue() }), Type = StatementResultType.Return }
-                   },
-                   StatementResultType.Break => throw new Exception($"Unexpected \"break\" without loop statement while executing function \"{mainFunc.FunctionName}\""),
-                   StatementResultType.Continue => throw new Exception($"Unexpected \"continue\" without loop statement while executing function \"{mainFunc.FunctionName}\""),
-                   _ => throw new Exception("Assert failed!"),
-               };
-           };
+            //    if (mainFunc.Instance == null)
+            //    {
+            //        throw new Exception($"Unimplemented function \"{mainFunc.FunctionName}\"");
+            //    }
+
+            //    // create new block
+            //    var newFuncBlock = new BasicBlock(mainBlock);
+            //    var newFuncBlockOverlay = new OverlayBlock(arg.Block.Overlay, newFuncBlock);
+            //    // execute function
+            //    var funRet = mainFunc.Instance.Execute(new ExeArg() { Block = newFuncBlockOverlay }).StatementResult;
+            //    return funRet.Type switch
+            //    {
+            //        StatementResultType.Return => new ExeResult()
+            //        {
+            //            StatementResult = new StatementResult()
+            //            { ReturnVariableRefRef = funRet.ReturnVariableRefRef, Type = StatementResultType.Return }
+            //        },
+            //        StatementResultType.Normal => new ExeResult()
+            //        {
+            //            StatementResult = new StatementResult()
+            //            { ReturnVariableRefRef = new VariableRefRef(new VariableRef() { Variable = NType.Void.NewValue() }), Type = StatementResultType.Return }
+            //        },
+            //        StatementResultType.Break => throw new Exception($"Unexpected \"break\" without loop statement while executing function \"{mainFunc.FunctionName}\""),
+            //        StatementResultType.Continue => throw new Exception($"Unexpected \"continue\" without loop statement while executing function \"{mainFunc.FunctionName}\""),
+            //        _ => throw new Exception("Assert failed!"),
+            //    };
+            //};
 
             MainProgramItem.Name = "Main Program Item";
             MainProgramItem.Type = ParseUnitType.Single;
@@ -742,7 +764,7 @@ namespace code0k_cc.Parse
             {
                 CompoundStatement,
                 IfStatement,
-                ForStatement,
+               // ForStatement,
                 WhileStatement,
                 StatementSemicolon,
             };
@@ -884,6 +906,8 @@ namespace code0k_cc.Parse
                     // normal if-statement  
                     //todo
 
+                    //todo
+                    throw new NotImplementedException();
                 }
                 else
                 {
@@ -925,30 +949,31 @@ namespace code0k_cc.Parse
             };
             OptionalElseStatement.Execute = arg => arg.Instance.Children[1].Execute(arg);
 
-            ForStatement.Name = "For Statement";
-            ForStatement.Type = ParseUnitType.Single;
-            ForStatement.ChildType = ParseUnitChildType.AllChild;
-            ForStatement.Children = new List<ParseUnit>()
-            {
-                //todo change for statement parse unit
-                // for i = a to/downto b do
-                // where b-a (a-b for downto) must be a constant type and must be an integer with positive/zero value
-                TokenUnits[TokenType.For],
-                TokenUnits[TokenType.LeftBracket],
-                Expression,
-                TokenUnits[TokenType.Semicolon],
-                Expression,
-                TokenUnits[TokenType.Semicolon],
-                Expression,
-                TokenUnits[TokenType.RightBracket],
-                TokenUnits[TokenType.Max],
-                TokenUnits[TokenType.LeftBracket],
-                Expression,
-                TokenUnits[TokenType.RightBracket],
-                CompoundStatement
-            };
-            //todo
-            ForStatement.Execute = arg => throw new NotImplementedException();
+            //ForStatement.Name = "For Statement";
+            //ForStatement.Type = ParseUnitType.Single;
+            //ForStatement.ChildType = ParseUnitChildType.AllChild;
+            //ForStatement.Children = new List<ParseUnit>()
+            //{
+            //    //todo change for statement parse unit
+            //    // for i = a to/downto b do
+            //    // where b-a (a-b for downto) must be a constant type and must be an integer with positive/zero value
+            //    TokenUnits[TokenType.For],
+            //    TokenUnits[TokenType.LeftBracket],
+            //    Expression,
+            //    TokenUnits[TokenType.Semicolon],
+            //    Expression,
+            //    TokenUnits[TokenType.Semicolon],
+            //    Expression,
+            //    TokenUnits[TokenType.RightBracket],
+            //    TokenUnits[TokenType.Max],
+            //    TokenUnits[TokenType.LeftBracket],
+            //    Expression,
+            //    TokenUnits[TokenType.RightBracket],
+            //    CompoundStatement
+            //};
+
+            ////todo
+            //ForStatement.Execute = arg => throw new NotImplementedException();
 
             WhileStatement.Name = "While Statement";
             WhileStatement.Type = ParseUnitType.Single;
@@ -1363,27 +1388,31 @@ namespace code0k_cc.Parse
                         }
 
                         // execute function
-                        var funRet = funcStruct.Instance.Execute(new ExeArg() { Block = newBlockOverlay }).StatementResult;
-                        switch (funRet.Type)
-                        {
-                            case StatementResultType.Return:
-                                exp = new ExpressionResult() { VariableRefRef = funRet.ReturnVariableRefRef };
-                                break;
-                            case StatementResultType.Normal:
-                                return new ExeResult()
-                                {
-                                    StatementResult = new StatementResult()
-                                    { ReturnVariableRefRef = new VariableRefRef(new VariableRef() { Variable = NType.Void.NewValue() }), Type = StatementResultType.Return }
-                                };
-                            case StatementResultType.Break:
-                                throw new Exception($"Unexpected \"break\" without loop statement while executing function \"{funcStruct.FunctionName}\"");
 
-                            case StatementResultType.Continue:
-                                throw new Exception($"Unexpected \"continue\" without loop statement while executing function \"{funcStruct.FunctionName}\"");
+                        //todo
+                        throw new NotImplementedException();
 
-                            default:
-                                throw new Exception("Assert failed!");
-                        }
+                        //var funRet = funcStruct.Instance.Execute(new ExeArg() { Block = newBlockOverlay }).StatementResult;
+                        //switch (funRet.Type)
+                        //{
+                        //    case StatementResultType.Return:
+                        //        exp = new ExpressionResult() { VariableRefRef = funRet.ReturnVariableRefRef };
+                        //        break;
+                        //    case StatementResultType.Normal:
+                        //        return new ExeResult()
+                        //        {
+                        //            StatementResult = new StatementResult()
+                        //            { ReturnVariableRefRef = new VariableRefRef(new VariableRef() { Variable = NType.Void.NewValue() }), Type = StatementResultType.Return }
+                        //        };
+                        //    case StatementResultType.Break:
+                        //        throw new Exception($"Unexpected \"break\" without loop statement while executing function \"{funcStruct.FunctionName}\"");
+
+                        //    case StatementResultType.Continue:
+                        //        throw new Exception($"Unexpected \"continue\" without loop statement while executing function \"{funcStruct.FunctionName}\"");
+
+                        //    default:
+                        //        throw new Exception("Assert failed!");
+                        //}
 
 
                     }

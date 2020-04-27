@@ -37,29 +37,33 @@ namespace code0k_cc.Lex
 
         public static readonly TokenType EOL = new TokenType("\\b", "EOL");
 
-        //public static readonly TokenType Input = new TokenType("input", "input", new TokenTypeProperty() { IsDescriptionWord = true });
-        //public static readonly TokenType Output = new TokenType("output", "output", new TokenTypeProperty() { IsDescriptionWord = true });
-        //public static readonly TokenType NizkInput = new TokenType("nizkinput", "nizkinput", new TokenTypeProperty() { IsDescriptionWord = true });
+        public static readonly TokenType Input = new TokenType("input", "input", new TokenTypeProperty() { IsDescriptionWord = true });
+        public static readonly TokenType Output = new TokenType("output", "output", new TokenTypeProperty() { IsDescriptionWord = true });
+        public static readonly TokenType NizkInput = new TokenType("nizkinput", "nizkinput", new TokenTypeProperty() { IsDescriptionWord = true });
         //public static readonly TokenType Const = new TokenType("const", "const", new TokenTypeProperty() { IsDescriptionWord = true });
-        public static readonly TokenType Var = new TokenType("var", "var", new TokenTypeProperty() { IsDescriptionWord = true });
+        //public static readonly TokenType Var = new TokenType("var", "var", new TokenTypeProperty() { IsDescriptionWord = true });
         //public static readonly TokenType Ref = new TokenType("ref", "ref", new TokenTypeProperty() { IsDescriptionWord = true });
 
         //public static readonly TokenType Call = new TokenType("call", "call");
-        public static readonly TokenType Return = new TokenType("return", "return");
 
         public static readonly TokenType If = new TokenType("if", "if");
         public static readonly TokenType Then = new TokenType("then", "then");
         public static readonly TokenType Else = new TokenType("else", "else");
 
         public static readonly TokenType While = new TokenType("while", "while");
-        //public static readonly TokenType Do = new TokenType("do", "do");
         public static readonly TokenType Max = new TokenType("max", "max");
-        public static readonly TokenType For = new TokenType("for", "for");
+
+        //public static readonly TokenType Do = new TokenType("do", "do");
+        //public static readonly TokenType For = new TokenType("for", "for");
         //public static readonly TokenType To = new TokenType("to", "to");
         //public static readonly TokenType DownTo = new TokenType("downto", "downto");
 
         public static readonly TokenType Break = new TokenType("break", "break");
         public static readonly TokenType Continue = new TokenType("continue", "continue");
+        public static readonly TokenType Return = new TokenType("return", "return");
+
+        public static readonly TokenType True = new TokenType("true", "true");
+        public static readonly TokenType False = new TokenType("false", "false");
 
         public static readonly TokenType Begin = new TokenType("{", "{");
         public static readonly TokenType End = new TokenType("}", "}");
@@ -102,17 +106,18 @@ namespace code0k_cc.Lex
         public static readonly TokenType BitwiseRightShiftSigned = new TokenType("\\>\\>", ">>", new TokenTypeProperty() { IsBinaryOperator = true });
         public static readonly TokenType BitwiseRightShiftUnsigned = new TokenType("\\>\\>\\>", ">>>", new TokenTypeProperty() { IsBinaryOperator = true });
 
+        public static readonly TokenType String = new TokenType("\\\"(\\\\.|[^\\\"])*\\\"", "string");
+
         public static readonly TokenType Identifier = new TokenType("[_a-zA-z][_a-zA-z0-9]{0,200}", "identifier");
         public static readonly TokenType Number = new TokenType("[0-9][0-9_a-zA-z\\.]{0,200}", "number");
 
-
         public static IEnumerable<TokenType> GetAll()
         {
-            // no EOL
-             
-            yield return Var; 
+            // EOL not included
 
-            yield return Return;
+            yield return Input;
+            yield return NizkInput;
+            yield return Output;
 
             yield return If;
             yield return Then;
@@ -121,10 +126,12 @@ namespace code0k_cc.Lex
             yield return While;
             yield return Max;
 
-            yield return For;
-
             yield return Break;
             yield return Continue;
+            yield return Return;
+
+            yield return True;
+            yield return False;
 
             yield return Begin;
             yield return End;
@@ -167,6 +174,7 @@ namespace code0k_cc.Lex
             yield return BitwiseLeftShiftUnsigned;
             yield return BitwiseRightShiftUnsigned;
 
+            yield return String;
             // note that the order matters 
             yield return Number;
             yield return Identifier;

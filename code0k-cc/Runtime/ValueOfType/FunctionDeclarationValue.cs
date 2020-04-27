@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using code0k_cc.Parse;
 using code0k_cc.Runtime.Block;
 
@@ -18,5 +19,6 @@ namespace code0k_cc.Runtime.ValueOfType
         /// </summary>
         public List<(string VarName, NType Type)> Arguments;
         public BasicBlock ParentBlock;
+        public UInt32 MaxLoop;
     }
 }
