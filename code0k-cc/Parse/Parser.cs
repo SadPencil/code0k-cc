@@ -453,6 +453,10 @@ namespace code0k_cc.Parse
                 TokenUnits[TokenType.LeftBracket],
                 FunctionDeclarationArguments,
                 TokenUnits[TokenType.RightBracket],
+                TokenUnits[TokenType.Max],
+                TokenUnits[TokenType.LeftBracket],
+                Expression,
+                TokenUnits[TokenType.RightBracket],
             };
             FunctionDeclaration.Execute = arg =>
             {
@@ -463,7 +467,11 @@ namespace code0k_cc.Parse
 
                 var funArgs = arg.Instance.Children[3]?.Execute(arg)?.FunctionDeclarationValue.Arguments;
 
-                var funT = new FunctionDeclarationValue() { Arguments = funArgs, FunctionName = funName, ReturnType = funRetNType, Instance = null };
+                var maxIntVar = arg.Instance.Children[7].Execute(arg)?.ExpressionResult.VariableRefRef.VariableRef.Variable;
+
+                var maxInt = ( (NizkUInt32Value) NType.UInt32.Assign(maxIntVar, NType.UInt32).Value ).Value;
+
+                var funT = new FunctionDeclarationValue() { Arguments = funArgs, FunctionName = funName, ReturnType = funRetNType, MaxLoop = maxInt, Instance = null };
 
                 arg.Block.AddVariable(funName, new Variable() { Type = NType.Function, Value = funT }, true);
 
