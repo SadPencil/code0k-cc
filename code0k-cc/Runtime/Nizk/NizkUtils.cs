@@ -41,7 +41,7 @@ namespace code0k_cc.Runtime.Nizk
                 Value = System.UInt32.MaxValue, //todo 
                 VariableType = NizkVariableType.Intermediate,
             }
-        }; 
+        };
 
         public static void NizkCombineOverlay(Variable nizkConditionVariable, OverlayBlock trueOverlayBlock, OverlayBlock falseOverlayBlock, Overlay retOverlay)
         {
@@ -60,70 +60,84 @@ namespace code0k_cc.Runtime.Nizk
 
                 foreach (var name in nameList)
                 {
-                    var trueVar = block.Variables[trueOverlay].GetValueOrDefault(name);
-                    var falseVar = block.Variables[falseOverlay].GetValueOrDefault(name);
+                    Variable retVar = null;
 
-                    var parentVar = block.Variables[trueOverlay.ParentOverlay]?.GetValueOrDefault(name);
+                    Variable trueVar = block.Variables[trueOverlay].GetValueOrDefault(name).Variable;
+                    Variable falseVar = block.Variables[falseOverlay].GetValueOrDefault(name).Variable;
+
+                    Variable parentVar = null;
+                    for (var ol = trueOverlay.ParentOverlay; ol != null; ol = ol.ParentOverlay)
+                    {
+                        parentVar = block.Variables[trueOverlay.ParentOverlay]?.GetValueOrDefault(name).Variable;
+                        if (parentVar != null) break;
+                    }
 
                     Debug.Assert(( trueVar != null ) || ( falseVar != null ));
-                    //todo !!! nested parent here ! use OverlayBlock to locate the variable!!
                     if (trueVar == null)
                     {
-                        trueVar = new VariableRef() { Variable = parentVar?.Variable };
+                        trueVar = parentVar;
                     }
 
                     if (falseVar == null)
                     {
-                        falseVar = new VariableRef() { Variable = parentVar?.Variable };
+                        falseVar = parentVar;
                     }
 
-                    if (( parentVar != null ) && ( ( trueVar?.Variable == parentVar.Variable ) && ( falseVar?.Variable == parentVar.Variable ) ))
+                    if (( trueVar == falseVar ))
                     {
-                        // well, not actually changed
-                        continue;
+                        Debug.Assert(trueVar != null);
+                        retVar = trueVar;
                     }
-
-                    // generate new value
-                    if (trueVar.Variable.Type != falseVar.Variable.Type)
+                    else if (trueVar == null )
                     {
-                        throw new Exception($"Type mismatched. Got \"{trueVar.Variable.Type.TypeCodeName}\" and \"{falseVar.Variable.Type.TypeCodeName}\"!");
-                    }
-
-                    Variable retVar = null;
-                    if (trueVar.Variable.Type == NType.Bool)
+                        retVar = falseVar;
+                    }else if (falseVar == null)
                     {
-                        var var1 = nizkConditionVariable;
-                        var var2 = trueVar.Variable;
-                        var var3 = falseVar.Variable;
-
-                        var var4 = NType.UInt32.BinaryOperation(var3, UInt32NegOne, BinaryOperation.Multiplication);
-                        var var5 = NType.UInt32.BinaryOperation(var2, var4, BinaryOperation.Addition);
-                        var var6 = NType.UInt32.BinaryOperation(var5, var1, BinaryOperation.Multiplication);
-                        var var7 = NType.UInt32.BinaryOperation(var3, var6, BinaryOperation.Addition);
-
-                        //let var8 = Bool(var7)
-                        var var8 = NType.UInt32.ExplicitConvert(var7, NType.Bool);
-                        retVar = var8;
-                    }
-                    else if (trueVar.Variable.Type == NType.UInt32)
-                    {
-                        var var1 = nizkConditionVariable;
-                        var var2 = trueVar.Variable;
-                        var var3 = falseVar.Variable;
-
-                        var var4 = NType.UInt32.BinaryOperation(var3, UInt32NegOne, BinaryOperation.Multiplication);
-                        var var5 = NType.UInt32.BinaryOperation(var2, var4, BinaryOperation.Addition);
-                        var var6 = NType.UInt32.BinaryOperation(var5, var1, BinaryOperation.Multiplication);
-                        var var7 = NType.UInt32.BinaryOperation(var3, var6, BinaryOperation.Addition);
-
-                        // maybe needs a mod 2^32?
-                        // currently, maybe not because it is handled at other operations
-                        retVar = var7;
+                        retVar = trueVar;
                     }
                     else
                     {
-                        throw new Exception($"Unsupported type \"{trueVar.Variable.Type.TypeCodeName}\" in a nizk-condition structure.");
+                        // generate new value
+                        if (trueVar.Type != falseVar.Type)
+                        {
+                            throw new Exception($"Type mismatched. Got \"{trueVar.Type.TypeCodeName}\" and \"{falseVar.Type.TypeCodeName}\"!");
+                        }
+
+                        if (trueVar.Type == NType.Bool)
+                        {
+                            var var1 = nizkConditionVariable;
+                            var var2 = NType.UInt32.ExplicitConvert(trueVar,NType.UInt32);
+                            var var3 = NType.UInt32.ExplicitConvert(falseVar, NType.UInt32); ;
+
+                            var var4 = NType.UInt32.BinaryOperation(var3, UInt32NegOne, BinaryOperation.Multiplication);
+                            var var5 = NType.UInt32.BinaryOperation(var2, var4, BinaryOperation.Addition);
+                            var var6 = NType.UInt32.BinaryOperation(var5, var1, BinaryOperation.Multiplication);
+                            var var7 = NType.UInt32.BinaryOperation(var3, var6, BinaryOperation.Addition);
+
+                            var var8 = NType.UInt32.ExplicitConvert(var7, NType.Bool);
+                            retVar = var8;
+                        }
+                        else if (trueVar.Type == NType.UInt32)
+                        {
+                            var var1 = nizkConditionVariable;
+                            var var2 = trueVar;
+                            var var3 = falseVar;
+
+                            var var4 = NType.UInt32.BinaryOperation(var3, UInt32NegOne, BinaryOperation.Multiplication);
+                            var var5 = NType.UInt32.BinaryOperation(var2, var4, BinaryOperation.Addition);
+                            var var6 = NType.UInt32.BinaryOperation(var5, var1, BinaryOperation.Multiplication);
+                            var var7 = NType.UInt32.BinaryOperation(var3, var6, BinaryOperation.Addition);
+
+                            // maybe needs a mod 2^32?
+                            // currently, maybe not because it is handled at other operations
+                            retVar = var7;
+                        }
+                        else
+                        {
+                            throw new Exception($"Unsupported type \"{trueVar.Type.TypeCodeName}\" in a nizk-condition structure.");
+                        }
                     }
+
 
                     //add var to retOverlay
                     Debug.Assert(retVar != null);
