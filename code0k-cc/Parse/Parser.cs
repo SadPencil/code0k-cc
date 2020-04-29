@@ -1014,30 +1014,6 @@ namespace code0k_cc.Parse
                 }
 
                 UInt32 maxInt = ( (NizkUInt32Value) maxIntVar.Value ).Value;
-                //todo execute condition var and judge its content every time in the loop!!!
-                //todo!!
-                var conditionVar = arg.Instance.Children[2].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
-                if (conditionVar.Type != NType.Bool)
-                {
-                    //try implicit convert to bool type
-                    conditionVar = conditionVar.Assign(NType.Bool);
-                }
-
-                // while false: break
-                if (conditionVar.Value.IsConstant)
-                {
-                    if (!( ( (NizkBoolValue) conditionVar.Value ).Value ))
-                    {
-                        return new ExeResult()
-                        {
-                            StatementResult = new StatementResultOneCase()
-                            {
-                                Overlay = arg.Block.Overlay,
-                                ExecutionResultType = StatementResultType.Normal,
-                            }
-                        };
-                    }
-                }
 
                 // dummy StatementResultTwoCase in order to achieve pointer to a StatementResult
                 // do NOT return stmtRetPointer, be sure to return stmtRetPointer.TrueCase
@@ -1054,6 +1030,23 @@ namespace code0k_cc.Parse
 
                 for (UInt32 i = 0; i < maxInt; ++i)
                 {
+
+                    // execute condition var and judge its content every time in the loop
+                    var conditionVar = arg.Instance.Children[2].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                    if (conditionVar.Type != NType.Bool)
+                    {
+                        //try implicit convert to bool type
+                        conditionVar = conditionVar.Assign(NType.Bool);
+                    }
+
+                    if (conditionVar.Value.IsConstant)
+                    {
+                        if (!( ( (NizkBoolValue) conditionVar.Value ).Value ))
+                        {
+                            // stop the loop
+                            break;
+                        }
+                    }
 
                     var queue = new List<(StatementResult ItemRet, StatementResultTwoCase ItemParentRet, bool IsParentTrueCase)>()
                     {
@@ -1137,7 +1130,7 @@ namespace code0k_cc.Parse
 
                 }
 
-                // now change continue and break to normal, but leave return alone
+                // now change "continue" to "normal", but leave "break" and "return" alone
                 {
                     var queue = new List<(StatementResult ItemRet, StatementResultTwoCase ItemParentRet, bool IsParentTrueCase)>()
                     {
@@ -1156,12 +1149,12 @@ namespace code0k_cc.Parse
                                 break;
 
                             case StatementResultOneCase item:
-                                if (item.ExecutionResultType == StatementResultType.Break ||
-                                    item.ExecutionResultType == StatementResultType.Continue)
+                                if (item.ExecutionResultType == StatementResultType.Continue)
                                 {
                                     item.ExecutionResultType = StatementResultType.Normal;
                                 }
-                                else if (item.ExecutionResultType == StatementResultType.Return ||
+                                else if (item.ExecutionResultType == StatementResultType.Break ||
+                                         item.ExecutionResultType == StatementResultType.Return ||
                                          item.ExecutionResultType == StatementResultType.Normal)
                                 {
                                     // leave the ExecutionResultType alone
