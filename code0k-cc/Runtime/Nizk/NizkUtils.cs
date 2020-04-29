@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using code0k_cc.Runtime.Block;
+using code0k_cc.Runtime.ExeResult;
 using code0k_cc.Runtime.Operation;
 using code0k_cc.Runtime.ValueOfType;
 
@@ -64,6 +65,84 @@ namespace code0k_cc.Runtime.Nizk
                 VariableType = NizkVariableType.Intermediate,
             }
         };
+
+        public static StatementResult NizkCombineResult(StatementResult result, BasicBlock currentBlock)
+        {
+            switch (result)
+            {
+                case StatementResultOneCase ret:
+                    return ret;
+
+                case StatementResultTwoCase ret:
+                    var trueCase = NizkCombineResult(ret.TrueCase, currentBlock);
+                    var falseCase = NizkCombineResult(ret.FalseCase, currentBlock);
+                    if (trueCase is StatementResultOneCase trueOneCase && falseCase is StatementResultOneCase falseOneCase)
+                    {
+                        var trueRetType = trueOneCase.ExecutionResultType;
+                        var falseRetType = falseOneCase.ExecutionResultType;
+                        if (trueRetType == falseRetType)
+                        {
+                            switch (trueRetType)
+                            {
+                                case StatementResultType.Normal:
+                                case StatementResultType.Break:
+                                case StatementResultType.Continue:
+                                    Debug.Assert(trueOneCase.ReturnVariableRefRef == null);
+                                    Debug.Assert(falseOneCase.ReturnVariableRefRef == null);
+                                    Overlay retOverlay;
+                                    if (trueOneCase.Overlay != falseOneCase.Overlay)
+                                    {
+                                        Debug.Assert(trueOneCase.Overlay.ParentOverlay == falseOneCase.Overlay.ParentOverlay);
+                                        retOverlay = new Overlay(trueOneCase.Overlay.ParentOverlay);
+
+                                        //combine two overlay
+                                        NizkCombineOverlay(
+                                            ret.Condition,
+                                            new OverlayBlock(trueOneCase.Overlay, currentBlock),
+                                            new OverlayBlock(falseOneCase.Overlay, currentBlock),
+                                            retOverlay
+                                        );
+                                    }
+                                    else
+                                    {
+                                        retOverlay = trueOneCase.Overlay;
+                                    }
+
+                                    return new StatementResultOneCase()
+                                    {
+                                        ExecutionResultType = trueRetType,
+                                        Overlay = retOverlay,
+                                    };
+
+                                case StatementResultType.Return:
+                                    // currently, not combining "return"
+                                    return ret;
+
+                                default:
+                                    throw new Exception("Assert failed!");
+                            }
+
+                        }
+                        else
+                        {
+                            return ret;
+                        }
+                    }
+                    else
+                    {
+                        return new StatementResultTwoCase()
+                        {
+                            Condition = ret.Condition,
+                            FalseCase = falseCase,
+                            TrueCase = trueCase,
+                        };
+                    }
+
+                default:
+                    throw new Exception("Assert failed!");
+            }
+
+        }
 
         public static void NizkCombineOverlay(Variable nizkConditionVariable, OverlayBlock trueOverlayBlock, OverlayBlock falseOverlayBlock, Overlay retOverlay)
         {
