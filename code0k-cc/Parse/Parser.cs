@@ -688,17 +688,18 @@ namespace code0k_cc.Parse
                                                     Block = new OverlayBlock(item.Overlay, arg.Block.Block)
                                                 }).StatementResult;
 
+                                                //optimization: if all the retRaw are all Break or all Continue or all normal (not possible), combining overlay can be done here
+                                                var retRawOptimized = NizkUtils.NizkCombineResult(retRaw, arg.Block.Block);
+
                                                 //save retRaw to the parent
                                                 if (isParentTrueCase)
                                                 {
-                                                    itemParentRet.TrueCase = retRaw;
+                                                    itemParentRet.TrueCase = retRawOptimized;
                                                 }
                                                 else
                                                 {
-                                                    itemParentRet.FalseCase = retRaw;
+                                                    itemParentRet.FalseCase = retRawOptimized;
                                                 }
-
-                                                //todo: do an optimization described below
 
                                                 break;
                                             default:
@@ -712,10 +713,10 @@ namespace code0k_cc.Parse
 
                             }
 
-                            //todo: optimization: if all the retRaw are all Break or all Continue, combining overlay can be done here
-
+                            //optimization: if all the retRaw are all Break or all Continue or all normal (not possible), combining overlay can be done here
+                            var stmtRetOptimized= NizkUtils.NizkCombineResult(stmtRet,arg.Block.Block );
                             // now return the result
-                            return new ExeResult() { StatementResult = stmtRet };
+                            return new ExeResult() { StatementResult = stmtRetOptimized };
                         }
                     default:
                         throw new Exception("Assert failed!");

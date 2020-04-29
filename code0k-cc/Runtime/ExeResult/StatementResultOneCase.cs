@@ -7,6 +7,7 @@ namespace code0k_cc.Runtime.ExeResult
 {
     class StatementResultOneCase : StatementResult
     {
+        //todo make these fields readonly
         public Overlay Overlay;
         public StatementResultType ExecutionResultType;
         public VariableRefRef ReturnVariableRefRef;
