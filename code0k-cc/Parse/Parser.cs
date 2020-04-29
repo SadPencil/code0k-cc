@@ -1014,7 +1014,8 @@ namespace code0k_cc.Parse
                 }
 
                 UInt32 maxInt = ( (NizkUInt32Value) maxIntVar.Value ).Value;
-
+                //todo execute condition var and judge its content every time in the loop!!!
+                //todo!!
                 var conditionVar = arg.Instance.Children[2].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
                 if (conditionVar.Type != NType.Bool)
                 {
