@@ -1592,19 +1592,19 @@ namespace code0k_cc.Parse
             {
                 var variable = arg.Instance.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
                 Variable retVar;
-                if (arg.Instance.Children[0].Token.TokenType == TokenType.Plus)
+                if (arg.Instance.Children[0].Children[0].Token.TokenType == TokenType.Plus)
                 {
                     retVar = variable.Type.UnaryOperation(variable, UnaryOperation.UnaryPlus);
                 }
-                else if (arg.Instance.Children[0].Token.TokenType == TokenType.Minus)
+                else if (arg.Instance.Children[0].Children[0].Token.TokenType == TokenType.Minus)
                 {
                     retVar = variable.Type.UnaryOperation(variable, UnaryOperation.UnaryMinus);
                 }
-                else if (arg.Instance.Children[0].Token.TokenType == TokenType.BooleanNot)
+                else if (arg.Instance.Children[0].Children[0].Token.TokenType == TokenType.BooleanNot)
                 {
                     retVar = variable.Type.UnaryOperation(variable, UnaryOperation.BooleanNot);
                 }
-                else if (arg.Instance.Children[0].Token.TokenType == TokenType.BitwiseNot)
+                else if (arg.Instance.Children[0].Children[0].Token.TokenType == TokenType.BitwiseNot)
                 {
                     retVar = variable.Type.UnaryOperation(variable, UnaryOperation.BitwiseNot);
                 }
@@ -1664,15 +1664,15 @@ namespace code0k_cc.Parse
                     {
                         var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
 
-                        if (h5ins.Children[0].Token.TokenType == TokenType.Times)
+                        if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.Times)
                         {
                             var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.Multiplication);
                         }
-                        else if (h5ins.Children[0].Token.TokenType == TokenType.Divide)
+                        else if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.Divide)
                         {
                             var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.Division);
                         }
-                        else if (h5ins.Children[0].Token.TokenType == TokenType.Mod)
+                        else if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.Mod)
                         {
                             var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.Remainder);
                         }
@@ -1705,11 +1705,11 @@ namespace code0k_cc.Parse
                     {
                         var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
 
-                        if (h5ins.Children[0].Token.TokenType == TokenType.Plus)
+                        if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.Plus)
                         {
                             var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.Addition);
                         }
-                        else if (h5ins.Children[0].Token.TokenType == TokenType.Minus)
+                        else if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.Minus)
                         {
                             var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.Subtract);
                         }
@@ -1750,19 +1750,19 @@ namespace code0k_cc.Parse
                     {
                         var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
 
-                        if (h5ins.Children[0].Token.TokenType == TokenType.BitwiseLeftShiftUnsigned)
+                        if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.BitwiseLeftShiftUnsigned)
                         {
                             var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.BitwiseLeftShiftUnsigned);
                         }
-                        else if (h5ins.Children[0].Token.TokenType == TokenType.BitwiseRightShiftUnsigned)
+                        else if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.BitwiseRightShiftUnsigned)
                         {
                             var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.BitwiseRightShiftUnsigned);
                         }
-                        else if (h5ins.Children[0].Token.TokenType == TokenType.BitwiseLeftShiftSigned)
+                        else if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.BitwiseLeftShiftSigned)
                         {
                             var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.BitwiseLeftShiftSigned);
                         }
-                        else if (h5ins.Children[0].Token.TokenType == TokenType.BitwiseRightShiftSigned)
+                        else if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.BitwiseRightShiftSigned)
                         {
                             var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.BitwiseRightShiftSigned);
                         }
@@ -1807,19 +1807,19 @@ namespace code0k_cc.Parse
                     {
                         var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
 
-                        if (h5ins.Children[0].Token.TokenType == TokenType.LessThan)
+                        if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.LessThan)
                         {
                             var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.LessThan);
                         }
-                        else if (h5ins.Children[0].Token.TokenType == TokenType.LessEqualThan)
+                        else if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.LessEqualThan)
                         {
                             var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.LessEqualThan);
                         }
-                        else if (h5ins.Children[0].Token.TokenType == TokenType.GreaterThan)
+                        else if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.GreaterThan)
                         {
                             var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.GreaterThan);
                         }
-                        else if (h5ins.Children[0].Token.TokenType == TokenType.GreaterEqualThan)
+                        else if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.GreaterEqualThan)
                         {
                             var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.GreaterEqualThan);
                         }
@@ -1851,11 +1851,11 @@ namespace code0k_cc.Parse
                     {
                         var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
 
-                        if (h5ins.Children[0].Token.TokenType == TokenType.EqualTo)
+                        if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.EqualTo)
                         {
                             var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.EqualTo);
                         }
-                        else if (h5ins.Children[0].Token.TokenType == TokenType.NotEqualTo)
+                        else if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.NotEqualTo)
                         {
                             var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.NotEqualTo);
                         }
@@ -1887,7 +1887,7 @@ namespace code0k_cc.Parse
                     {
                         var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
 
-                        if (h5ins.Children[0].Token.TokenType == TokenType.BitwiseAnd)
+                        if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.BitwiseAnd)
                         {
                             var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.BitwiseAnd);
                         }
@@ -1919,7 +1919,7 @@ namespace code0k_cc.Parse
                     {
                         var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
 
-                        if (h5ins.Children[0].Token.TokenType == TokenType.BitwiseXor)
+                        if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.BitwiseXor)
                         {
                             var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.BitwiseXor);
                         }
@@ -1951,7 +1951,7 @@ namespace code0k_cc.Parse
                     {
                         var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
 
-                        if (h5ins.Children[0].Token.TokenType == TokenType.BitwiseOr)
+                        if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.BitwiseOr)
                         {
                             var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.BitwiseOr);
                         }
@@ -1983,7 +1983,7 @@ namespace code0k_cc.Parse
                     {
                         var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
 
-                        if (h5ins.Children[0].Token.TokenType == TokenType.BooleanAnd)
+                        if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.BooleanAnd)
                         {
                             var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.BooleanAnd);
                         }
@@ -2015,7 +2015,7 @@ namespace code0k_cc.Parse
                     {
                         var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
 
-                        if (h5ins.Children[0].Token.TokenType == TokenType.BooleanXor)
+                        if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.BooleanXor)
                         {
                             var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.BooleanXor);
                         }
@@ -2047,7 +2047,7 @@ namespace code0k_cc.Parse
                     {
                         var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
 
-                        if (h5ins.Children[0].Token.TokenType == TokenType.BooleanOr)
+                        if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.BooleanOr)
                         {
                             var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.BooleanOr);
                         }
