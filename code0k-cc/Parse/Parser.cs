@@ -911,11 +911,30 @@ namespace code0k_cc.Parse
 
                 if (conditionVar.Value.IsConstant)
                 {
-                    // normal if-statement  
-                    //todo
+                    // traditional if-statement   
+                    if (( (NizkBoolValue) conditionVar.Value ).Value)
+                    {
+                        return new ExeResult() { StatementResult = arg.Instance.Children[4].Execute(arg).StatementResult };
+                    }
 
-                    //todo
-                    throw new NotImplementedException();
+                    else
+                    {
+                        if (arg.Instance.Children[5] == null)
+                        {
+                            return new ExeResult()
+                            {
+                                StatementResult = new StatementResultOneCase()
+                                {
+                                    Overlay = arg.Block.Overlay,
+                                    ExecutionResultType = StatementResultType.Normal,
+                                }
+                            };
+                        }
+                        else
+                        {
+                            return new ExeResult() { StatementResult = arg.Instance.Children[5].Execute(arg).StatementResult };
+                        }
+                    }
                 }
                 else
                 {
@@ -930,7 +949,20 @@ namespace code0k_cc.Parse
                     var falseOverlayBlock = new OverlayBlock(falseOverlay, arg.Block.Block);
 
                     var trueRetRaw = arg.Instance.Children[4].Execute(new ExeArg() { Block = trueOverlayBlock }).StatementResult;
-                    var falseRetRaw = arg.Instance.Children[5].Execute(new ExeArg() { Block = falseOverlayBlock }).StatementResult;
+                    StatementResult falseRetRaw;
+                    if (arg.Instance.Children[5] == null)
+                    {
+                        falseRetRaw = new StatementResultOneCase()
+                        {
+                            Overlay = arg.Block.Overlay,
+                            ExecutionResultType = StatementResultType.Normal,
+                        };
+                    }
+                    else
+                    {
+                        falseRetRaw = arg.Instance.Children[5].Execute(new ExeArg() { Block = falseOverlayBlock }).StatementResult;
+                    }
+
 
                     //todo: optimization: if all the retRaw are all Break or all Continue or all normal, combining overlay can be done here
 
