@@ -11,6 +11,28 @@ namespace code0k_cc.Runtime.Nizk
 {
     static class NizkUtils
     {
+        public static readonly Variable BoolTrue = new Variable()
+        {
+            Type = NType.Bool,
+            Value = new NizkBoolValue()
+            {
+                IsConstant = true,
+                Value = true,
+                VariableType = NizkVariableType.Intermediate,
+            }
+        };
+
+        public static readonly Variable BoolFalse = new Variable()
+        {
+            Type = NType.Bool,
+            Value = new NizkBoolValue()
+            {
+                IsConstant = true,
+                Value = false,
+                VariableType = NizkVariableType.Intermediate,
+            }
+        };
+
         public static readonly Variable UInt32Zero = new Variable()
         {
             Type = NType.UInt32,
@@ -89,10 +111,11 @@ namespace code0k_cc.Runtime.Nizk
                         Debug.Assert(trueVar != null);
                         retVar = trueVar;
                     }
-                    else if (trueVar == null )
+                    else if (trueVar == null)
                     {
                         retVar = falseVar;
-                    }else if (falseVar == null)
+                    }
+                    else if (falseVar == null)
                     {
                         retVar = trueVar;
                     }
@@ -107,7 +130,7 @@ namespace code0k_cc.Runtime.Nizk
                         if (trueVar.Type == NType.Bool)
                         {
                             var var1 = nizkConditionVariable;
-                            var var2 = NType.UInt32.ExplicitConvert(trueVar,NType.UInt32);
+                            var var2 = NType.UInt32.ExplicitConvert(trueVar, NType.UInt32);
                             var var3 = NType.UInt32.ExplicitConvert(falseVar, NType.UInt32); ;
 
                             var var4 = NType.UInt32.BinaryOperation(var3, UInt32NegOne, BinaryOperation.Multiplication);

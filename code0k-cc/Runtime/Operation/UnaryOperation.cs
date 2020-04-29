@@ -8,7 +8,7 @@ namespace code0k_cc.Runtime.Operation
     {
         UnaryPlus,
         UnaryMinus,
-        LogicalNot,
+        BooleanNot,
         BitwiseNot,
     }
 }

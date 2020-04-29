@@ -9,6 +9,7 @@ using code0k_cc.Runtime.Block;
 using code0k_cc.Runtime.ExeArg;
 using code0k_cc.Runtime.ExeResult;
 using code0k_cc.Runtime.Nizk;
+using code0k_cc.Runtime.Operation;
 using code0k_cc.Runtime.ValueOfType;
 
 namespace code0k_cc.Parse
@@ -1219,8 +1220,10 @@ namespace code0k_cc.Parse
             };
             CompoundStatement.Execute = arg =>
             {
-                //todo new block
-                return arg.Instance.Children[1].Execute(arg);
+                // new block
+                BasicBlock newBlock = new BasicBlock(arg.Block.Block);
+                OverlayBlock newOverlayBlock = new OverlayBlock(arg.Block.Overlay, newBlock);
+                return arg.Instance.Children[1].Execute(new ExeArg() { Block = newOverlayBlock });
             };
 
             LeftValue.Name = "Left Value";
@@ -1310,7 +1313,14 @@ namespace code0k_cc.Parse
             Expressions[0].Children = new List<ParseUnit>() { Operators[0] };
             Expressions[0].Execute = arg => arg.Instance.Children[0].Execute(arg);
 
-            Operators[0].Children = new List<ParseUnit>() { TokenUnits[TokenType.Identifier], TokenUnits[TokenType.Number], BracketExpression };
+            Operators[0].Children = new List<ParseUnit>()
+            {
+                TokenUnits[TokenType.Identifier],
+                TokenUnits[TokenType.Number],
+                TokenUnits[TokenType.True],
+                TokenUnits[TokenType.False],
+                BracketExpression
+            };
             Operators[0].Execute = arg =>
             {
                 if (arg.Instance.Children[0].ParseUnit == TokenUnits[TokenType.Identifier])
@@ -1332,6 +1342,20 @@ namespace code0k_cc.Parse
                     return new ExeResult()
                     {
                         ExpressionResult = new ExpressionResult() { VariableRefRef = new VariableRefRef(new VariableRef() { Variable = retVar }) }
+                    };
+                }
+                else if (arg.Instance.Children[0].ParseUnit == TokenUnits[TokenType.True])
+                {
+                    return new ExeResult()
+                    {
+                        ExpressionResult = new ExpressionResult() { VariableRefRef = new VariableRefRef(new VariableRef() { Variable = NizkUtils.BoolTrue }) }
+                    };
+                }
+                else if (arg.Instance.Children[0].ParseUnit == TokenUnits[TokenType.False])
+                {
+                    return new ExeResult()
+                    {
+                        ExpressionResult = new ExpressionResult() { VariableRefRef = new VariableRefRef(new VariableRef() { Variable = NizkUtils.BoolFalse }) }
                     };
                 }
                 else if (arg.Instance.Children[0].ParseUnit == BracketExpression)
@@ -1373,6 +1397,7 @@ namespace code0k_cc.Parse
                 {
                     var op = ins?.Children[0];
                     ins = ins?.Children[1];
+
                     if (op == null) break;
 
                     // let exp = op(exp) 
@@ -1472,7 +1497,9 @@ namespace code0k_cc.Parse
             };
 
             ExpressionsHelper[2].Children = new List<ParseUnit>() { Operators[2], ExpressionsHelper[2] };
+            ExpressionsHelper[2].Execute = null;
             Operators[2].Children = new List<ParseUnit>() { FunctionCall, ArraySubscripting, MemberAccess };
+            Operators[2].Execute = null;
 
             FunctionCall.Name = "Function Call";
             FunctionCall.Type = ParseUnitType.Single;
@@ -1546,24 +1573,62 @@ namespace code0k_cc.Parse
 
 
             // level-3 (RTL): Unary plus and minus, Logical NOT and bitwise NOT
-            ExpressionsHelper[3].Type = ParseUnitType.Single;
-            ExpressionsHelper[3].Children = new List<ParseUnit>()
-            {
-                Operators[3],
-                Expressions[3],
-            };
+
             Expressions[3].ChildType = ParseUnitChildType.OneChild;
             Expressions[3].Children = new List<ParseUnit>()
             {
                 ExpressionsHelper[3],
                 Expressions[2],
             };
-            Operators[3].Children = new List<ParseUnit>() { TokenUnits[TokenType.Plus], TokenUnits[TokenType.Minus], TokenUnits[TokenType.BooleanNot], TokenUnits[TokenType.BitwiseNot] };
+            Expressions[3].Execute = arg => arg.Instance.Children[0].Execute(arg);
+
+            ExpressionsHelper[3].Type = ParseUnitType.Single;
+            ExpressionsHelper[3].Children = new List<ParseUnit>()
+            {
+                Operators[3],
+                Expressions[3],
+            };
+            ExpressionsHelper[3].Execute = arg =>
+            {
+                var variable = arg.Instance.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                Variable retVar;
+                if (arg.Instance.Children[0].Token.TokenType == TokenType.Plus)
+                {
+                    retVar = variable.Type.UnaryOperation(variable, UnaryOperation.UnaryPlus);
+                }
+                else if (arg.Instance.Children[0].Token.TokenType == TokenType.Minus)
+                {
+                    retVar = variable.Type.UnaryOperation(variable, UnaryOperation.UnaryMinus);
+                }
+                else if (arg.Instance.Children[0].Token.TokenType == TokenType.BooleanNot)
+                {
+                    retVar = variable.Type.UnaryOperation(variable, UnaryOperation.BooleanNot);
+                }
+                else if (arg.Instance.Children[0].Token.TokenType == TokenType.BitwiseNot)
+                {
+                    retVar = variable.Type.UnaryOperation(variable, UnaryOperation.BitwiseNot);
+                }
+                else
+                {
+                    throw new Exception("Assert failed!");
+                }
+
+                return new ExeResult() { ExpressionResult = new ExpressionResult() { VariableRefRef = new VariableRefRef(new VariableRef() { Variable = retVar }) } };
+            };
+
+            Operators[3].Children = new List<ParseUnit>()
+            {
+                TokenUnits[TokenType.Plus],
+                TokenUnits[TokenType.Minus],
+                TokenUnits[TokenType.BooleanNot],
+                TokenUnits[TokenType.BitwiseNot]
+            };
+            Operators[3].Execute = null;
 
 
             // level-4: not used
             Expressions[4].Children = new List<ParseUnit>() { Expressions[3] };
-
+            Expressions[4].Execute = arg => arg.Instance.Children[0].Execute(arg);
 
             // level-5: Multiplication, division, remainder
             //
@@ -1585,7 +1650,42 @@ namespace code0k_cc.Parse
                 Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper[i] };
                 ExpressionsHelper[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper[i] };
 
-                Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.Times], TokenUnits[TokenType.Divide], TokenUnits[TokenType.Mod] };
+                Operators[i].Children = new List<ParseUnit>() {
+                    TokenUnits[TokenType.Times],
+                    TokenUnits[TokenType.Divide],
+                    TokenUnits[TokenType.Mod],
+                };
+
+                Expressions[i].Execute = arg =>
+                {
+                    var var1 = arg.Instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                    var h5ins = arg.Instance.Children[1];
+                    while (h5ins != null)
+                    {
+                        var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+
+                        if (h5ins.Children[0].Token.TokenType == TokenType.Times)
+                        {
+                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.Multiplication);
+                        }
+                        else if (h5ins.Children[0].Token.TokenType == TokenType.Divide)
+                        {
+                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.Division);
+                        }
+                        else if (h5ins.Children[0].Token.TokenType == TokenType.Mod)
+                        {
+                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.Remainder);
+                        }
+                        else
+                        {
+                            throw new Exception("Assert failed!");
+                        }
+
+                        h5ins = h5ins.Children[2];
+                    }
+
+                    return new ExeResult() { ExpressionResult = new ExpressionResult() { VariableRefRef = new VariableRefRef(new VariableRef() { Variable = var1 }) } };
+                };
             }
 
             // level-6: plus, minus
@@ -1596,6 +1696,33 @@ namespace code0k_cc.Parse
                 ExpressionsHelper[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper[i] };
 
                 Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.Plus], TokenUnits[TokenType.Minus] };
+
+                Expressions[i].Execute = arg =>
+                {
+                    var var1 = arg.Instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                    var h5ins = arg.Instance.Children[1];
+                    while (h5ins != null)
+                    {
+                        var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+
+                        if (h5ins.Children[0].Token.TokenType == TokenType.Plus)
+                        {
+                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.Addition);
+                        }
+                        else if (h5ins.Children[0].Token.TokenType == TokenType.Minus)
+                        {
+                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.Subtract);
+                        }
+                        else
+                        {
+                            throw new Exception("Assert failed!");
+                        }
+
+                        h5ins = h5ins.Children[2];
+                    }
+
+                    return new ExeResult() { ExpressionResult = new ExpressionResult() { VariableRefRef = new VariableRefRef(new VariableRef() { Variable = var1 }) } };
+                };
             }
 
 
@@ -1606,13 +1733,56 @@ namespace code0k_cc.Parse
                 Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper[i] };
                 ExpressionsHelper[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper[i] };
 
-                Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.BitwiseLeftShiftUnsigned], TokenUnits[TokenType.BitwiseRightShiftUnsigned], TokenUnits[TokenType.BitwiseLeftShiftSigned], TokenUnits[TokenType.BitwiseRightShiftSigned] };
+                Operators[i].Children = new List<ParseUnit>()
+                {
+                    TokenUnits[TokenType.BitwiseLeftShiftUnsigned],
+                    TokenUnits[TokenType.BitwiseRightShiftUnsigned],
+                    TokenUnits[TokenType.BitwiseLeftShiftSigned],
+                    TokenUnits[TokenType.BitwiseRightShiftSigned],
+                };
+
+
+                Expressions[i].Execute = arg =>
+                {
+                    var var1 = arg.Instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                    var h5ins = arg.Instance.Children[1];
+                    while (h5ins != null)
+                    {
+                        var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+
+                        if (h5ins.Children[0].Token.TokenType == TokenType.BitwiseLeftShiftUnsigned)
+                        {
+                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.BitwiseLeftShiftUnsigned);
+                        }
+                        else if (h5ins.Children[0].Token.TokenType == TokenType.BitwiseRightShiftUnsigned)
+                        {
+                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.BitwiseRightShiftUnsigned);
+                        }
+                        else if (h5ins.Children[0].Token.TokenType == TokenType.BitwiseLeftShiftSigned)
+                        {
+                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.BitwiseLeftShiftSigned);
+                        }
+                        else if (h5ins.Children[0].Token.TokenType == TokenType.BitwiseRightShiftSigned)
+                        {
+                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.BitwiseRightShiftSigned);
+                        }
+                        else
+                        {
+                            throw new Exception("Assert failed!");
+                        }
+
+                        h5ins = h5ins.Children[2];
+                    }
+
+                    return new ExeResult() { ExpressionResult = new ExpressionResult() { VariableRefRef = new VariableRefRef(new VariableRef() { Variable = var1 }) } };
+                };
+
             }
 
 
             // level-8: not used
             Expressions[8].Children = new List<ParseUnit>() { Expressions[7] };
-
+            Expressions[8].Execute = arg => arg.Instance.Children[0].Execute(arg);
 
             // level-9: <   <= 	>   >=
             {
@@ -1620,7 +1790,49 @@ namespace code0k_cc.Parse
                 Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper[i] };
                 ExpressionsHelper[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper[i] };
 
-                Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.LessThan], TokenUnits[TokenType.LessEqualThan], TokenUnits[TokenType.GreaterThan], TokenUnits[TokenType.GreaterEqualThan] };
+                Operators[i].Children = new List<ParseUnit>()
+                {
+                    TokenUnits[TokenType.LessThan],
+                    TokenUnits[TokenType.LessEqualThan],
+                    TokenUnits[TokenType.GreaterThan],
+                    TokenUnits[TokenType.GreaterEqualThan],
+                };
+
+
+                Expressions[i].Execute = arg =>
+                {
+                    var var1 = arg.Instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                    var h5ins = arg.Instance.Children[1];
+                    while (h5ins != null)
+                    {
+                        var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+
+                        if (h5ins.Children[0].Token.TokenType == TokenType.LessThan)
+                        {
+                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.LessThan);
+                        }
+                        else if (h5ins.Children[0].Token.TokenType == TokenType.LessEqualThan)
+                        {
+                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.LessEqualThan);
+                        }
+                        else if (h5ins.Children[0].Token.TokenType == TokenType.GreaterThan)
+                        {
+                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.GreaterThan);
+                        }
+                        else if (h5ins.Children[0].Token.TokenType == TokenType.GreaterEqualThan)
+                        {
+                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.GreaterEqualThan);
+                        }
+                        else
+                        {
+                            throw new Exception("Assert failed!");
+                        }
+
+                        h5ins = h5ins.Children[2];
+                    }
+
+                    return new ExeResult() { ExpressionResult = new ExpressionResult() { VariableRefRef = new VariableRefRef(new VariableRef() { Variable = var1 }) } };
+                };
             }
 
 
@@ -1631,6 +1843,32 @@ namespace code0k_cc.Parse
                 ExpressionsHelper[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper[i] };
 
                 Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.EqualTo], TokenUnits[TokenType.NotEqualTo] };
+                Expressions[i].Execute = arg =>
+                {
+                    var var1 = arg.Instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                    var h5ins = arg.Instance.Children[1];
+                    while (h5ins != null)
+                    {
+                        var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+
+                        if (h5ins.Children[0].Token.TokenType == TokenType.EqualTo)
+                        {
+                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.EqualTo);
+                        }
+                        else if (h5ins.Children[0].Token.TokenType == TokenType.NotEqualTo)
+                        {
+                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.NotEqualTo);
+                        }
+                        else
+                        {
+                            throw new Exception("Assert failed!");
+                        }
+
+                        h5ins = h5ins.Children[2];
+                    }
+
+                    return new ExeResult() { ExpressionResult = new ExpressionResult() { VariableRefRef = new VariableRefRef(new VariableRef() { Variable = var1 }) } };
+                };
             }
 
 
@@ -1641,6 +1879,28 @@ namespace code0k_cc.Parse
                 ExpressionsHelper[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper[i] };
 
                 Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.BitwiseAnd] };
+                Expressions[i].Execute = arg =>
+                {
+                    var var1 = arg.Instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                    var h5ins = arg.Instance.Children[1];
+                    while (h5ins != null)
+                    {
+                        var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+
+                        if (h5ins.Children[0].Token.TokenType == TokenType.BitwiseAnd)
+                        {
+                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.BitwiseAnd);
+                        }
+                        else
+                        {
+                            throw new Exception("Assert failed!");
+                        }
+
+                        h5ins = h5ins.Children[2];
+                    }
+
+                    return new ExeResult() { ExpressionResult = new ExpressionResult() { VariableRefRef = new VariableRefRef(new VariableRef() { Variable = var1 }) } };
+                };
             }
 
 
@@ -1651,6 +1911,28 @@ namespace code0k_cc.Parse
                 ExpressionsHelper[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper[i] };
 
                 Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.BitwiseXor] };
+                Expressions[i].Execute = arg =>
+                {
+                    var var1 = arg.Instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                    var h5ins = arg.Instance.Children[1];
+                    while (h5ins != null)
+                    {
+                        var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+
+                        if (h5ins.Children[0].Token.TokenType == TokenType.BitwiseXor)
+                        {
+                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.BitwiseXor);
+                        }
+                        else
+                        {
+                            throw new Exception("Assert failed!");
+                        }
+
+                        h5ins = h5ins.Children[2];
+                    }
+
+                    return new ExeResult() { ExpressionResult = new ExpressionResult() { VariableRefRef = new VariableRefRef(new VariableRef() { Variable = var1 }) } };
+                };
             }
 
 
@@ -1661,6 +1943,28 @@ namespace code0k_cc.Parse
                 ExpressionsHelper[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper[i] };
 
                 Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.BitwiseOr] };
+                Expressions[i].Execute = arg =>
+                {
+                    var var1 = arg.Instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                    var h5ins = arg.Instance.Children[1];
+                    while (h5ins != null)
+                    {
+                        var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+
+                        if (h5ins.Children[0].Token.TokenType == TokenType.BitwiseOr)
+                        {
+                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.BitwiseOr);
+                        }
+                        else
+                        {
+                            throw new Exception("Assert failed!");
+                        }
+
+                        h5ins = h5ins.Children[2];
+                    }
+
+                    return new ExeResult() { ExpressionResult = new ExpressionResult() { VariableRefRef = new VariableRefRef(new VariableRef() { Variable = var1 }) } };
+                };
             }
 
 
@@ -1671,6 +1975,28 @@ namespace code0k_cc.Parse
                 ExpressionsHelper[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper[i] };
 
                 Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.BooleanAnd] };
+                Expressions[i].Execute = arg =>
+                {
+                    var var1 = arg.Instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                    var h5ins = arg.Instance.Children[1];
+                    while (h5ins != null)
+                    {
+                        var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+
+                        if (h5ins.Children[0].Token.TokenType == TokenType.BooleanAnd)
+                        {
+                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.BooleanAnd);
+                        }
+                        else
+                        {
+                            throw new Exception("Assert failed!");
+                        }
+
+                        h5ins = h5ins.Children[2];
+                    }
+
+                    return new ExeResult() { ExpressionResult = new ExpressionResult() { VariableRefRef = new VariableRefRef(new VariableRef() { Variable = var1 }) } };
+                };
             }
 
 
@@ -1681,6 +2007,28 @@ namespace code0k_cc.Parse
                 ExpressionsHelper[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper[i] };
 
                 Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.BooleanXor] };
+                Expressions[i].Execute = arg =>
+                {
+                    var var1 = arg.Instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                    var h5ins = arg.Instance.Children[1];
+                    while (h5ins != null)
+                    {
+                        var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+
+                        if (h5ins.Children[0].Token.TokenType == TokenType.BooleanXor)
+                        {
+                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.BooleanXor);
+                        }
+                        else
+                        {
+                            throw new Exception("Assert failed!");
+                        }
+
+                        h5ins = h5ins.Children[2];
+                    }
+
+                    return new ExeResult() { ExpressionResult = new ExpressionResult() { VariableRefRef = new VariableRefRef(new VariableRef() { Variable = var1 }) } };
+                };
             }
 
 
@@ -1691,6 +2039,28 @@ namespace code0k_cc.Parse
                 ExpressionsHelper[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper[i] };
 
                 Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.BooleanOr] };
+                Expressions[i].Execute = arg =>
+                {
+                    var var1 = arg.Instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                    var h5ins = arg.Instance.Children[1];
+                    while (h5ins != null)
+                    {
+                        var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+
+                        if (h5ins.Children[0].Token.TokenType == TokenType.BooleanOr)
+                        {
+                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.BooleanOr);
+                        }
+                        else
+                        {
+                            throw new Exception("Assert failed!");
+                        }
+
+                        h5ins = h5ins.Children[2];
+                    }
+
+                    return new ExeResult() { ExpressionResult = new ExpressionResult() { VariableRefRef = new VariableRefRef(new VariableRef() { Variable = var1 }) } };
+                };
             }
 
 
@@ -1705,15 +2075,21 @@ namespace code0k_cc.Parse
             };
             ExpressionsHelper[17].Execute = arg =>
             {
-                Debug.Assert(arg.Instance.Children[1].Token.TokenType == TokenType.Assign);
+                Debug.Assert(arg.Instance.Children[1].Children[0].Token.TokenType == TokenType.Assign);
 
                 var leftVarRefRef = arg.Instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef;
-
 
                 var rightExpRefRef = arg.Instance.Children[2].Execute(arg).ExpressionResult.VariableRefRef;
 
                 //assign
-                leftVarRefRef.VariableRef.Variable = rightExpRefRef.VariableRef.Variable.Assign(leftVarRefRef.VariableRef.Variable.Type);
+                if (arg.Instance.Children[1].Children[0].Token.TokenType == TokenType.Assign)
+                {
+                    leftVarRefRef.VariableRef.Variable = rightExpRefRef.VariableRef.Variable.Assign(leftVarRefRef.VariableRef.Variable.Type);
+                }
+                else
+                {
+                    throw new Exception("Assert failed!");
+                }
 
                 return new ExeResult() { ExpressionResult = new ExpressionResult() { VariableRefRef = leftVarRefRef } };
             };
@@ -1724,8 +2100,10 @@ namespace code0k_cc.Parse
                 ExpressionsHelper[17],
                 Expressions[16]
             };
-            Operators[17].Children = new List<ParseUnit>() { TokenUnits[TokenType.Assign] };
+            Expressions[17].Execute = arg => arg.Instance.Children[0].Execute(arg);
 
+            Operators[17].Children = new List<ParseUnit>() { TokenUnits[TokenType.Assign] };
+            Operators[17].Execute = null;
 
             // level-18 (corresponding 17): not used
             if (OPERATOR_PRECEDENCE_LEVEL != 18)

@@ -16,9 +16,9 @@ namespace code0k_cc.Runtime.Operation
         BitwiseOr,
         BitwiseXor,
 
-        LogicalAnd,
-        LogicalOr,
-        LogicalXor,
+        BooleanAnd,
+        BooleanOr,
+        BooleanXor,
 
         EqualTo,
         LessThan,

@@ -609,7 +609,7 @@ namespace code0k_cc.Runtime
             StringFunc = variable => ( (NizkBoolValue) variable.Value ).Value.ToString(CultureInfo.InvariantCulture),
             UnaryOperationFuncs = new Dictionary<UnaryOperation, Func<Variable, Variable>>()
             {
-                {Operation.UnaryOperation.LogicalNot, (var1) =>
+                {Operation.UnaryOperation.BooleanNot, (var1) =>
                 {
                     var v1 = ((NizkBoolValue) var1.Value);
                     return new Variable() {
@@ -667,7 +667,7 @@ namespace code0k_cc.Runtime
                     };
                 }},
 
-                {Operation.BinaryOperation.LogicalAnd, (var1, var2) =>
+                {Operation.BinaryOperation.BooleanAnd, (var1, var2) =>
                 {
                     var v1 = ((NizkBoolValue) var1.Value);
                     var v2 = ((NizkBoolValue) var2.Value);
@@ -686,7 +686,7 @@ namespace code0k_cc.Runtime
                     };
                 }},
 
-                {Operation.BinaryOperation.LogicalOr, (var1, var2) =>
+                {Operation.BinaryOperation.BooleanOr, (var1, var2) =>
                 {
                     var v1 = ((NizkBoolValue) var1.Value);
                     var v2 = ((NizkBoolValue) var2.Value);
@@ -705,7 +705,7 @@ namespace code0k_cc.Runtime
                     };
                 }},
 
-                {Operation.BinaryOperation.LogicalXor, (var1, var2) =>
+                {Operation.BinaryOperation.BooleanXor, (var1, var2) =>
                 {
                     var v1 = ((NizkBoolValue) var1.Value);
                     var v2 = ((NizkBoolValue) var2.Value);
