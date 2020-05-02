@@ -1346,7 +1346,7 @@ namespace code0k_cc.Parse
                     {
                         ExpressionResult = new ExpressionResult()
                         {
-                            VariableRefRef = arg.Block.GetVariableRefRef(str, false, true)
+                            VariableRefRef = arg.Block.GetVariableRefRef(str, true, true)
                         }
                     };
                 }
