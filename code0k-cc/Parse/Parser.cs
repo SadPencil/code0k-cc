@@ -300,7 +300,8 @@ namespace code0k_cc.Parse
                 Name = "Token " + TokenType.EOL.Name,
                 Type = ParseUnitType.Single,
                 ChildType = ParseUnitChildType.Terminal,
-                TerminalTokenType = TokenType.EOL
+                TerminalTokenType = TokenType.EOL,
+                Execute = arg => new ExeResult()
             };
 
             ParseUnit MainProgram = new ParseUnit();
@@ -374,7 +375,7 @@ namespace code0k_cc.Parse
                 var newBlockOverlay = new OverlayBlock(arg.Block.Overlay, newBlock);
 
                 // get & load all params 
-                if (argList.Count != funcDec.Arguments.Count)
+                if (argList.Count != ( ( funcDec.Arguments?.Count ) ?? 0 ))
                 {
                     throw new Exception($"Unexpected function arguments of function \"{funcDec.FunctionName}\".");
                 }
@@ -391,9 +392,9 @@ namespace code0k_cc.Parse
                 }
 
                 // execute function
-                var funRet = funcDec.Instance.Execute(new ExeArg() {Block = newBlockOverlay}).StatementResult;
+                var funRet = funcDec.Instance.Execute(new ExeArg() { Block = newBlockOverlay }).StatementResult;
                 var funRetVar = NizkUtils.NizkCombineFunctionResult(funRet, funcDec.ReturnType);
-                return new ExeResult() {ExpressionResult = new ExpressionResult() {VariableRefRef = new VariableRefRef(new VariableRef() {Variable = funRetVar})}};
+                return new ExeResult() { ExpressionResult = new ExpressionResult() { VariableRefRef = new VariableRefRef(new VariableRef() { Variable = funRetVar }) } };
             }
 
 
@@ -407,30 +408,30 @@ namespace code0k_cc.Parse
                 MainProgramLoop,
                 eolUnit,
             };
-            
+
             MainProgram.Execute = arg =>
-            {
-                //arg.block: provide built-in vars if any
+                        {
+                            //arg.block: provide built-in vars if any
 
-                // prepare environment
-                var mainBlock = new BasicBlock(arg.Block.Block);
-                var mainBlockOverlay = new OverlayBlock(arg.Block.Overlay, mainBlock);
+                            // prepare environment
+                            var mainBlock = new BasicBlock(arg.Block.Block);
+                            var mainBlockOverlay = new OverlayBlock(arg.Block.Overlay, mainBlock);
 
-                foreach (var instanceChild in arg.Instance.Children)
-                {
-                    _ = instanceChild?.Execute(new ExeArg() { Block = mainBlockOverlay });
-                }
+                            foreach (var instanceChild in arg.Instance.Children)
+                            {
+                                _ = instanceChild?.Execute(new ExeArg() { Block = mainBlockOverlay });
+                            }
 
-                // find & execute "main"
-                var mainVar = mainBlockOverlay.GetVariableRefRef("main", false, true).VariableRef.Variable;
-                var mainFuncDec = (FunctionDeclarationValue) ( mainVar.Value );
+                            // find & execute "main"
+                            var mainVar = mainBlockOverlay.GetVariableRefRef("main", false, true).VariableRef.Variable;
+                            var mainFuncDec = (FunctionDeclarationValue) ( mainVar.Value );
 
-                // execute function
-                var expRet = FunctionCallFunc(arg, mainFuncDec, new List<Variable>()).ExpressionResult;
+                            // execute function
+                            var expRet = FunctionCallFunc(arg, mainFuncDec, new List<Variable>()).ExpressionResult;
 
-                return new ExeResult() { ExpressionResult = expRet };
-            };
-            
+                            return new ExeResult() { ExpressionResult = expRet };
+                        };
+
             MainProgramItem.Name = "Main Program Item";
             MainProgramItem.Type = ParseUnitType.Single;
             MainProgramItem.ChildType = ParseUnitChildType.OneChild;
@@ -627,7 +628,7 @@ namespace code0k_cc.Parse
             {
                 // note: adding block level is done at CompoundStatement instead of here
                 var stmtRawRet = arg.Instance.Children[0].Execute(arg).StatementResult;
-                var nextStmtInstance = arg.Instance.Children[1]?.Children[0];
+                var nextStmtInstance = arg.Instance.Children[1];
                 switch (stmtRawRet)
                 {
                     case StatementResultOneCase stmtRet:
@@ -1338,7 +1339,7 @@ namespace code0k_cc.Parse
                     {
                         ExpressionResult = new ExpressionResult()
                         {
-                            VariableRefRef = arg.Block.GetVariableRefRef(str, false, false)
+                            VariableRefRef = arg.Block.GetVariableRefRef(str, false, true)
                         }
                     };
                 }
