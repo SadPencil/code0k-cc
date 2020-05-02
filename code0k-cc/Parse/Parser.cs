@@ -29,8 +29,7 @@ namespace code0k_cc.Parse
             else
             {
                 //todo: to make this error message more reliable, compute FIRST and FOLLOW
-                throw new Exception(
-                    $"Failed at Parsing {ret.ResultInstance?.ParseUnit?.Name}, at row {ret.Row} col {ret.Column}");
+                throw new Exception($"Failed at Parsing {ret.ResultInstance?.ParseUnit?.Name}, at row {ret.Row} col {ret.Column}");
             }
 
         }

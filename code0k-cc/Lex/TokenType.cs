@@ -81,7 +81,7 @@ namespace code0k_cc.Lex
         public static readonly TokenType Plus = new TokenType("\\+", "+", new TokenTypeProperty() { IsUnaryOperator = true, IsBinaryOperator = true });
         public static readonly TokenType Minus = new TokenType("\\-", "-", new TokenTypeProperty() { IsUnaryOperator = true, IsBinaryOperator = true });
         public static readonly TokenType Times = new TokenType("\\*", "*", new TokenTypeProperty() { IsBinaryOperator = true });
-        public static readonly TokenType Divide = new TokenType("\\\\", "\\", new TokenTypeProperty() { IsBinaryOperator = true });
+        public static readonly TokenType Divide = new TokenType("\\/", "/", new TokenTypeProperty() { IsBinaryOperator = true });
         public static readonly TokenType Mod = new TokenType("\\%", "%", new TokenTypeProperty() { IsBinaryOperator = true });
 
         public static readonly TokenType EqualTo = new TokenType("\\=\\=", "==", new TokenTypeProperty() { IsBinaryOperator = true });
