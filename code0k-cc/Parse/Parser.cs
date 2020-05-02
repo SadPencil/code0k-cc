@@ -407,7 +407,7 @@ namespace code0k_cc.Parse
                 MainProgramLoop,
                 eolUnit,
             };
-            //todo
+            
             MainProgram.Execute = arg =>
             {
                 //arg.block: provide built-in vars if any
@@ -430,54 +430,7 @@ namespace code0k_cc.Parse
 
                 return new ExeResult() { ExpressionResult = expRet };
             };
-
-            // MainProgram.Execute = arg =>
-            //{
-            //    //block: provide built-in types
-
-            //    //todo: redundancy code here.
-
-            //    // prepare environment
-            //    var mainBlock = new BasicBlock(arg.Block.Block);
-
-            //    var mainBlockOverlay = new OverlayBlock(arg.Block.Overlay, mainBlock);
-
-            //    foreach (var instanceChild in arg.Instance.Children)
-            //    {
-            //        _ = instanceChild?.Execute(new ExeArg() { Block = mainBlockOverlay });
-            //    }
-
-            //    // find & execute "main"
-            //    var mainFunc = (FunctionDeclarationValue) mainBlockOverlay.GetVariableRefRef("main", false, true).VariableRef.Variable.Value;
-
-            //    if (mainFunc.Instance == null)
-            //    {
-            //        throw new Exception($"Unimplemented function \"{mainFunc.FunctionName}\"");
-            //    }
-
-            //    // create new block
-            //    var newFuncBlock = new BasicBlock(mainBlock);
-            //    var newFuncBlockOverlay = new OverlayBlock(arg.Block.Overlay, newFuncBlock);
-            //    // execute function
-            //    var funRet = mainFunc.Instance.Execute(new ExeArg() { Block = newFuncBlockOverlay }).StatementResult;
-            //    return funRet.Type switch
-            //    {
-            //        StatementResultType.Return => new ExeResult()
-            //        {
-            //            StatementResult = new StatementResult()
-            //            { ReturnVariableRefRef = funRet.ReturnVariableRefRef, Type = StatementResultType.Return }
-            //        },
-            //        StatementResultType.Normal => new ExeResult()
-            //        {
-            //            StatementResult = new StatementResult()
-            //            { ReturnVariableRefRef = new VariableRefRef(new VariableRef() { Variable = NType.Void.NewValue() }), Type = StatementResultType.Return }
-            //        },
-            //        StatementResultType.Break => throw new Exception($"Unexpected \"break\" without loop statement while executing function \"{mainFunc.FunctionName}\""),
-            //        StatementResultType.Continue => throw new Exception($"Unexpected \"continue\" without loop statement while executing function \"{mainFunc.FunctionName}\""),
-            //        _ => throw new Exception("Assert failed!"),
-            //    };
-            //};
-
+            
             MainProgramItem.Name = "Main Program Item";
             MainProgramItem.Type = ParseUnitType.Single;
             MainProgramItem.ChildType = ParseUnitChildType.OneChild;

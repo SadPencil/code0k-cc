@@ -6,10 +6,23 @@ namespace code0k_cc.Runtime.Block
 {
     class BasicBlock
     {
-        public Guid Guid { get; } = Guid.NewGuid();
+        private Guid Guid { get; } = Guid.NewGuid();
 
-        public Dictionary<Overlay, Dictionary<string, VariableRef>> Variables { get; } = new Dictionary<Overlay, Dictionary<string, VariableRef>>();
-         
+        private Dictionary<Overlay, Dictionary<string, VariableRef>> Variables { get; } = new Dictionary<Overlay, Dictionary<string, VariableRef>>();
+
+        public Dictionary<string, VariableRef> GetVariableDict(Overlay overlay)
+        {
+            if (this.Variables.ContainsKey(overlay))
+            {
+                return this.Variables[overlay];
+            }
+            else
+            {
+                this.Variables.Add(overlay, new Dictionary<string, VariableRef>());
+                return this.Variables[overlay];
+            }
+        }
+
         public BasicBlock ParentBlock { get; set; }
 
         public BasicBlock(BasicBlock parent)

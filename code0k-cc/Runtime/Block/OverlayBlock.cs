@@ -23,13 +23,11 @@ namespace code0k_cc.Runtime.Block
             {
                 for (var overlay = this.Overlay; overlay != null; overlay = overlay.ParentOverlay)
                 {
-                    if (block.Variables.ContainsKey(overlay))
+                    if (block.GetVariableDict(overlay).ContainsKey(name))
                     {
-                        if (block.Variables[overlay].ContainsKey(name))
-                        {
-                            return new OverlayBlock(overlay, block);
-                        }
+                        return new OverlayBlock(overlay, block);
                     }
+
                 }
             }
 
@@ -61,7 +59,7 @@ namespace code0k_cc.Runtime.Block
 
                 overlay = overlayBlock.Overlay;
                 block = overlayBlock.Block;
-                varRef = block.Variables[overlay][name];
+                varRef = block.GetVariableDict(overlay)[name];
 
             }
             else
@@ -69,9 +67,9 @@ namespace code0k_cc.Runtime.Block
                 block = this.Block;
                 for (overlay = this.Overlay; overlay != null; overlay = overlay.ParentOverlay)
                 {
-                    if (block.Variables[overlay].ContainsKey(name))
+                    if (block.GetVariableDict(overlay).ContainsKey(name))
                     {
-                        varRef = block.Variables[overlay][name];
+                        varRef = block.GetVariableDict(overlay)[name];
                         break;
                     }
                 }
@@ -92,11 +90,11 @@ namespace code0k_cc.Runtime.Block
             // important: copy the variableRef to this overlay
             if (overlay != this.Overlay)
             {
-                Debug.Assert(! (block.Variables[this.Overlay].ContainsKey(name)));
+                Debug.Assert(!( block.GetVariableDict(this.Overlay).ContainsKey(name) ));
 
                 // make a copy of this variableRef
                 var newRef = new VariableRef() { Variable = varRef.Variable };
-                block.Variables[this.Overlay].Add(name, newRef);
+                block.GetVariableDict(this.Overlay).Add(name, newRef);
                 overlay = this.Overlay;
                 //block = block;
                 varRef = newRef;
@@ -110,7 +108,7 @@ namespace code0k_cc.Runtime.Block
         {
             // GetVariableRefRef() ensures that `variableRefRef` must be contained in this overlay
             var variableRefRef = this.GetVariableRefRef(name, false, false);
-            
+
             if (variableRefRef != null)
             {
                 if (updateIfExist)
@@ -134,7 +132,7 @@ namespace code0k_cc.Runtime.Block
             }
             else
             {
-                this.Block.Variables[this.Overlay].Add(name, new VariableRef() { Variable = value });
+                this.Block.GetVariableDict(this.Overlay).Add(name, new VariableRef() { Variable = value });
             }
         }
 

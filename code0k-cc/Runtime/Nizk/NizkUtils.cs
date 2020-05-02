@@ -202,19 +202,19 @@ namespace code0k_cc.Runtime.Nizk
             for (var block = trueOverlayBlock.Block; block != null; block = block.ParentBlock)
             {
                 var retOverlayBlock = new OverlayBlock(retOverlay, block);
-                var nameList = block.Variables[trueOverlay].Keys.Union(block.Variables[falseOverlay].Keys).ToList();
+                var nameList = block.GetVariableDict(trueOverlay).Keys.Union(block.GetVariableDict(falseOverlay).Keys).ToList();
 
                 foreach (var name in nameList)
                 {
                     Variable retVar = null;
 
-                    Variable trueVar = block.Variables[trueOverlay].GetValueOrDefault(name).Variable;
-                    Variable falseVar = block.Variables[falseOverlay].GetValueOrDefault(name).Variable;
+                    Variable trueVar = block.GetVariableDict(trueOverlay).GetValueOrDefault(name).Variable;
+                    Variable falseVar = block.GetVariableDict(falseOverlay).GetValueOrDefault(name).Variable;
 
                     Variable parentVar = null;
                     for (var ol = trueOverlay.ParentOverlay; ol != null; ol = ol.ParentOverlay)
                     {
-                        parentVar = block.Variables[trueOverlay.ParentOverlay]?.GetValueOrDefault(name).Variable;
+                        parentVar = block.GetVariableDict(trueOverlay.ParentOverlay)?.GetValueOrDefault(name).Variable;
                         if (parentVar != null) break;
                     }
                     Debug.Assert(( trueVar != null ) || ( falseVar != null ));
