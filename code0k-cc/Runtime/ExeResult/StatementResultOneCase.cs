@@ -10,6 +10,6 @@ namespace code0k_cc.Runtime.ExeResult
         //todo make these fields readonly
         public Overlay Overlay;
         public StatementResultType ExecutionResultType;
-        public VariableRefRef ReturnVariableRefRef;
+        public Variable ReturnVariable ;
     }
 }

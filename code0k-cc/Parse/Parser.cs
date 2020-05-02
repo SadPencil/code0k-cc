@@ -362,6 +362,41 @@ namespace code0k_cc.Parse
                 ExpressionsHelper[i] = new ParseUnit();
             }
 
+            static ExeResult FunctionCallFunc(ExeArg arg, FunctionDeclarationValue funcDec, IReadOnlyList<Variable> argList)
+            {
+                if (funcDec.Instance == null)
+                {
+                    throw new Exception($"Unimplemented function \"{funcDec.FunctionName}\"");
+                }
+
+                // create new block
+                var newBlock = new BasicBlock(funcDec.ParentBlock);
+                var newBlockOverlay = new OverlayBlock(arg.Block.Overlay, newBlock);
+
+                // get & load all params 
+                if (argList.Count != funcDec.Arguments.Count)
+                {
+                    throw new Exception($"Unexpected function arguments of function \"{funcDec.FunctionName}\".");
+                }
+
+                foreach (var i in Enumerable.Range(0, argList.Count))
+                {
+                    (string argName, NType argNType) = funcDec.Arguments[i];
+                    var argVal = argList[i];
+                    // ByVal : convert type when calling
+                    var newArgVal = argVal.Assign(argNType);
+
+                    //add params
+                    newBlockOverlay.AddVariable(argName, newArgVal, false);
+                }
+
+                // execute function
+                var funRet = funcDec.Instance.Execute(new ExeArg() {Block = newBlockOverlay}).StatementResult;
+                var funRetVar = NizkUtils.NizkCombineFunctionResult(funRet, funcDec.ReturnType);
+                return new ExeResult() {ExpressionResult = new ExpressionResult() {VariableRefRef = new VariableRefRef(new VariableRef() {Variable = funRetVar})}};
+            }
+
+
             // write the parse unit & execution function
             MainProgram.Name = "Main Program";
             MainProgram.Type = ParseUnitType.Single;
@@ -373,7 +408,28 @@ namespace code0k_cc.Parse
                 eolUnit,
             };
             //todo
-            MainProgram.Execute = arg => throw new NotImplementedException();
+            MainProgram.Execute = arg =>
+            {
+                //arg.block: provide built-in vars if any
+
+                // prepare environment
+                var mainBlock = new BasicBlock(arg.Block.Block);
+                var mainBlockOverlay = new OverlayBlock(arg.Block.Overlay, mainBlock);
+
+                foreach (var instanceChild in arg.Instance.Children)
+                {
+                    _ = instanceChild?.Execute(new ExeArg() { Block = mainBlockOverlay });
+                }
+
+                // find & execute "main"
+                var mainVar = mainBlockOverlay.GetVariableRefRef("main", false, true).VariableRef.Variable;
+                var mainFuncDec = (FunctionDeclarationValue) ( mainVar.Value );
+
+                // execute function
+                var expRet = FunctionCallFunc(arg, mainFuncDec, new List<Variable>()).ExpressionResult;
+
+                return new ExeResult() { ExpressionResult = expRet };
+            };
 
             // MainProgram.Execute = arg =>
             //{
@@ -689,16 +745,16 @@ namespace code0k_cc.Parse
                                                 }).StatementResult;
 
                                                 //optimization: if all the retRaw are all Break or all Continue or all normal (not possible), combining overlay can be done here
-                                                var retRawOptimized = NizkUtils.NizkCombineResult(retRaw, arg.Block.Block);
+                                                retRaw = NizkUtils.NizkCombineStatementResult(retRaw, arg.Block.Block);
 
                                                 //save retRaw to the parent
                                                 if (isParentTrueCase)
                                                 {
-                                                    itemParentRet.TrueCase = retRawOptimized;
+                                                    itemParentRet.TrueCase = retRaw;
                                                 }
                                                 else
                                                 {
-                                                    itemParentRet.FalseCase = retRawOptimized;
+                                                    itemParentRet.FalseCase = retRaw;
                                                 }
 
                                                 break;
@@ -714,7 +770,7 @@ namespace code0k_cc.Parse
                             }
 
                             //optimization: if all the retRaw are all Break or all Continue or all normal (not possible), combining overlay can be done here
-                            var stmtRetOptimized= NizkUtils.NizkCombineResult(stmtRet,arg.Block.Block );
+                            var stmtRetOptimized = NizkUtils.NizkCombineStatementResult(stmtRet, arg.Block.Block);
                             // now return the result
                             return new ExeResult() { StatementResult = stmtRetOptimized };
                         }
@@ -818,7 +874,7 @@ namespace code0k_cc.Parse
                     {
                         Overlay = arg.Block.Overlay,
                         ExecutionResultType = StatementResultType.Return,
-                        ReturnVariableRefRef = expRefRef,
+                        ReturnVariable = expRefRef.VariableRef.Variable,
                     }
                 };
             };
@@ -966,17 +1022,15 @@ namespace code0k_cc.Parse
                     }
 
 
-                    //todo: optimization: if all the retRaw are all Break or all Continue or all normal, combining overlay can be done here
-
-                    return new ExeResult()
+                    StatementResult retResult = new StatementResultTwoCase()
                     {
-                        StatementResult = new StatementResultTwoCase()
-                        {
-                            Condition = conditionVar,
-                            FalseCase = falseRetRaw,
-                            TrueCase = trueRetRaw,
-                        }
+                        Condition = conditionVar,
+                        FalseCase = falseRetRaw,
+                        TrueCase = trueRetRaw,
                     };
+                    //optimization: if all the retRaw are all Break or all Continue or all normal, combining overlay can be done here
+                    retResult = NizkUtils.NizkCombineStatementResult(retResult, arg.Block.Block);
+                    return new ExeResult() { StatementResult = retResult };
                 }
 
             };
@@ -1389,6 +1443,7 @@ namespace code0k_cc.Parse
             // In this situation, A is Expression[2], α is Operator[2] and β is Expression[1]
             // R is ExpressionHelper[2]
 
+
             Expressions[2].Children = new List<ParseUnit>() { Expressions[1], ExpressionsHelper[2] };
             Expressions[2].Execute = arg =>
             {
@@ -1402,79 +1457,28 @@ namespace code0k_cc.Parse
                     if (op == null) break;
 
                     // let exp = op(exp) 
+                    ExpressionResult newExp;
 
                     if (op.ParseUnit == FunctionCall)
                     {
-                        // get func
-                        var funcStruct = (FunctionDeclarationValue) exp.VariableRefRef.VariableRef.Variable.Value;
+                        var funcDec = (FunctionDeclarationValue) exp.VariableRefRef.VariableRef.Variable.Value;
 
-                        if (funcStruct.Instance == null)
-                        {
-                            throw new Exception($"Unimplemented function \"{funcStruct.FunctionName}\"");
-                        }
-
-                        // create new block
-                        var newBlock = new BasicBlock(funcStruct.ParentBlock);
-                        var newBlockOverlay = new OverlayBlock(arg.Block.Overlay, newBlock);
-
-                        // get & load all params 
+                        // load all params 
                         var paramLoopIns = op.Children[1];
-                        int argCount = 0;
+                        var argList = new List<Variable>();
+
                         while (true)
                         {
                             var argItemIns = paramLoopIns?.Children[0];
                             paramLoopIns = paramLoopIns?.Children[1];
                             if (argItemIns == null) break;
 
-                            var argExp = argItemIns.Execute(arg).ExpressionResult;
-                            // ByVal : convert type when calling
-                            if (funcStruct.Arguments.Count - 1 < argCount)
-                            {
-                                throw new Exception($"Unexpected function arguments of function \"{funcStruct.FunctionName}\".");
-                            }
-
-                            (string argName, NType argNType) = funcStruct.Arguments[argCount];
-                            var newArgVal = argExp.VariableRefRef.VariableRef.Variable.Assign(argNType);
-
-                            //add params
-                            newBlockOverlay.AddVariable(argName, newArgVal, false);
-
-                            ++argCount;
-                        }
-
-                        if (argCount != funcStruct.Arguments.Count)
-                        {
-                            throw new Exception($"Unexpected function arguments of function \"{funcStruct.FunctionName}\".");
+                            var argVal = argItemIns.Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                            argList.Add(argVal);
                         }
 
                         // execute function
-
-                        //todo
-                        throw new NotImplementedException();
-
-                        //var funRet = funcStruct.Instance.Execute(new ExeArg() { Block = newBlockOverlay }).StatementResult;
-                        //switch (funRet.Type)
-                        //{
-                        //    case StatementResultType.Return:
-                        //        exp = new ExpressionResult() { VariableRefRef = funRet.ReturnVariableRefRef };
-                        //        break;
-                        //    case StatementResultType.Normal:
-                        //        return new ExeResult()
-                        //        {
-                        //            StatementResult = new StatementResult()
-                        //            { ReturnVariableRefRef = new VariableRefRef(new VariableRef() { Variable = NType.Void.NewValue() }), Type = StatementResultType.Return }
-                        //        };
-                        //    case StatementResultType.Break:
-                        //        throw new Exception($"Unexpected \"break\" without loop statement while executing function \"{funcStruct.FunctionName}\"");
-
-                        //    case StatementResultType.Continue:
-                        //        throw new Exception($"Unexpected \"continue\" without loop statement while executing function \"{funcStruct.FunctionName}\"");
-
-                        //    default:
-                        //        throw new Exception("Assert failed!");
-                        //}
-
-
+                        newExp = FunctionCallFunc(arg, funcDec, argList).ExpressionResult;
                     }
                     else if (op.ParseUnit == MemberAccess)
                     {
@@ -1491,7 +1495,7 @@ namespace code0k_cc.Parse
                         throw new Exception("Assert failed!");
                     }
 
-
+                    exp = newExp;
                 }
 
                 return new ExeResult() { ExpressionResult = exp };

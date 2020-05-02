@@ -66,7 +66,52 @@ namespace code0k_cc.Runtime.Nizk
             }
         };
 
-        public static StatementResult NizkCombineResult(StatementResult result, BasicBlock currentBlock)
+        public static Variable NizkCombineFunctionResult(StatementResult result, NType resultNType)
+        {
+            switch (result)
+            {
+                case StatementResultOneCase ret:
+                    switch (ret.ExecutionResultType)
+                    {
+                        case StatementResultType.Continue:
+                        case StatementResultType.Break:
+                            throw new Exception($"Unexpected \"{ ret.ExecutionResultType.ToString()}\" statement.");
+
+                        case StatementResultType.Normal:
+                        case StatementResultType.Return:
+
+                            Debug.Assert(( ret.ExecutionResultType != StatementResultType.Normal ) || ret.ReturnVariable == null);
+                            if (ret.ReturnVariable != null)
+                            {
+                                return ret.ReturnVariable.Assign(resultNType);
+                            }
+
+                            if (resultNType == NType.Void)
+                            {
+                                return NType.Void.NewValue();
+                            }
+                            else
+                            {
+                                throw new Exception("Missing \"return\" statement.");
+                            }
+
+                        default:
+                            throw new Exception("Assert failed!");
+                    }
+
+                case StatementResultTwoCase ret:
+                    var trueVar = NizkCombineFunctionResult(ret.TrueCase, resultNType);
+                    var falseVar = NizkCombineFunctionResult(ret.FalseCase, resultNType);
+                    return NizkConditionVariable(ret.Condition, trueVar, falseVar);
+
+                default:
+                    throw new Exception("Assert failed!");
+            }
+
+
+        }
+
+        public static StatementResult NizkCombineStatementResult(StatementResult result, BasicBlock currentBlock)
         {
             switch (result)
             {
@@ -74,8 +119,8 @@ namespace code0k_cc.Runtime.Nizk
                     return ret;
 
                 case StatementResultTwoCase ret:
-                    var trueCase = NizkCombineResult(ret.TrueCase, currentBlock);
-                    var falseCase = NizkCombineResult(ret.FalseCase, currentBlock);
+                    var trueCase = NizkCombineStatementResult(ret.TrueCase, currentBlock);
+                    var falseCase = NizkCombineStatementResult(ret.FalseCase, currentBlock);
                     if (trueCase is StatementResultOneCase trueOneCase && falseCase is StatementResultOneCase falseOneCase)
                     {
                         var trueRetType = trueOneCase.ExecutionResultType;
@@ -87,8 +132,8 @@ namespace code0k_cc.Runtime.Nizk
                                 case StatementResultType.Normal:
                                 case StatementResultType.Break:
                                 case StatementResultType.Continue:
-                                    Debug.Assert(trueOneCase.ReturnVariableRefRef == null);
-                                    Debug.Assert(falseOneCase.ReturnVariableRefRef == null);
+                                    Debug.Assert(trueOneCase.ReturnVariable == null);
+                                    Debug.Assert(falseOneCase.ReturnVariable == null);
                                     Overlay retOverlay;
                                     if (trueOneCase.Overlay != falseOneCase.Overlay)
                                     {
@@ -201,44 +246,7 @@ namespace code0k_cc.Runtime.Nizk
                     else
                     {
                         // generate new value
-                        if (trueVar.Type != falseVar.Type)
-                        {
-                            throw new Exception($"Type mismatched. Got \"{trueVar.Type.TypeCodeName}\" and \"{falseVar.Type.TypeCodeName}\"!");
-                        }
-
-                        if (trueVar.Type == NType.Bool)
-                        {
-                            var var1 = nizkConditionVariable;
-                            var var2 = NType.UInt32.ExplicitConvert(trueVar, NType.UInt32);
-                            var var3 = NType.UInt32.ExplicitConvert(falseVar, NType.UInt32); ;
-
-                            var var4 = NType.UInt32.BinaryOperation(var3, UInt32NegOne, BinaryOperation.Multiplication);
-                            var var5 = NType.UInt32.BinaryOperation(var2, var4, BinaryOperation.Addition);
-                            var var6 = NType.UInt32.BinaryOperation(var5, var1, BinaryOperation.Multiplication);
-                            var var7 = NType.UInt32.BinaryOperation(var3, var6, BinaryOperation.Addition);
-
-                            var var8 = NType.UInt32.ExplicitConvert(var7, NType.Bool);
-                            retVar = var8;
-                        }
-                        else if (trueVar.Type == NType.UInt32)
-                        {
-                            var var1 = nizkConditionVariable;
-                            var var2 = trueVar;
-                            var var3 = falseVar;
-
-                            var var4 = NType.UInt32.BinaryOperation(var3, UInt32NegOne, BinaryOperation.Multiplication);
-                            var var5 = NType.UInt32.BinaryOperation(var2, var4, BinaryOperation.Addition);
-                            var var6 = NType.UInt32.BinaryOperation(var5, var1, BinaryOperation.Multiplication);
-                            var var7 = NType.UInt32.BinaryOperation(var3, var6, BinaryOperation.Addition);
-
-                            // maybe needs a mod 2^32?
-                            // currently, maybe not because it is handled at other operations
-                            retVar = var7;
-                        }
-                        else
-                        {
-                            throw new Exception($"Unsupported type \"{trueVar.Type.TypeCodeName}\" in a nizk-condition structure.");
-                        }
+                        retVar = NizkConditionVariable(nizkConditionVariable, trueVar, falseVar);
                     }
 
 
@@ -248,6 +256,44 @@ namespace code0k_cc.Runtime.Nizk
                 }
 
 
+            }
+
+        }
+
+        public static Variable NizkConditionVariable(Variable condition, Variable trueVar, Variable falseVar)
+        {
+            if (trueVar.Type == NType.Bool)
+            {
+                var var1 = condition;
+                var var2 = NType.UInt32.ExplicitConvert(trueVar, NType.UInt32);
+                var var3 = NType.UInt32.ExplicitConvert(falseVar, NType.UInt32); ;
+
+                var var4 = NType.UInt32.BinaryOperation(var3, UInt32NegOne, BinaryOperation.Multiplication);
+                var var5 = NType.UInt32.BinaryOperation(var2, var4, BinaryOperation.Addition);
+                var var6 = NType.UInt32.BinaryOperation(var5, var1, BinaryOperation.Multiplication);
+                var var7 = NType.UInt32.BinaryOperation(var3, var6, BinaryOperation.Addition);
+
+                var var8 = NType.UInt32.ExplicitConvert(var7, NType.Bool);
+                return var8;
+            }
+            else if (trueVar.Type == NType.UInt32)
+            {
+                var var1 = condition;
+                var var2 = trueVar;
+                var var3 = falseVar;
+
+                var var4 = NType.UInt32.BinaryOperation(var3, UInt32NegOne, BinaryOperation.Multiplication);
+                var var5 = NType.UInt32.BinaryOperation(var2, var4, BinaryOperation.Addition);
+                var var6 = NType.UInt32.BinaryOperation(var5, var1, BinaryOperation.Multiplication);
+                var var7 = NType.UInt32.BinaryOperation(var3, var6, BinaryOperation.Addition);
+
+                // maybe needs a mod 2^32?
+                // currently, maybe not because it is handled at other operations
+                return var7;
+            }
+            else
+            {
+                throw new Exception($"Unsupported type \"{trueVar.Type.TypeCodeName}\" in a nizk-condition structure.");
             }
 
         }
