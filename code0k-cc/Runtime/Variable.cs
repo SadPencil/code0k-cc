@@ -19,7 +19,7 @@ namespace code0k_cc.Runtime
 
         public Variable Assign(NType leftType)
         {
-            return leftType.Assign(this, leftType);
+            return this.Type.Assign(this, leftType);
         }
     }
 }

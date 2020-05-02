@@ -1044,10 +1044,10 @@ namespace code0k_cc.Parse
             {
                 // get max loop count
                 var maxIntVar = arg.Instance.Children[6].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
-                if (maxIntVar.Type != NType.Bool)
+                if (maxIntVar.Type != NType.UInt32)
                 {
-                    //try implicit convert to bool type
-                    maxIntVar = maxIntVar.Assign(NType.Bool);
+                    //try implicit convert to UInt32 type
+                    maxIntVar = maxIntVar.Assign(NType.UInt32);
                 }
 
                 if (!maxIntVar.Value.IsConstant)
@@ -1229,10 +1229,17 @@ namespace code0k_cc.Parse
             };
             CompoundStatement.Execute = arg =>
             {
-                // new block
-                BasicBlock newBlock = new BasicBlock(arg.Block.Block);
-                OverlayBlock newOverlayBlock = new OverlayBlock(arg.Block.Overlay, newBlock);
-                return arg.Instance.Children[1].Execute(new ExeArg() { Block = newOverlayBlock });
+                if (arg.Instance.Children[1] == null)
+                {
+                    return new ExeResult() { StatementResult = new StatementResultOneCase() { ExecutionResultType = StatementResultType.Normal, Overlay = arg.Block.Overlay } };
+                }
+                else
+                {
+                    // new block
+                    BasicBlock newBlock = new BasicBlock(arg.Block.Block);
+                    OverlayBlock newOverlayBlock = new OverlayBlock(arg.Block.Overlay, newBlock);
+                    return arg.Instance.Children[1].Execute(new ExeArg() { Block = newOverlayBlock });
+                }
             };
 
             LeftValue.Name = "Left Value";
