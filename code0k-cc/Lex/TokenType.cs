@@ -29,7 +29,7 @@ namespace code0k_cc.Lex
         }
 
         public static readonly TokenType EOL = new TokenType("\\b", "EOL");
-        public static readonly TokenType Print = new TokenType("print", "print");
+        public static readonly TokenType Print = new TokenType("debug_print", "debug_print");
 
         public static readonly TokenType Input = new TokenType("input", "input");
         public static readonly TokenType Output = new TokenType("output", "output");
@@ -88,12 +88,12 @@ namespace code0k_cc.Lex
         public static readonly TokenType BitwiseAnd = new TokenType("\\&", "&");
         public static readonly TokenType BitwiseOr = new TokenType("\\|", "|");
         public static readonly TokenType BitwiseXor = new TokenType("\\^", "^");
-        public static readonly TokenType BitwiseNot = new TokenType("\\~", "~" );
+        public static readonly TokenType BitwiseNot = new TokenType("\\~", "~");
 
         public static readonly TokenType BooleanAnd = new TokenType("\\&\\&", "&&");
         public static readonly TokenType BooleanOr = new TokenType("\\|\\|", "||");
         public static readonly TokenType BooleanXor = new TokenType("\\^\\^", "^^");
-        public static readonly TokenType BooleanNot = new TokenType("\\!", "!" );
+        public static readonly TokenType BooleanNot = new TokenType("\\!", "!");
 
         public static readonly TokenType BitwiseLeftShiftSigned = new TokenType("\\<\\<", "<<");
         public static readonly TokenType BitwiseLeftShiftUnsigned = new TokenType("\\<\\<\\<", "<<<");
