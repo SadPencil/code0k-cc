@@ -312,6 +312,7 @@ namespace code0k_cc.Parse
 
             ParseUnit GlobalDefinitionStatement = new ParseUnit();
             ParseUnit GlobalFunctionDeclarationStatement = new ParseUnit();
+            ParseUnit GlobalNizkDefinitionStatement = new ParseUnit();
 
             ParseUnit FunctionDeclaration = new ParseUnit();
             ParseUnit FunctionImplementation = new ParseUnit();
@@ -355,6 +356,8 @@ namespace code0k_cc.Parse
 
             ParseUnit Expression = new ParseUnit();
             ParseUnit BracketExpression = new ParseUnit();
+
+            ParseUnit NizkValueDescriptionWord = new ParseUnit();
 
             const int OPERATOR_PRECEDENCE_LEVEL = 18;
             ParseUnit[] Expressions = new ParseUnit[OPERATOR_PRECEDENCE_LEVEL];
@@ -448,6 +451,8 @@ namespace code0k_cc.Parse
                 // execute function
                 var expRet = FunctionCallFunc(arg, mainFuncDec, new List<Variable>()).ExpressionResult;
 
+                // todo: save nizk variables
+
                 return new ExeResult() { ExpressionResult = expRet };
             };
 
@@ -456,6 +461,7 @@ namespace code0k_cc.Parse
             MainProgramItem.ChildType = ParseUnitChildType.OneChild;
             MainProgramItem.Children = new List<ParseUnit>()
             {
+                GlobalNizkDefinitionStatement,
                 GlobalDefinitionStatement,
                 GlobalFunctionDeclarationStatement,
                 FunctionImplementation,
@@ -926,7 +932,7 @@ namespace code0k_cc.Parse
                     {
                         Overlay = arg.Block.Overlay,
                         ExecutionResultType = StatementResultType.Return,
-                        ReturnVariable = NType.Void.GetNewValue(),
+                        ReturnVariable = NType.Void.GetNewEmptyVariable(),
                     }
                 };
             };
@@ -1060,7 +1066,7 @@ namespace code0k_cc.Parse
                     var trueOverlayBlock = new OverlayBlock(trueOverlay, arg.Block.Block);
                     var falseOverlayBlock = new OverlayBlock(falseOverlay, arg.Block.Block);
 
-                    var trueRetRaw = arg.Instance.Children[4].Execute(new ExeArg() { Block = trueOverlayBlock,StdOut = arg.StdOut}).StatementResult;
+                    var trueRetRaw = arg.Instance.Children[4].Execute(new ExeArg() { Block = trueOverlayBlock, StdOut = arg.StdOut }).StatementResult;
                     StatementResult falseRetRaw;
                     if (arg.Instance.Children[5] == null)
                     {
@@ -1318,6 +1324,80 @@ namespace code0k_cc.Parse
                     return arg.Instance.Children[1].Execute(new ExeArg() { Block = newOverlayBlock, StdOut = arg.StdOut, });
                 }
             };
+
+            GlobalNizkDefinitionStatement.Name = "Global Nizk Definition Statement";
+            GlobalNizkDefinitionStatement.Type = ParseUnitType.Single;
+            GlobalNizkDefinitionStatement.ChildType = ParseUnitChildType.AllChild;
+            GlobalNizkDefinitionStatement.Children = new List<ParseUnit>()
+            {
+                NizkValueDescriptionWord,
+                TypeUnit,
+                TokenUnits[TokenType.Identifier],
+                TokenUnits[TokenType.Semicolon],
+            };
+            GlobalNizkDefinitionStatement.Execute = arg =>
+            {
+                //// note that these variable are so special that they are stored at the ROOT block and the ROOT overlay
+                //// todo maybe a nicer way? maybe just define at current block and let "MainProgram" handle it?
+                //BasicBlock rootBlock = arg.Block.Block;
+                //while (rootBlock.ParentBlock != null)
+                //{
+                //    rootBlock = rootBlock.ParentBlock;
+                //}
+
+                //Overlay overlay = arg.Block.Overlay;
+                //if (overlay.ParentOverlay != null)
+                //{
+                //    throw new Exception("Assert failed. A nizk variable must be defined at the root overlay.");
+                //}
+
+                //OverlayBlock rootOverlayBlock = new OverlayBlock(overlay, rootBlock);
+
+
+                var varName = arg.Instance.Children[2].Token.Value;
+
+                NizkVariableType nizkType;
+                if (arg.Instance.Children[0].Children[0].Token.TokenType == TokenType.Input)
+                {
+                    nizkType = NizkVariableType.Input;
+                }
+                else if (arg.Instance.Children[0].Children[0].Token.TokenType == TokenType.NizkInput)
+                {
+                    nizkType = NizkVariableType.NizkInput;
+                }
+                else if (arg.Instance.Children[0].Children[0].Token.TokenType == TokenType.Output)
+                {
+                    nizkType = NizkVariableType.Output;
+                }
+                else
+                {
+                    throw new Exception("Assert failed!");
+                }
+
+                NType type = NType.GetNType(arg.Instance.Children[1].Execute(arg).TypeUnitResult);
+                Variable nizkVar = type.GetNewNizkVariable(nizkType, null);
+                arg.Block.AddVariable(varName, nizkVar, false);
+
+                return new ExeResult()
+                {
+                    StatementResult = new StatementResultOneCase()
+                    {
+                        Overlay = arg.Block.Overlay,
+                        ExecutionResultType = StatementResultType.Normal,
+                    }
+                };
+            };
+
+            NizkValueDescriptionWord.Name = "Nizk Value Word";
+            NizkValueDescriptionWord.Type = ParseUnitType.Single;
+            NizkValueDescriptionWord.ChildType = ParseUnitChildType.OneChild;
+            NizkValueDescriptionWord.Children = new List<ParseUnit>()
+            {
+                TokenUnits[TokenType.Input],
+                TokenUnits[TokenType.NizkInput],
+                TokenUnits[TokenType.Output],
+            };
+            NizkValueDescriptionWord.Execute = null;
 
             LeftValue.Name = "Left Value";
             LeftValue.Type = ParseUnitType.Single;

@@ -5,8 +5,9 @@ using code0k_cc.Runtime.Nizk;
 
 namespace code0k_cc.Runtime.ValueOfType
 {
-    class NizkBoolValue : INizkValue
+    abstract class INizkValue : IValueOfType
     {
-        public Boolean Value;
+        public Variable TagVariable { get; set; }
+        public NizkVariableType VariableType { get; set; }
     }
 }

@@ -11,7 +11,7 @@ namespace code0k_cc.Runtime
         public NType Type;
         public IValueOfType Value;
         public readonly List<VariableConnection> Connections = new List<VariableConnection>();
-         
+        
         public string GetString()
         {
             return this.Type.GetString(this);
@@ -20,6 +20,11 @@ namespace code0k_cc.Runtime
         public Variable Assign(NType leftType)
         {
             return this.Type.Assign(this, leftType);
+        }
+
+        public Variable ExplicitConvert(NType leftType)
+        {
+            return this.Type.ExplicitConvert(this, leftType);
         }
     }
 }

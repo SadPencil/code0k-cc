@@ -88,7 +88,7 @@ namespace code0k_cc.Runtime.Nizk
 
                             if (resultNType == NType.Void)
                             {
-                                return NType.Void.GetNewValue();
+                                return NType.Void.GetNewEmptyVariable();
                             }
                             else
                             {
@@ -264,21 +264,21 @@ namespace code0k_cc.Runtime.Nizk
         {
             if (trueVar.Type == NType.Bool)
             {
-                var var1 = condition;
-                var var2 = NType.UInt32.ExplicitConvert(trueVar, NType.UInt32);
-                var var3 = NType.UInt32.ExplicitConvert(falseVar, NType.UInt32); ;
+                var var1 = condition.ExplicitConvert(NType.UInt32);
+                var var2 = trueVar.ExplicitConvert(NType.UInt32);
+                var var3 = falseVar.ExplicitConvert(NType.UInt32);
 
                 var var4 = NType.UInt32.BinaryOperation(var3, UInt32NegOne, BinaryOperation.Multiplication);
                 var var5 = NType.UInt32.BinaryOperation(var2, var4, BinaryOperation.Addition);
                 var var6 = NType.UInt32.BinaryOperation(var5, var1, BinaryOperation.Multiplication);
                 var var7 = NType.UInt32.BinaryOperation(var3, var6, BinaryOperation.Addition);
 
-                var var8 = NType.UInt32.ExplicitConvert(var7, NType.Bool);
+                var var8 = var7.ExplicitConvert(NType.Bool);
                 return var8;
             }
             else if (trueVar.Type == NType.UInt32)
             {
-                var var1 = condition;
+                var var1 = condition.ExplicitConvert(NType.UInt32);
                 var var2 = trueVar;
                 var var3 = falseVar;
 

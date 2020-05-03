@@ -5,9 +5,8 @@ using code0k_cc.Runtime.Nizk;
 
 namespace code0k_cc.Runtime.ValueOfType
 {
-    class NizkUInt32Value : IValueOfType
+    class NizkUInt32Value : INizkValue
     {
-        public UInt32 Value;
-        public NizkVariableType VariableType;
+        public UInt32 Value; 
     }
 }

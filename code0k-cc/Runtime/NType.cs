@@ -24,15 +24,23 @@ namespace code0k_cc.Runtime
         /// </summary>
         public string TypeCodeName { get; }
 
-        public Variable GetNewValue()
+        public Variable GetNewEmptyVariable()
         {
-            var variable = this.GetNewValueFunc();
+            var variable = this.GetNewEmptyVariableFunc();
             return variable;
         }
         /// <summary>
         /// Method to get a new value. Throw exceptions.
         /// </summary>
-        private Func<Variable> GetNewValueFunc;
+        private Func<Variable> GetNewEmptyVariableFunc;
+
+        public Variable GetNewNizkVariable(NizkVariableType nizkType, Variable tagVariable)
+        {
+            var variable = this.GetNewNizkVariableFunc(nizkType, tagVariable);
+            return variable;
+        }
+
+        private Func<NizkVariableType, Variable, Variable> GetNewNizkVariableFunc;
 
         public Variable Parse(string str)
         {
@@ -207,12 +215,12 @@ namespace code0k_cc.Runtime
 
             this.GetStringFunc = variable => throw new Exception($"Type \"{this.TypeCodeName}\" doesn't support String().");
             this.ParseFunc = s => throw new Exception($"Type \"{this.TypeCodeName}\" doesn't support Parse().");
-
+            this.GetNewNizkVariableFunc = (nizkType, tagVariable) => throw new Exception($"Type \"{this.TypeCodeName}\" is not nizk-compatible.");
         }
 
         public static readonly NType String = new NType("string")
         {
-            GetNewValueFunc = () => new Variable()
+            GetNewEmptyVariableFunc = () => new Variable()
             {
                 Type = NType.String,
                 Value = new StringValue(),
@@ -267,7 +275,7 @@ namespace code0k_cc.Runtime
 
         public static readonly NType UInt32 = new NType("uint32")
         {
-            GetNewValueFunc = () => new Variable()
+            GetNewEmptyVariableFunc = () => new Variable()
             {
                 Type = NType.UInt32,
                 Value = new NizkUInt32Value()
@@ -298,6 +306,17 @@ namespace code0k_cc.Runtime
                 }
             },
             GetStringFunc = variable => ( (NizkUInt32Value) variable.Value ).Value.ToString(CultureInfo.InvariantCulture),
+            GetNewNizkVariableFunc = (nizkType, tagVariable) => new Variable()
+            {
+                Type = NType.UInt32,
+                Value = new NizkUInt32Value()
+                {
+                    IsConstant = false,
+                    Value = 0,
+                    VariableType = nizkType,
+                    TagVariable = tagVariable,
+                }
+            },
             UnaryOperationFuncs = new Dictionary<UnaryOperation, Func<Variable, Variable>>()
             {
                 {Operation.UnaryOperation.UnaryPlus, (var1) =>
@@ -633,7 +652,7 @@ namespace code0k_cc.Runtime
 
         public static readonly NType Bool = new NType("bool")
         {
-            GetNewValueFunc = () => new Variable()
+            GetNewEmptyVariableFunc = () => new Variable()
             {
                 Type = NType.Bool,
                 Value = new NizkBoolValue()
@@ -664,6 +683,17 @@ namespace code0k_cc.Runtime
                 }
             },
             GetStringFunc = variable => ( (NizkBoolValue) variable.Value ).Value.ToString(CultureInfo.InvariantCulture),
+            GetNewNizkVariableFunc = (nizkType, tagVariable) => new Variable()
+            {
+                Type = NType.Bool,
+                Value = new NizkBoolValue()
+                {
+                    IsConstant = false,
+                    Value = false,
+                    VariableType = nizkType,
+                    TagVariable = tagVariable,
+                }
+            },
             UnaryOperationFuncs = new Dictionary<UnaryOperation, Func<Variable, Variable>>()
             {
                 {Operation.UnaryOperation.BooleanNot, (var1) =>
@@ -787,12 +817,12 @@ namespace code0k_cc.Runtime
 
         public static readonly NType Void = new NType("void")
         {
-            GetNewValueFunc = () => new Variable() { Type = NType.Void, Value = null },
+            GetNewEmptyVariableFunc = () => new Variable() { Type = NType.Void, Value = null },
         };
 
         public static readonly NType Function = new NType("__Function")
         {
-            GetNewValueFunc = () => new Variable() { Type = NType.Function, Value = new FunctionDeclarationValue() },
+            GetNewEmptyVariableFunc = () => new Variable() { Type = NType.Function, Value = new FunctionDeclarationValue() },
         };
 
         public static NType GetNType(TypeResult r)
