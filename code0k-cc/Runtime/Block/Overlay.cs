@@ -6,7 +6,7 @@ namespace code0k_cc.Runtime.Block
 {
     class Overlay
     {
-        public Guid Guid { get; } = Guid.NewGuid();
+        private Guid Guid { get; } = Guid.NewGuid();
 
         public Overlay ParentOverlay { get; }
 
@@ -14,7 +14,11 @@ namespace code0k_cc.Runtime.Block
         {
             this.ParentOverlay = parent;
         }
-        
+
+        public override string ToString()
+        {
+            return "Overlay " + this.Guid;
+        }
         public override bool Equals(object obj)
         {
             if (obj is Overlay overlay)

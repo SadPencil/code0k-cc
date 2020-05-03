@@ -16,13 +16,19 @@ namespace code0k_cc.Runtime.Block
             this.Block = block;
         }
 
-        private OverlayBlock LocateVariableBlock(string name, bool throwException)
+        public override string ToString()
+        {
+            return $"OverlayBlock{{Block:{this.Block.ToString()},Overlay:{this.Overlay.ToString()}}}";
+        }
+
+        public OverlayBlock LocateVariableBlock(string name, bool throwException)
         {
             // block first, overlay second
             for (var block = this.Block; block != null; block = block.ParentBlock)
             {
                 for (var overlay = this.Overlay; overlay != null; overlay = overlay.ParentOverlay)
                 {
+                    Debug.WriteLine($"--Debug--{new OverlayBlock(overlay, block)}");
                     if (block.GetVariableDict(overlay).ContainsKey(name))
                     {
                         return new OverlayBlock(overlay, block);

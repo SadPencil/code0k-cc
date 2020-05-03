@@ -30,6 +30,11 @@ namespace code0k_cc.Runtime.Block
             this.ParentBlock = parent;
         }
 
+        public override string ToString()
+        {
+            return "BasicBlock "+this.Guid;
+        }
+
         public override bool Equals(object obj)
         {
             if (obj is BasicBlock blk)

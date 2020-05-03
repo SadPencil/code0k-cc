@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using code0k_cc.Parse;
@@ -11,6 +12,7 @@ namespace code0k_cc
     {
         static void Main(string[] args)
         {
+            Debug.WriteLine(null);
             ParseInstance mainProgram;
             using (var fs = File.OpenRead("1.txt"))
             {
@@ -30,13 +32,14 @@ namespace code0k_cc
 
 
             OverlayBlock blk = new OverlayBlock(new Overlay(null), new BasicBlock(null));
+            Debug.WriteLine($"root blk {blk}");
             var ret = mainProgram.Execute(new ExeArg() { Block = blk });
 
 
             //debug
 
 
-
+            Debug.WriteLine(ret.ExpressionResult.VariableRefRef.VariableRef.Variable);
         }
 
         static void test(ParseInstance p, int tab)

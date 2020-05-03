@@ -372,6 +372,7 @@ namespace code0k_cc.Parse
                 // create new block
                 var newBlock = new BasicBlock(funcDec.ParentBlock);
                 var newBlockOverlay = new OverlayBlock(arg.Block.Overlay, newBlock);
+                Debug.WriteLine($"debug: func {funcDec.FunctionName} {newBlockOverlay}");
 
                 // get & load all params 
                 if (argList.Count != ( ( funcDec.Arguments?.Count ) ?? 0 ))
@@ -409,27 +410,31 @@ namespace code0k_cc.Parse
             };
 
             MainProgram.Execute = arg =>
-                        {
-                            //arg.block: provide built-in vars if any
+            {
+                //arg.block: provide built-in vars if any
 
-                            // prepare environment
-                            var mainBlock = new BasicBlock(arg.Block.Block);
-                            var mainBlockOverlay = new OverlayBlock(arg.Block.Overlay, mainBlock);
+                // prepare environment
+                var mainBlock = new BasicBlock(arg.Block.Block);
+                var mainBlockOverlay = new OverlayBlock(arg.Block.Overlay, mainBlock);
+                Debug.WriteLine($"debug:Main - {mainBlockOverlay}");
 
-                            foreach (var instanceChild in arg.Instance.Children)
-                            {
-                                _ = instanceChild?.Execute(new ExeArg() { Block = mainBlockOverlay });
-                            }
+                _ = arg.Instance.Children[0]?.Execute(new ExeArg() { Block = mainBlockOverlay });
+                ParseInstance programLoopInstance = arg.Instance.Children[1];
+                while (programLoopInstance != null)
+                {
+                    _ = programLoopInstance.Children[0]?.Execute(new ExeArg() { Block = mainBlockOverlay });
+                    programLoopInstance = programLoopInstance.Children[1];
+                }
 
-                            // find & execute "main"
-                            var mainVar = mainBlockOverlay.GetVariableRefRef("main", false, true).VariableRef.Variable;
-                            var mainFuncDec = (FunctionDeclarationValue) ( mainVar.Value );
+                // find & execute "main"
+                var mainVar = mainBlockOverlay.GetVariableRefRef("main", false, true).VariableRef.Variable;
+                var mainFuncDec = (FunctionDeclarationValue) ( mainVar.Value );
 
-                            // execute function
-                            var expRet = FunctionCallFunc(arg, mainFuncDec, new List<Variable>()).ExpressionResult;
+                // execute function
+                var expRet = FunctionCallFunc(arg, mainFuncDec, new List<Variable>()).ExpressionResult;
 
-                            return new ExeResult() { ExpressionResult = expRet };
-                        };
+                return new ExeResult() { ExpressionResult = expRet };
+            };
 
             MainProgramItem.Name = "Main Program Item";
             MainProgramItem.Type = ParseUnitType.Single;
@@ -440,7 +445,12 @@ namespace code0k_cc.Parse
                 GlobalFunctionDeclarationStatement,
                 FunctionImplementation,
             };
-            MainProgramItem.Execute = arg => arg.Instance.Children[0].Execute(arg);
+            MainProgramItem.Execute = arg =>
+            {
+
+                Debug.WriteLine("Executing Global " + arg.Instance.Children[0].ParseUnit.Name);
+                return arg.Instance.Children[0].Execute(arg);
+            };
 
             MainProgramLoop.Name = "Main Program Loop";
             MainProgramLoop.Type = ParseUnitType.SingleOptional;
@@ -450,7 +460,7 @@ namespace code0k_cc.Parse
                 MainProgramItem,
                 MainProgramLoop,
             };
-            MainProgramLoop.Execute = arg => arg.Instance.Children[0].Execute(arg);
+            MainProgramLoop.Execute = null;
 
 
             FunctionDeclaration.Name = "Function Declaration";
@@ -481,7 +491,15 @@ namespace code0k_cc.Parse
 
                 var maxInt = ( (NizkUInt32Value) NType.UInt32.Assign(maxIntVar, NType.UInt32).Value ).Value;
 
-                var funT = new FunctionDeclarationValue() { Arguments = funArgs, FunctionName = funName, ReturnType = funRetNType, MaxLoop = maxInt, Instance = null };
+                var funT = new FunctionDeclarationValue()
+                {
+                    Arguments = funArgs, 
+                    FunctionName = funName,
+                    ReturnType = funRetNType,
+                    MaxLoop = maxInt, 
+                    Instance = null,
+                    ParentBlock = null,
+                };
 
                 arg.Block.AddVariable(funName, new Variable() { Type = NType.Function, Value = funT }, true);
 
@@ -560,6 +578,7 @@ namespace code0k_cc.Parse
                 // 2. set the FunctionDeclarationValue.Instance to the compound statement
                 var funT = (FunctionDeclarationValue) arg.Block.GetVariableRefRef(functionName, false, false).VariableRef.Variable.Value;
                 funT.Instance = arg.Instance.Children[1];
+                funT.ParentBlock = arg.Block.Block;
 
                 return new ExeResult() { FunctionDeclarationValue = funT };
             };
@@ -589,7 +608,7 @@ namespace code0k_cc.Parse
                     unitIns = loopIns.Children[1];
                     loopIns = loopIns.Children[2];
                 }
-
+                //todo maybe use another struct?
                 return new ExeResult() { FunctionDeclarationValue = new FunctionDeclarationValue() { Arguments = arguments } };
             };
 
@@ -756,6 +775,7 @@ namespace code0k_cc.Parse
             };
             StatementSemicolonCollection.Execute = arg =>
              {
+                 Debug.WriteLine("i.e. Statement " + arg.Instance.Children[0].ParseUnit.Name);
                  if (arg.Instance.Children[0].ParseUnit == Expression)
                  {
                      _ = arg.Instance.Children[0].Execute(arg);
@@ -787,7 +807,11 @@ namespace code0k_cc.Parse
                 WhileStatement,
                 StatementSemicolon,
             };
-            Statement.Execute = arg => arg.Instance.Children[0].Execute(arg);
+            Statement.Execute = arg =>
+            {
+                Debug.WriteLine("Executing Statement " + arg.Instance.Children[0].ParseUnit.Name);
+                return arg.Instance.Children[0].Execute(arg);
+            };
 
             GlobalDefinitionStatement.Name = "Global Definition Statement";
             GlobalDefinitionStatement.Type = ParseUnitType.Single;
@@ -885,6 +909,8 @@ namespace code0k_cc.Parse
                 var newExp = expRefRef.VariableRef.Variable.Assign(ntype);
 
                 arg.Block.AddVariable(varName, newExp, false);
+                Debug.Assert(arg.Block.GetVariableRefRef(varName, true, false) != null);
+                Debug.WriteLine($"Declared variable \"{varName}\" at {arg.Block.LocateVariableBlock(varName, false).ToString()}");
 
                 return new ExeResult()
                 {
@@ -1411,7 +1437,7 @@ namespace code0k_cc.Parse
                 var ins = arg.Instance.Children[1];
                 while (true)
                 {
-                    var op = ins?.Children[0];
+                    var op = ins?.Children[0]?.Children[0];
                     ins = ins?.Children[1];
 
                     if (op == null) break;
