@@ -81,12 +81,12 @@ namespace code0k_cc.Runtime
         public Variable ExplicitConvert(Variable variable, NType type)
         {
             Debug.Assert(variable.Type == this);
-            if (variable.Type == type)
+            var retVariable = this.ExplicitConvertFunc(variable, type);
+            if (Object.ReferenceEquals(retVariable, variable))
             {
-                return variable;
+                return retVariable;
             }
 
-            var retVariable = this.ExplicitConvertFunc(variable, type);
             // add connection
             var newCon = new VariableConnection() { Type = new VariableConnectionType() { SpecialOperation = SpecialOperation.TypeCast } };
 
@@ -101,12 +101,11 @@ namespace code0k_cc.Runtime
         public Variable ImplicitConvert(Variable variable, NType type)
         {
             Debug.Assert(variable.Type == this);
-            if (variable.Type == type)
-            {
-                return variable;
-            }
-
             var retVariable = this.ImplicitConvertFunc(variable, type);
+            if (Object.ReferenceEquals(retVariable, variable))
+            {
+                return retVariable;
+            }
 
             // add connection
             var newCon = new VariableConnection() { Type = new VariableConnectionType() { SpecialOperation = SpecialOperation.TypeCast } };
@@ -189,7 +188,6 @@ namespace code0k_cc.Runtime
 
             this.ImplicitConvertFunc = (variable, type) =>
             {
-                Debug.Assert(variable.Type == this);
                 if (variable.Type == type)
                 {
                     return variable;
@@ -202,7 +200,6 @@ namespace code0k_cc.Runtime
 
             this.ExplicitConvertFunc = (variable, type) =>
             {
-                Debug.Assert(variable.Type == this);
                 if (variable.Type == type)
                 {
                     return variable;
@@ -315,6 +312,38 @@ namespace code0k_cc.Runtime
                     Value = 0,
                     VariableType = nizkType,
                     TagVariable = tagVariable,
+                }
+            },
+            ExplicitConvertFunc = (variable, type) =>
+            {
+                if (NType.UInt32 == type)
+                {
+                    return variable;
+                }
+                else if (type == NType.Bool)
+                {
+                    if (variable.Value.IsConstant)
+                    {
+                        return new Variable()
+                        {
+                            Type = NType.Bool,
+                            Value = new NizkBoolValue()
+                            {
+                                IsConstant = true,
+                                Value = ( (NizkUInt32Value) variable.Value ).Value != 0,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                        };
+                    }
+                    else
+                    {
+                        return NType.Bool.GetNewNizkVariableFunc(NizkVariableType.Intermediate, null);
+                    }
+
+                }
+                else
+                {
+                    throw new Exception($"Can't explicit convert \"{NType.UInt32.TypeCodeName }\" to \"{type.TypeCodeName}\".");
                 }
             },
             UnaryOperationFuncs = new Dictionary<UnaryOperation, Func<Variable, Variable>>()
@@ -692,6 +721,38 @@ namespace code0k_cc.Runtime
                     Value = false,
                     VariableType = nizkType,
                     TagVariable = tagVariable,
+                }
+            },
+            ExplicitConvertFunc = (variable, type) =>
+            {
+                if (NType.Bool == type)
+                {
+                    return variable;
+                }
+                else if (type == NType.UInt32)
+                {
+                    if (variable.Value.IsConstant)
+                    {
+                        return new Variable()
+                        {
+                            Type = NType.UInt32,
+                            Value = new NizkUInt32Value()
+                            {
+                                IsConstant = true,
+                                Value = ( ( (NizkBoolValue) variable.Value ).Value ) ? (System.UInt32) 1 : (System.UInt32) 0,
+                                VariableType = NizkVariableType.Intermediate,
+                            }
+                        };
+                    }
+                    else
+                    {
+                        return NType.UInt32.GetNewNizkVariableFunc(NizkVariableType.Intermediate, null);
+                    }
+
+                }
+                else
+                {
+                    throw new Exception($"Can't explicit convert \"{NType.Bool.TypeCodeName }\" to \"{type.TypeCodeName}\".");
                 }
             },
             UnaryOperationFuncs = new Dictionary<UnaryOperation, Func<Variable, Variable>>()
