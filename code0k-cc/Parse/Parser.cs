@@ -1195,7 +1195,7 @@ namespace code0k_cc.Parse
 
                 }
 
-                // now change "continue" to "normal", but leave "break" and "return" alone
+                // now change "continue" and "break" to "normal", but leave "return" alone
                 {
                     var queue = new List<(StatementResult ItemRet, StatementResultTwoCase ItemParentRet, bool IsParentTrueCase)>()
                     {
@@ -1214,12 +1214,12 @@ namespace code0k_cc.Parse
                                 break;
 
                             case StatementResultOneCase item:
-                                if (item.ExecutionResultType == StatementResultType.Continue)
+                                if (item.ExecutionResultType == StatementResultType.Break ||
+                                    item.ExecutionResultType == StatementResultType.Continue)
                                 {
                                     item.ExecutionResultType = StatementResultType.Normal;
                                 }
-                                else if (item.ExecutionResultType == StatementResultType.Break ||
-                                         item.ExecutionResultType == StatementResultType.Return ||
+                                else if (item.ExecutionResultType == StatementResultType.Return ||
                                          item.ExecutionResultType == StatementResultType.Normal)
                                 {
                                     // leave the ExecutionResultType alone
