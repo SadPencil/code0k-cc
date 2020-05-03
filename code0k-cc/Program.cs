@@ -14,7 +14,8 @@ namespace code0k_cc
         {
             Debug.WriteLine(null);
             ParseInstance mainProgram;
-            using (var fs = File.OpenRead("1.txt"))
+            var path = @"C:\Users\SadPencil\source\repos\code0k-cc\Examples\test.txt";
+            using (var fs = File.OpenRead(path))
             {
                 var tokens = Lex.Lex.Analyze(fs);
                 var tokenList = tokens.ToList();
