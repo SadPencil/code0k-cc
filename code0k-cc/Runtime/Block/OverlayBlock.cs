@@ -27,8 +27,7 @@ namespace code0k_cc.Runtime.Block
             for (var block = this.Block; block != null; block = block.ParentBlock)
             {
                 for (var overlay = this.Overlay; overlay != null; overlay = overlay.ParentOverlay)
-                {
-                    Debug.WriteLine($"--Debug--{new OverlayBlock(overlay, block)}");
+                { 
                     if (block.GetVariableDict(overlay).ContainsKey(name))
                     {
                         return new OverlayBlock(overlay, block);

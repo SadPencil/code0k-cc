@@ -372,7 +372,6 @@ namespace code0k_cc.Parse
                 // create new block
                 var newBlock = new BasicBlock(funcDec.ParentBlock);
                 var newBlockOverlay = new OverlayBlock(arg.Block.Overlay, newBlock);
-                Debug.WriteLine($"debug: func {funcDec.FunctionName} {newBlockOverlay}");
 
                 // get & load all params 
                 if (argList.Count != ( ( funcDec.Arguments?.Count ) ?? 0 ))
@@ -416,7 +415,6 @@ namespace code0k_cc.Parse
                 // prepare environment
                 var mainBlock = new BasicBlock(arg.Block.Block);
                 var mainBlockOverlay = new OverlayBlock(arg.Block.Overlay, mainBlock);
-                Debug.WriteLine($"debug:Main - {mainBlockOverlay}");
 
                 _ = arg.Instance.Children[0]?.Execute(new ExeArg() { Block = mainBlockOverlay });
                 ParseInstance programLoopInstance = arg.Instance.Children[1];
@@ -493,10 +491,10 @@ namespace code0k_cc.Parse
 
                 var funT = new FunctionDeclarationValue()
                 {
-                    Arguments = funArgs, 
+                    Arguments = funArgs,
                     FunctionName = funName,
                     ReturnType = funRetNType,
-                    MaxLoop = maxInt, 
+                    MaxLoop = maxInt,
                     Instance = null,
                     ParentBlock = null,
                 };
