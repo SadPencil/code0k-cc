@@ -9,6 +9,7 @@ namespace code0k_cc.Runtime.ExeArg
     {
         public OverlayBlock Block;
         public ParseInstance Instance;
-        
+
+        public CallStack CallStack;
     }
 }

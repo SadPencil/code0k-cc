@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Security.Cryptography;
 using code0k_cc.Lex;
 using code0k_cc.Runtime;
 using code0k_cc.Runtime.Block;
@@ -371,6 +372,12 @@ namespace code0k_cc.Parse
                     throw new Exception($"Unimplemented function \"{funcDec.FunctionName}\"");
                 }
 
+                // check function call stack count
+                if (( ( arg.CallStack?.GetFunctionCount(funcDec) ?? 0 ) + 1 ) > funcDec.MaxLoop)
+                {
+                    throw new Exception($"Recursion limit of function \"{funcDec.FunctionName}\" reached.");
+                }
+
                 // create new block
                 var newBlock = new BasicBlock(funcDec.ParentBlock);
                 var newBlockOverlay = new OverlayBlock(arg.Block.Overlay, newBlock);
@@ -393,7 +400,11 @@ namespace code0k_cc.Parse
                 }
 
                 // execute function
-                var funRet = funcDec.Instance.Execute(new ExeArg() { Block = newBlockOverlay }).StatementResult;
+                var funRet = funcDec.Instance.Execute(new ExeArg()
+                {
+                    Block = newBlockOverlay,
+                    CallStack = new CallStack(funcDec, arg.CallStack),
+                }).StatementResult;
                 var funRetVar = NizkUtils.NizkCombineFunctionResult(funRet, funcDec.ReturnType);
                 return new ExeResult() { ExpressionResult = new ExpressionResult() { VariableRefRef = new VariableRefRef(new VariableRef() { Variable = funRetVar }) } };
             }
@@ -769,7 +780,7 @@ namespace code0k_cc.Parse
             {
                 BreakStatement,
                 ContinueStatement,
-                ReturnStatement, 
+                ReturnStatement,
                 DefinitionStatement,
                 Expression,
             };
@@ -872,7 +883,7 @@ namespace code0k_cc.Parse
             ReturnStatementB.ChildType = ParseUnitChildType.AllChild;
             ReturnStatementB.Children = new List<ParseUnit>()
             {
-                TokenUnits[TokenType.Return], 
+                TokenUnits[TokenType.Return],
             };
             ReturnStatementB.Execute = arg =>
             {

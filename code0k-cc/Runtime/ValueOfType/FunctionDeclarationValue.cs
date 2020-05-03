@@ -7,6 +7,8 @@ namespace code0k_cc.Runtime.ValueOfType
 {
     class FunctionDeclarationValue : IValueOfType
     {
+        private Guid Guid { get; } = Guid.NewGuid();
+
         /// <summary>
         /// Instance of CompoundStatement
         /// </summary>
@@ -20,5 +22,32 @@ namespace code0k_cc.Runtime.ValueOfType
         public List<(string VarName, NType Type)> Arguments;
         public BasicBlock ParentBlock;
         public UInt32 MaxLoop;
+
+
+        public override bool Equals(object obj)
+        {
+            if (obj is FunctionDeclarationValue v)
+            {
+                return this.Guid == v.Guid;
+            }
+            else
+            {
+                return base.Equals(obj);
+            }
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(this.Guid);
+        }
+
+        public static bool operator ==(FunctionDeclarationValue op1, FunctionDeclarationValue op2)
+        {
+            return op1?.Guid == op2?.Guid;
+        }
+        public static bool operator !=(FunctionDeclarationValue op1, FunctionDeclarationValue op2)
+        {
+            return !( op1 == op2 );
+        }
     }
 }
