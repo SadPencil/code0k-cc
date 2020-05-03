@@ -337,6 +337,8 @@ namespace code0k_cc.Parse
             ParseUnit WhileStatement = new ParseUnit();
             ParseUnit CompoundStatement = new ParseUnit();
             ParseUnit ReturnStatement = new ParseUnit();
+            ParseUnit ReturnStatementA = new ParseUnit();
+            ParseUnit ReturnStatementB = new ParseUnit();
             ParseUnit BreakStatement = new ParseUnit();
             ParseUnit ContinueStatement = new ParseUnit();
 
@@ -767,9 +769,9 @@ namespace code0k_cc.Parse
             {
                 BreakStatement,
                 ContinueStatement,
-                ReturnStatement,
+                ReturnStatement, 
                 DefinitionStatement,
-                Expression
+                Expression,
             };
             StatementSemicolonCollection.Execute = arg =>
              {
@@ -831,16 +833,27 @@ namespace code0k_cc.Parse
             };
             GlobalFunctionDeclarationStatement.Execute = arg => arg.Instance.Children[0].Execute(arg);
 
-
             ReturnStatement.Name = "Return Statement";
             ReturnStatement.Type = ParseUnitType.Single;
-            ReturnStatement.ChildType = ParseUnitChildType.AllChild;
+            ReturnStatement.ChildType = ParseUnitChildType.OneChild;
             ReturnStatement.Children = new List<ParseUnit>()
+            {
+                // the order matters
+                ReturnStatementA,
+                ReturnStatementB,
+            };
+            ReturnStatement.Execute = arg => arg.Instance.Children[0].Execute(arg);
+
+
+            ReturnStatementA.Name = "Return Statement";
+            ReturnStatementA.Type = ParseUnitType.Single;
+            ReturnStatementA.ChildType = ParseUnitChildType.AllChild;
+            ReturnStatementA.Children = new List<ParseUnit>()
             {
                 TokenUnits[TokenType.Return],
                 Expression,
             };
-            ReturnStatement.Execute = arg =>
+            ReturnStatementA.Execute = arg =>
             {
                 var expRefRef = arg.Instance.Children[1].Execute(arg).ExpressionResult.VariableRefRef;
                 return new ExeResult()
@@ -850,6 +863,26 @@ namespace code0k_cc.Parse
                         Overlay = arg.Block.Overlay,
                         ExecutionResultType = StatementResultType.Return,
                         ReturnVariable = expRefRef.VariableRef.Variable,
+                    }
+                };
+            };
+
+            ReturnStatementB.Name = "Return Statement";
+            ReturnStatementB.Type = ParseUnitType.Single;
+            ReturnStatementB.ChildType = ParseUnitChildType.AllChild;
+            ReturnStatementB.Children = new List<ParseUnit>()
+            {
+                TokenUnits[TokenType.Return], 
+            };
+            ReturnStatementB.Execute = arg =>
+            {
+                return new ExeResult()
+                {
+                    StatementResult = new StatementResultOneCase()
+                    {
+                        Overlay = arg.Block.Overlay,
+                        ExecutionResultType = StatementResultType.Return,
+                        ReturnVariable = NType.Void.NewValue(),
                     }
                 };
             };
