@@ -1400,9 +1400,10 @@ namespace code0k_cc.Parse
             {
                 TokenUnits[TokenType.Identifier],
                 TokenUnits[TokenType.Number],
+                TokenUnits[TokenType.String],
                 TokenUnits[TokenType.True],
                 TokenUnits[TokenType.False],
-                BracketExpression
+                BracketExpression,
             };
             Operators[0].Execute = arg =>
             {
@@ -1422,6 +1423,15 @@ namespace code0k_cc.Parse
                     string str = arg.Instance.Children[0].Token.Value;
                     //todo: currently, only support UInt32, will add other number type later
                     var retVar = NType.UInt32.Parse(str);
+                    return new ExeResult()
+                    {
+                        ExpressionResult = new ExpressionResult() { VariableRefRef = new VariableRefRef(new VariableRef() { Variable = retVar }) }
+                    };
+                }
+                else if (arg.Instance.Children[0].ParseUnit == TokenUnits[TokenType.String])
+                {
+                    string str = arg.Instance.Children[0].Token.Value; 
+                    var retVar = NType.String.Parse(str);
                     return new ExeResult()
                     {
                         ExpressionResult = new ExpressionResult() { VariableRefRef = new VariableRefRef(new VariableRef() { Variable = retVar }) }
