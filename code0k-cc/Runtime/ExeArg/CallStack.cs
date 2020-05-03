@@ -16,7 +16,7 @@ namespace code0k_cc.Runtime.ExeArg
             this.ParentCallStack = parent;
         }
 
-        public int GetFunctionCount() => GetFunctionCount(this.FunctionDeclaration);
+        public int GetFunctionCount() => this.GetFunctionCount(this.FunctionDeclaration);
         public int GetFunctionCount(FunctionDeclarationValue function) =>
             ( ( function == this.FunctionDeclaration ) ? 1 : 0 ) + ( this.ParentCallStack?.GetFunctionCount(function) ?? 0 );
     }

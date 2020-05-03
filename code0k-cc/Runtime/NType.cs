@@ -4,9 +4,11 @@ using System.Collections.ObjectModel;
 using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
+using code0k_cc.Lex;
 using code0k_cc.Runtime.ExeResult;
 using code0k_cc.Runtime.Nizk;
 using code0k_cc.Runtime.Operation;
@@ -22,15 +24,15 @@ namespace code0k_cc.Runtime
         /// </summary>
         public string TypeCodeName { get; }
 
-        public Variable NewValue()
+        public Variable GetNewValue()
         {
-            var variable = this.NewValueFunc();
+            var variable = this.GetNewValueFunc();
             return variable;
         }
         /// <summary>
         /// Method to get a new value. Throw exceptions.
         /// </summary>
-        private Func<Variable> NewValueFunc;
+        private Func<Variable> GetNewValueFunc;
 
         public Variable Parse(string str)
         {
@@ -42,15 +44,15 @@ namespace code0k_cc.Runtime
         /// </summary>
         private Func<string, Variable> ParseFunc;
 
-        public string String(Variable variable)
+        public string GetString(Variable variable)
         {
             Debug.Assert(variable.Type == this);
-            return this.StringFunc(variable);
+            return this.GetStringFunc(variable);
         }
         /// <summary>
         /// Method to get a string from a value. Throw exceptions.
         /// </summary>
-        private Func<Variable, string> StringFunc;
+        private Func<Variable, string> GetStringFunc;
 
         /// <summary>
         /// Generics Type Lists. Can be null.
@@ -70,7 +72,7 @@ namespace code0k_cc.Runtime
 
         public Variable ExplicitConvert(Variable variable, NType type)
         {
-            Debug.Assert(variable.Type == this); 
+            Debug.Assert(variable.Type == this);
             if (variable.Type == type)
             {
                 return variable;
@@ -97,7 +99,7 @@ namespace code0k_cc.Runtime
             }
 
             var retVariable = this.ImplicitConvertFunc(variable, type);
-            
+
             // add connection
             var newCon = new VariableConnection() { Type = new VariableConnectionType() { SpecialOperation = SpecialOperation.TypeCast } };
 
@@ -203,14 +205,69 @@ namespace code0k_cc.Runtime
                 }
             };
 
-            this.StringFunc = variable => throw new Exception($"Type \"{this.TypeCodeName}\" doesn't support String().");
+            this.GetStringFunc = variable => throw new Exception($"Type \"{this.TypeCodeName}\" doesn't support String().");
             this.ParseFunc = s => throw new Exception($"Type \"{this.TypeCodeName}\" doesn't support Parse().");
 
         }
 
+        public static readonly NType String = new NType("string")
+        {
+            GetNewValueFunc = () => new Variable()
+            {
+                Type = NType.String,
+                Value = new StringValue(),
+            },
+            GetStringFunc = variable => ( (StringValue) ( variable.Value ) ).Value,
+            ParseFunc = str =>
+            {
+                Debug.Assert(str.First() == '\"');
+                Debug.Assert(str.Last() == '\"');
+                Debug.Assert(str.Length >= 2);
+
+                StringBuilder sb = new StringBuilder();
+                LexState state = LexState.String;
+                foreach (var i in Enumerable.Range(1, str.Length - 2))
+                {
+                    char ch = str[i];
+                    switch (state)
+                    {
+                        case LexState.StringEscaping:
+                            _ = sb.Append(ch switch
+                            {
+                                'n' => '\n',
+                                'r' => '\r',
+                                't' => '\t',
+                                '\\' => '\\',
+                                '\"' => '\"',
+                                '\'' => '\'',
+                                '?' => '?',
+                                _ => throw new Exception($"Unrecognized character \"\\{ch}\"")
+                            });
+                            state = LexState.String;
+                            continue;
+
+                        case LexState.String when ch == '\\':
+                            state = LexState.StringEscaping;
+                            continue;
+                        case LexState.String when ch != '\\':
+                            _ = sb.Append(ch);
+                            continue;
+                        default:
+                            throw new Exception("Assert failed!");
+                    }
+                }
+
+                return new Variable()
+                {
+                    Type = NType.String,
+                    Value = new StringValue() { Value = sb.ToString() },
+                };
+            },
+        };
+
         public static readonly NType UInt32 = new NType("uint32")
         {
-            NewValueFunc = () => new Variable()
+            GetNewValueFunc = () => new Variable()
             {
                 Type = NType.UInt32,
                 Value = new NizkUInt32Value()
@@ -240,7 +297,7 @@ namespace code0k_cc.Runtime
                     throw new Exception($"Can't parse \"{str}\" as \"{NType.UInt32.TypeCodeName}\".");
                 }
             },
-            StringFunc = variable => ( (NizkUInt32Value) variable.Value ).Value.ToString(CultureInfo.InvariantCulture),
+            GetStringFunc = variable => ( (NizkUInt32Value) variable.Value ).Value.ToString(CultureInfo.InvariantCulture),
             UnaryOperationFuncs = new Dictionary<UnaryOperation, Func<Variable, Variable>>()
             {
                 {Operation.UnaryOperation.UnaryPlus, (var1) =>
@@ -576,7 +633,7 @@ namespace code0k_cc.Runtime
 
         public static readonly NType Bool = new NType("bool")
         {
-            NewValueFunc = () => new Variable()
+            GetNewValueFunc = () => new Variable()
             {
                 Type = NType.Bool,
                 Value = new NizkBoolValue()
@@ -606,7 +663,7 @@ namespace code0k_cc.Runtime
                     throw new Exception($"Can't parse \"{str}\" as \"{NType.Bool.TypeCodeName}\".");
                 }
             },
-            StringFunc = variable => ( (NizkBoolValue) variable.Value ).Value.ToString(CultureInfo.InvariantCulture),
+            GetStringFunc = variable => ( (NizkBoolValue) variable.Value ).Value.ToString(CultureInfo.InvariantCulture),
             UnaryOperationFuncs = new Dictionary<UnaryOperation, Func<Variable, Variable>>()
             {
                 {Operation.UnaryOperation.BooleanNot, (var1) =>
@@ -730,12 +787,12 @@ namespace code0k_cc.Runtime
 
         public static readonly NType Void = new NType("void")
         {
-            NewValueFunc = () => new Variable() { Type = NType.Void, Value = null },
+            GetNewValueFunc = () => new Variable() { Type = NType.Void, Value = null },
         };
 
         public static readonly NType Function = new NType("__Function")
         {
-            NewValueFunc = () => new Variable() { Type = NType.Function, Value = new FunctionDeclarationValue() },
+            GetNewValueFunc = () => new Variable() { Type = NType.Function, Value = new FunctionDeclarationValue() },
         };
 
         public static NType GetNType(TypeResult r)

@@ -893,7 +893,7 @@ namespace code0k_cc.Parse
                     {
                         Overlay = arg.Block.Overlay,
                         ExecutionResultType = StatementResultType.Return,
-                        ReturnVariable = NType.Void.NewValue(),
+                        ReturnVariable = NType.Void.GetNewValue(),
                     }
                 };
             };

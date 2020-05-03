@@ -88,7 +88,7 @@ namespace code0k_cc.Runtime.Nizk
 
                             if (resultNType == NType.Void)
                             {
-                                return NType.Void.NewValue();
+                                return NType.Void.GetNewValue();
                             }
                             else
                             {

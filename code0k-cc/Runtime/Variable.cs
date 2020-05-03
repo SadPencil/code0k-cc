@@ -12,9 +12,9 @@ namespace code0k_cc.Runtime
         public IValueOfType Value;
         public readonly List<VariableConnection> Connections = new List<VariableConnection>();
          
-        public string String()
+        public string GetString()
         {
-            return this.Type.String(this);
+            return this.Type.GetString(this);
         }
 
         public Variable Assign(NType leftType)
