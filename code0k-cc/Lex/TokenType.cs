@@ -6,7 +6,6 @@ namespace code0k_cc.Lex
     class TokenType
     {
 
-        public readonly TokenTypeProperty Property;
         private readonly string Pattern;
         public readonly string Name;
 
@@ -17,14 +16,8 @@ namespace code0k_cc.Lex
             return this.Name;
         }
 
-        private TokenType(string pattern, string name) : this(pattern, name, new TokenTypeProperty()) { }
-        private TokenType(string pattern, string name, TokenTypeProperty property)
+        private TokenType(string pattern, string name)
         {
-            if (property == null)
-            {
-                property = new TokenTypeProperty();
-            }
-            this.Property = property;
             this.Pattern = pattern;
             this.Name = name;
         }
@@ -36,13 +29,14 @@ namespace code0k_cc.Lex
         }
 
         public static readonly TokenType EOL = new TokenType("\\b", "EOL");
+        public static readonly TokenType Print = new TokenType("print", "print");
 
-        public static readonly TokenType Input = new TokenType("input", "input", new TokenTypeProperty() { IsDescriptionWord = true });
-        public static readonly TokenType Output = new TokenType("output", "output", new TokenTypeProperty() { IsDescriptionWord = true });
-        public static readonly TokenType NizkInput = new TokenType("nizkinput", "nizkinput", new TokenTypeProperty() { IsDescriptionWord = true });
-        //public static readonly TokenType Const = new TokenType("const", "const", new TokenTypeProperty() { IsDescriptionWord = true });
-        //public static readonly TokenType Var = new TokenType("var", "var", new TokenTypeProperty() { IsDescriptionWord = true });
-        //public static readonly TokenType Ref = new TokenType("ref", "ref", new TokenTypeProperty() { IsDescriptionWord = true });
+        public static readonly TokenType Input = new TokenType("input", "input");
+        public static readonly TokenType Output = new TokenType("output", "output");
+        public static readonly TokenType NizkInput = new TokenType("nizkinput", "nizkinput");
+        //public static readonly TokenType Const = new TokenType("const", "const");
+        //public static readonly TokenType Var = new TokenType("var", "var");
+        //public static readonly TokenType Ref = new TokenType("ref", "ref");
 
         //public static readonly TokenType Call = new TokenType("call", "call");
 
@@ -78,33 +72,33 @@ namespace code0k_cc.Lex
         public static readonly TokenType Semicolon = new TokenType("\\;", ";");
         public static readonly TokenType Assign = new TokenType("\\=", "=");
 
-        public static readonly TokenType Plus = new TokenType("\\+", "+", new TokenTypeProperty() { IsUnaryOperator = true, IsBinaryOperator = true });
-        public static readonly TokenType Minus = new TokenType("\\-", "-", new TokenTypeProperty() { IsUnaryOperator = true, IsBinaryOperator = true });
-        public static readonly TokenType Times = new TokenType("\\*", "*", new TokenTypeProperty() { IsBinaryOperator = true });
-        public static readonly TokenType Divide = new TokenType("\\/", "/", new TokenTypeProperty() { IsBinaryOperator = true });
-        public static readonly TokenType Mod = new TokenType("\\%", "%", new TokenTypeProperty() { IsBinaryOperator = true });
+        public static readonly TokenType Plus = new TokenType("\\+", "+");
+        public static readonly TokenType Minus = new TokenType("\\-", "-");
+        public static readonly TokenType Times = new TokenType("\\*", "*");
+        public static readonly TokenType Divide = new TokenType("\\/", "/");
+        public static readonly TokenType Mod = new TokenType("\\%", "%");
 
-        public static readonly TokenType EqualTo = new TokenType("\\=\\=", "==", new TokenTypeProperty() { IsBinaryOperator = true });
-        public static readonly TokenType LessThan = new TokenType("\\<", "<", new TokenTypeProperty() { IsBinaryOperator = true });
-        public static readonly TokenType GreaterThan = new TokenType("\\>", ">", new TokenTypeProperty() { IsBinaryOperator = true });
-        public static readonly TokenType LessEqualThan = new TokenType("\\<\\=", "<=", new TokenTypeProperty() { IsBinaryOperator = true });
-        public static readonly TokenType GreaterEqualThan = new TokenType("\\>\\=", ">=", new TokenTypeProperty() { IsBinaryOperator = true });
-        public static readonly TokenType NotEqualTo = new TokenType("\\!\\=", "!=", new TokenTypeProperty() { IsBinaryOperator = true });
+        public static readonly TokenType EqualTo = new TokenType("\\=\\=", "==");
+        public static readonly TokenType LessThan = new TokenType("\\<", "<");
+        public static readonly TokenType GreaterThan = new TokenType("\\>", ">");
+        public static readonly TokenType LessEqualThan = new TokenType("\\<\\=", "<=");
+        public static readonly TokenType GreaterEqualThan = new TokenType("\\>\\=", ">=");
+        public static readonly TokenType NotEqualTo = new TokenType("\\!\\=", "!=");
 
-        public static readonly TokenType BitwiseAnd = new TokenType("\\&", "&", new TokenTypeProperty() { IsUnaryOperator = true, IsBinaryOperator = true });
-        public static readonly TokenType BitwiseOr = new TokenType("\\|", "|", new TokenTypeProperty() { IsBinaryOperator = true });
-        public static readonly TokenType BitwiseXor = new TokenType("\\^", "^", new TokenTypeProperty() { IsBinaryOperator = true });
-        public static readonly TokenType BitwiseNot = new TokenType("\\~", "~", new TokenTypeProperty() { IsUnaryOperator = true });
+        public static readonly TokenType BitwiseAnd = new TokenType("\\&", "&");
+        public static readonly TokenType BitwiseOr = new TokenType("\\|", "|");
+        public static readonly TokenType BitwiseXor = new TokenType("\\^", "^");
+        public static readonly TokenType BitwiseNot = new TokenType("\\~", "~" );
 
-        public static readonly TokenType BooleanAnd = new TokenType("\\&\\&", "&&", new TokenTypeProperty() { IsBinaryOperator = true });
-        public static readonly TokenType BooleanOr = new TokenType("\\|\\|", "||", new TokenTypeProperty() { IsBinaryOperator = true });
-        public static readonly TokenType BooleanXor = new TokenType("\\^\\^", "^^", new TokenTypeProperty() { IsBinaryOperator = true });
-        public static readonly TokenType BooleanNot = new TokenType("\\!", "!", new TokenTypeProperty() { IsUnaryOperator = true });
+        public static readonly TokenType BooleanAnd = new TokenType("\\&\\&", "&&");
+        public static readonly TokenType BooleanOr = new TokenType("\\|\\|", "||");
+        public static readonly TokenType BooleanXor = new TokenType("\\^\\^", "^^");
+        public static readonly TokenType BooleanNot = new TokenType("\\!", "!" );
 
-        public static readonly TokenType BitwiseLeftShiftSigned = new TokenType("\\<\\<", "<<", new TokenTypeProperty() { IsBinaryOperator = true });
-        public static readonly TokenType BitwiseLeftShiftUnsigned = new TokenType("\\<\\<\\<", "<<<", new TokenTypeProperty() { IsBinaryOperator = true });
-        public static readonly TokenType BitwiseRightShiftSigned = new TokenType("\\>\\>", ">>", new TokenTypeProperty() { IsBinaryOperator = true });
-        public static readonly TokenType BitwiseRightShiftUnsigned = new TokenType("\\>\\>\\>", ">>>", new TokenTypeProperty() { IsBinaryOperator = true });
+        public static readonly TokenType BitwiseLeftShiftSigned = new TokenType("\\<\\<", "<<");
+        public static readonly TokenType BitwiseLeftShiftUnsigned = new TokenType("\\<\\<\\<", "<<<");
+        public static readonly TokenType BitwiseRightShiftSigned = new TokenType("\\>\\>", ">>");
+        public static readonly TokenType BitwiseRightShiftUnsigned = new TokenType("\\>\\>\\>", ">>>");
 
         public static readonly TokenType String = new TokenType("\\\"(\\\\.|[^\\\"])*\\\"", "string");
 
@@ -114,6 +108,8 @@ namespace code0k_cc.Lex
         public static IEnumerable<TokenType> GetAll()
         {
             // EOL not included
+
+            yield return Print;
 
             yield return Input;
             yield return NizkInput;

@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 using code0k_cc.Lex;
 using code0k_cc.Runtime;
 using code0k_cc.Runtime.Block;
@@ -301,7 +303,7 @@ namespace code0k_cc.Parse
                 Type = ParseUnitType.Single,
                 ChildType = ParseUnitChildType.Terminal,
                 TerminalTokenType = TokenType.EOL,
-                Execute = arg => new ExeResult()
+                Execute = null,
             };
 
             ParseUnit MainProgram = new ParseUnit();
@@ -342,6 +344,7 @@ namespace code0k_cc.Parse
             ParseUnit ReturnStatementB = new ParseUnit();
             ParseUnit BreakStatement = new ParseUnit();
             ParseUnit ContinueStatement = new ParseUnit();
+            ParseUnit PrintStatement = new ParseUnit();
 
             ParseUnit FunctionCall = new ParseUnit();
             ParseUnit FunctionCallArgument = new ParseUnit();
@@ -404,6 +407,7 @@ namespace code0k_cc.Parse
                 {
                     Block = newBlockOverlay,
                     CallStack = new CallStack(funcDec, arg.CallStack),
+                    StdOut = arg.StdOut,
                 }).StatementResult;
                 var funRetVar = NizkUtils.NizkCombineFunctionResult(funRet, funcDec.ReturnType);
                 return new ExeResult() { ExpressionResult = new ExpressionResult() { VariableRefRef = new VariableRefRef(new VariableRef() { Variable = funRetVar }) } };
@@ -429,11 +433,11 @@ namespace code0k_cc.Parse
                 var mainBlock = new BasicBlock(arg.Block.Block);
                 var mainBlockOverlay = new OverlayBlock(arg.Block.Overlay, mainBlock);
 
-                _ = arg.Instance.Children[0]?.Execute(new ExeArg() { Block = mainBlockOverlay });
+                _ = arg.Instance.Children[0]?.Execute(new ExeArg() { Block = mainBlockOverlay, StdOut = arg.StdOut });
                 ParseInstance programLoopInstance = arg.Instance.Children[1];
                 while (programLoopInstance != null)
                 {
-                    _ = programLoopInstance.Children[0]?.Execute(new ExeArg() { Block = mainBlockOverlay });
+                    _ = programLoopInstance.Children[0]?.Execute(new ExeArg() { Block = mainBlockOverlay, StdOut = arg.StdOut });
                     programLoopInstance = programLoopInstance.Children[1];
                 }
 
@@ -530,7 +534,7 @@ namespace code0k_cc.Parse
                 TypeUnitResult = new TypeResult()
                 {
                     TypeName = arg.Instance.Children[0].Token.Value,
-                    Generics = arg.Instance.Children[1]?.Execute(new ExeArg() { Block = arg.Block })?.GenericsTypeResult
+                    Generics = arg.Instance.Children[1]?.Execute(new ExeArg() { Block = arg.Block, StdOut = arg.StdOut })?.GenericsTypeResult
                 }
             };
 
@@ -546,8 +550,8 @@ namespace code0k_cc.Parse
             };
             TypeUnitGenerics.Execute = arg =>
             {
-                TypeResult type1 = arg.Instance.Children[1].Execute(new ExeArg() { Block = arg.Block }).TypeUnitResult;
-                GenericsTypeResult typeRest = arg.Instance.Children[2]?.Execute(new ExeArg() { Block = arg.Block })?.GenericsTypeResult;
+                TypeResult type1 = arg.Instance.Children[1].Execute(arg).TypeUnitResult;
+                GenericsTypeResult typeRest = arg.Instance.Children[2]?.Execute(arg)?.GenericsTypeResult;
 
                 GenericsTypeResult retResult = new GenericsTypeResult() { Types = new List<TypeResult>() { type1 } };
 
@@ -724,7 +728,8 @@ namespace code0k_cc.Parse
                                                 // execute next statement at this overlay
                                                 var retRaw = nextStmtInstance.Execute(new ExeArg()
                                                 {
-                                                    Block = new OverlayBlock(item.Overlay, arg.Block.Block)
+                                                    Block = new OverlayBlock(item.Overlay, arg.Block.Block),
+                                                    StdOut = arg.StdOut
                                                 }).StatementResult;
 
                                                 //optimization: if all the retRaw are all Break or all Continue or all normal (not possible), combining overlay can be done here
@@ -782,6 +787,7 @@ namespace code0k_cc.Parse
                 ContinueStatement,
                 ReturnStatement,
                 DefinitionStatement,
+                PrintStatement,
                 Expression,
             };
             StatementSemicolonCollection.Execute = arg =>
@@ -843,6 +849,33 @@ namespace code0k_cc.Parse
                 TokenUnits[TokenType.Semicolon],
             };
             GlobalFunctionDeclarationStatement.Execute = arg => arg.Instance.Children[0].Execute(arg);
+
+            PrintStatement.Name = "Print Statement";
+            PrintStatement.Type = ParseUnitType.Single;
+            PrintStatement.ChildType = ParseUnitChildType.AllChild;
+            PrintStatement.Children = new List<ParseUnit>()
+            {
+                TokenUnits[TokenType.Print],
+                TokenUnits[TokenType.LeftBracket],
+                Expression,
+                TokenUnits[TokenType.RightBracket],
+            };
+            PrintStatement.Execute = arg =>
+            {
+                var outputExp = arg.Instance.Children[2].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                var outputStr = outputExp.GetString();
+                arg.StdOut.Write(outputStr);
+
+                return new ExeResult()
+                {
+                    StatementResult = new StatementResultOneCase()
+                    {
+                        Overlay = arg.Block.Overlay,
+                        ExecutionResultType = StatementResultType.Normal,
+                    }
+                };
+
+            };
 
             ReturnStatement.Name = "Return Statement";
             ReturnStatement.Type = ParseUnitType.Single;
@@ -1027,7 +1060,7 @@ namespace code0k_cc.Parse
                     var trueOverlayBlock = new OverlayBlock(trueOverlay, arg.Block.Block);
                     var falseOverlayBlock = new OverlayBlock(falseOverlay, arg.Block.Block);
 
-                    var trueRetRaw = arg.Instance.Children[4].Execute(new ExeArg() { Block = trueOverlayBlock }).StatementResult;
+                    var trueRetRaw = arg.Instance.Children[4].Execute(new ExeArg() { Block = trueOverlayBlock,StdOut = arg.StdOut}).StatementResult;
                     StatementResult falseRetRaw;
                     if (arg.Instance.Children[5] == null)
                     {
@@ -1039,7 +1072,7 @@ namespace code0k_cc.Parse
                     }
                     else
                     {
-                        falseRetRaw = arg.Instance.Children[5].Execute(new ExeArg() { Block = falseOverlayBlock }).StatementResult;
+                        falseRetRaw = arg.Instance.Children[5].Execute(new ExeArg() { Block = falseOverlayBlock, StdOut = arg.StdOut }).StatementResult;
                     }
 
 
@@ -1066,31 +1099,6 @@ namespace code0k_cc.Parse
             };
             OptionalElseStatement.Execute = arg => arg.Instance.Children[1].Execute(arg);
 
-            //ForStatement.Name = "For Statement";
-            //ForStatement.Type = ParseUnitType.Single;
-            //ForStatement.ChildType = ParseUnitChildType.AllChild;
-            //ForStatement.Children = new List<ParseUnit>()
-            //{
-            //    //todo change for statement parse unit
-            //    // for i = a to/downto b do
-            //    // where b-a (a-b for downto) must be a constant type and must be an integer with positive/zero value
-            //    TokenUnits[TokenType.For],
-            //    TokenUnits[TokenType.LeftBracket],
-            //    Expression,
-            //    TokenUnits[TokenType.Semicolon],
-            //    Expression,
-            //    TokenUnits[TokenType.Semicolon],
-            //    Expression,
-            //    TokenUnits[TokenType.RightBracket],
-            //    TokenUnits[TokenType.Max],
-            //    TokenUnits[TokenType.LeftBracket],
-            //    Expression,
-            //    TokenUnits[TokenType.RightBracket],
-            //    CompoundStatement
-            //};
-
-            ////todo
-            //ForStatement.Execute = arg => throw new NotImplementedException();
 
             WhileStatement.Name = "While Statement";
             WhileStatement.Type = ParseUnitType.Single;
@@ -1189,7 +1197,8 @@ namespace code0k_cc.Parse
                                             Debug.Assert(( (NizkBoolValue) conditionVar.Value ).Value);
                                             retSave = arg.Instance.Children[8].Execute(new ExeArg()
                                             {
-                                                Block = new OverlayBlock(item.Overlay, arg.Block.Block)
+                                                Block = new OverlayBlock(item.Overlay, arg.Block.Block),
+                                                StdOut = arg.StdOut,
                                             }).StatementResult;
                                         }
                                         else
@@ -1207,7 +1216,8 @@ namespace code0k_cc.Parse
                                                 // execute
                                                 TrueCase = arg.Instance.Children[8].Execute(new ExeArg()
                                                 {
-                                                    Block = new OverlayBlock(new Overlay(item.Overlay), arg.Block.Block)
+                                                    Block = new OverlayBlock(new Overlay(item.Overlay), arg.Block.Block),
+                                                    StdOut = arg.StdOut,
                                                 }).StatementResult,
                                             };
 
@@ -1305,7 +1315,7 @@ namespace code0k_cc.Parse
                     // new block
                     BasicBlock newBlock = new BasicBlock(arg.Block.Block);
                     OverlayBlock newOverlayBlock = new OverlayBlock(arg.Block.Overlay, newBlock);
-                    return arg.Instance.Children[1].Execute(new ExeArg() { Block = newOverlayBlock });
+                    return arg.Instance.Children[1].Execute(new ExeArg() { Block = newOverlayBlock, StdOut = arg.StdOut, });
                 }
             };
 
@@ -1430,7 +1440,7 @@ namespace code0k_cc.Parse
                 }
                 else if (arg.Instance.Children[0].ParseUnit == TokenUnits[TokenType.String])
                 {
-                    string str = arg.Instance.Children[0].Token.Value; 
+                    string str = arg.Instance.Children[0].Token.Value;
                     var retVar = NType.String.Parse(str);
                     return new ExeResult()
                     {

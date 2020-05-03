@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using code0k_cc.Parse;
 using code0k_cc.Runtime.Block;
 
@@ -11,5 +12,7 @@ namespace code0k_cc.Runtime.ExeArg
         public ParseInstance Instance;
 
         public CallStack CallStack;
+
+        public TextWriter StdOut;
     }
 }

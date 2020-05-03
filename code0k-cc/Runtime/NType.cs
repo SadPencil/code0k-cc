@@ -820,6 +820,7 @@ namespace code0k_cc.Runtime
             yield return NType.Void;
             yield return NType.UInt32;
             yield return NType.Bool;
+            yield return NType.String;
             yield return NType.Function;
 
             yield break;
@@ -827,6 +828,7 @@ namespace code0k_cc.Runtime
 
         public static IEnumerable<NType> GetGenericsNTypes()
         {
+            throw new NotImplementedException();
             yield break;
         }
 

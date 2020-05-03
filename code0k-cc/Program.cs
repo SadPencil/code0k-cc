@@ -34,7 +34,7 @@ namespace code0k_cc
 
             OverlayBlock blk = new OverlayBlock(new Overlay(null), new BasicBlock(null));
             Debug.WriteLine($"root blk {blk}");
-            var ret = mainProgram.Execute(new ExeArg() { Block = blk });
+            var ret = mainProgram.Execute(new ExeArg() { Block = blk,StdOut = Console.Out });
 
 
             //debug
