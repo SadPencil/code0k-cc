@@ -762,6 +762,7 @@ namespace code0k_cc.Runtime
         {
             yield return NType.Void;
             yield return NType.UInt32;
+            yield return NType.Bool;
             yield return NType.Function;
 
             yield break;
