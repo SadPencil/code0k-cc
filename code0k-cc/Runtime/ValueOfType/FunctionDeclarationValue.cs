@@ -12,7 +12,7 @@ namespace code0k_cc.Runtime.ValueOfType
         /// <summary>
         /// Instance of CompoundStatement
         /// </summary>
-        public ParseInstance Instance;
+        public ParseUnitInstance Instance;
 
         public string FunctionName;
         public NType ReturnType;

@@ -21,7 +21,7 @@ namespace code0k_cc.Parse
     {
         private static ParseUnit RootParseUnit { get; } = GetRootParseUnit();
 
-        internal static ParseInstance Parse(in IEnumerable<Token> tokens)
+        internal static ParseUnitInstance Parse(in IEnumerable<Token> tokens)
         {
             IReadOnlyList<Token> tokenList = tokens.ToList();
             var ret = Parse(RootParseUnit, tokenList, 0, 0);
@@ -75,7 +75,7 @@ namespace code0k_cc.Parse
                     {
                         Position = pos + 1,
                         Success = true,
-                        ResultInstance = new ParseInstance()
+                        ResultInstance = new ParseUnitInstance()
                         {
                             Children = null,
                             ParseUnit = unit,
@@ -112,7 +112,7 @@ namespace code0k_cc.Parse
                         {
                             Position = pos,
                             Success = false,
-                            ResultInstance = new ParseInstance()
+                            ResultInstance = new ParseUnitInstance()
                             {
                                 Children = null,
                                 ParseUnit = unit,
@@ -135,7 +135,7 @@ namespace code0k_cc.Parse
                 ParseResult badResult = null;
                 int newPos = pos;
                 var newRowCol = (Row: token.Row, Column: token.Column);
-                List<ParseInstance> children = new List<ParseInstance>();
+                List<ParseUnitInstance> children = new List<ParseUnitInstance>();
                 foreach (var unitChild in unit.Children)
                 {
                     var ret = Parse(unitChild, tokenList, newPos, depth + 1);
@@ -186,7 +186,7 @@ namespace code0k_cc.Parse
                     {
                         Position = newPos,
                         Success = true,
-                        ResultInstance = new ParseInstance()
+                        ResultInstance = new ParseUnitInstance()
                         {
                             Children = children,
                             ParseUnit = unit,
@@ -262,9 +262,9 @@ namespace code0k_cc.Parse
                     {
                         Position = goodResult.Position,
                         Success = true,
-                        ResultInstance = new ParseInstance()
+                        ResultInstance = new ParseUnitInstance()
                         {
-                            Children = new List<ParseInstance>() { goodResult.ResultInstance },
+                            Children = new List<ParseUnitInstance>() { goodResult.ResultInstance },
                             ParseUnit = unit,
                             Token = null
                         },
@@ -406,12 +406,11 @@ namespace code0k_cc.Parse
                 }
 
                 // execute function
-                var funRet = funcDec.Instance.Execute(new ExeArg()
-                {
-                    Block = newBlockOverlay,
-                    CallStack = new CallStack(funcDec, arg.CallStack),
-                    StdOut = arg.StdOut,
-                }).StatementResult;
+                var newExeArg = arg.Clone() as ExeArg;
+                newExeArg.Block = newBlockOverlay;
+                newExeArg.CallStack = new CallStack(funcDec, arg.CallStack);
+
+                var funRet = funcDec.Instance.Execute(newExeArg).StatementResult;
                 var funRetVar = NizkUtils.NizkCombineFunctionResult(funRet, funcDec.ReturnType);
                 return new ExeResult() { ExpressionResult = new ExpressionResult() { VariableRefRef = new VariableRefRef(new VariableRef() { Variable = funRetVar }) } };
             }
@@ -428,7 +427,7 @@ namespace code0k_cc.Parse
                 eolUnit,
             };
 
-            MainProgram.Execute = arg =>
+            MainProgram.Execute = (instance, arg) =>
             {
                 //arg.block: provide built-in vars if any
 
@@ -436,11 +435,14 @@ namespace code0k_cc.Parse
                 var mainBlock = new BasicBlock(arg.Block.Block);
                 var mainBlockOverlay = new OverlayBlock(arg.Block.Overlay, mainBlock);
 
-                _ = arg.Instance.Children[0]?.Execute(new ExeArg() { Block = mainBlockOverlay, StdOut = arg.StdOut });
-                ParseInstance programLoopInstance = arg.Instance.Children[1];
+                var newExeArg = arg.Clone() as ExeArg;
+                newExeArg.Block = mainBlockOverlay;
+
+                _ = instance.Children[0]?.Execute(newExeArg);
+                ParseUnitInstance programLoopInstance = instance.Children[1];
                 while (programLoopInstance != null)
                 {
-                    _ = programLoopInstance.Children[0]?.Execute(new ExeArg() { Block = mainBlockOverlay, StdOut = arg.StdOut });
+                    _ = programLoopInstance.Children[0]?.Execute(newExeArg);
                     programLoopInstance = programLoopInstance.Children[1];
                 }
 
@@ -466,11 +468,11 @@ namespace code0k_cc.Parse
                 GlobalFunctionDeclarationStatement,
                 FunctionImplementation,
             };
-            MainProgramItem.Execute = arg =>
+            MainProgramItem.Execute = (instance, arg) =>
             {
 
-                Debug.WriteLine("Executing Global " + arg.Instance.Children[0].ParseUnit.Name);
-                return arg.Instance.Children[0].Execute(arg);
+                Debug.WriteLine("Executing Global " + instance.Children[0].ParseUnit.Name);
+                return instance.Children[0].Execute(arg);
             };
 
             MainProgramLoop.Name = "Main Program Loop";
@@ -499,16 +501,16 @@ namespace code0k_cc.Parse
                 Expression,
                 TokenUnits[TokenType.RightBracket],
             };
-            FunctionDeclaration.Execute = arg =>
+            FunctionDeclaration.Execute = (instance, arg) =>
             {
-                var typeUnitResult = arg.Instance.Children[0].Execute(arg).TypeUnitResult;
+                var typeUnitResult = instance.Children[0].Execute(arg).TypeUnitResult;
                 var funRetNType = NType.GetNType(typeUnitResult);
 
-                var funName = arg.Instance.Children[1].Token.Value;
+                var funName = instance.Children[1].Token.Value;
 
-                var funArgs = arg.Instance.Children[3]?.Execute(arg)?.FunctionDeclarationValue.Arguments;
+                var funArgs = instance.Children[3]?.Execute(arg)?.FunctionDeclarationValue.Arguments;
 
-                var maxIntVar = arg.Instance.Children[7].Execute(arg)?.ExpressionResult.VariableRefRef.VariableRef.Variable;
+                var maxIntVar = instance.Children[7].Execute(arg)?.ExpressionResult.VariableRefRef.VariableRef.Variable;
 
                 var maxInt = ( (NizkUInt32Value) NType.UInt32.Assign(maxIntVar, NType.UInt32).Value ).Value;
 
@@ -535,12 +537,12 @@ namespace code0k_cc.Parse
                 TokenUnits[TokenType.Identifier],
                 TypeUnitGenerics,
             };
-            TypeUnit.Execute = arg => new ExeResult()
+            TypeUnit.Execute = (instance, arg) => new ExeResult()
             {
                 TypeUnitResult = new TypeResult()
                 {
-                    TypeName = arg.Instance.Children[0].Token.Value,
-                    Generics = arg.Instance.Children[1]?.Execute(new ExeArg() { Block = arg.Block, StdOut = arg.StdOut })?.GenericsTypeResult
+                    TypeName = instance.Children[0].Token.Value,
+                    Generics = instance.Children[1]?.Execute(arg)?.GenericsTypeResult
                 }
             };
 
@@ -554,10 +556,10 @@ namespace code0k_cc.Parse
                 TypeUnitGenericsLoop,
                 TokenUnits[TokenType.GreaterThan],
             };
-            TypeUnitGenerics.Execute = arg =>
+            TypeUnitGenerics.Execute = (instance, arg) =>
             {
-                TypeResult type1 = arg.Instance.Children[1].Execute(arg).TypeUnitResult;
-                GenericsTypeResult typeRest = arg.Instance.Children[2]?.Execute(arg)?.GenericsTypeResult;
+                TypeResult type1 = instance.Children[1].Execute(arg).TypeUnitResult;
+                GenericsTypeResult typeRest = instance.Children[2]?.Execute(arg)?.GenericsTypeResult;
 
                 GenericsTypeResult retResult = new GenericsTypeResult() { Types = new List<TypeResult>() { type1 } };
 
@@ -592,13 +594,13 @@ namespace code0k_cc.Parse
                 FunctionDeclaration,
                 CompoundStatement
             };
-            FunctionImplementation.Execute = arg =>
+            FunctionImplementation.Execute = (instance, arg) =>
             {
                 // 1. re-declare the function if it is already declared
-                var functionName = arg.Instance.Children[0].Execute(arg).FunctionDeclarationValue.FunctionName;
+                var functionName = instance.Children[0].Execute(arg).FunctionDeclarationValue.FunctionName;
                 // 2. set the FunctionDeclarationValue.Instance to the compound statement
                 var funT = (FunctionDeclarationValue) arg.Block.GetVariableRefRef(functionName, false, false).VariableRef.Variable.Value;
-                funT.Instance = arg.Instance.Children[1];
+                funT.Instance = instance.Children[1];
                 funT.ParentBlock = arg.Block.Block;
 
                 return new ExeResult() { FunctionDeclarationValue = funT };
@@ -613,11 +615,11 @@ namespace code0k_cc.Parse
                 FunctionDeclarationArgumentUnit,
                 FunctionDeclarationArgumentLoop,
             };
-            FunctionDeclarationArguments.Execute = arg =>
+            FunctionDeclarationArguments.Execute = (instance, arg) =>
             {
                 var arguments = new List<(string VarName, NType Type)>();
-                var unitIns = arg.Instance.Children[0];
-                var loopIns = arg.Instance.Children[1];
+                var unitIns = instance.Children[0];
+                var loopIns = instance.Children[1];
                 while (true)
                 {
                     var typeResult = unitIns.Children[0].Execute(arg).TypeUnitResult;
@@ -663,11 +665,11 @@ namespace code0k_cc.Parse
                 Statement,
                 StatementBody
             };
-            StatementBody.Execute = arg =>
+            StatementBody.Execute = (instance, arg) =>
             {
                 // note: adding block level is done at CompoundStatement instead of here
-                var stmtRawRet = arg.Instance.Children[0].Execute(arg).StatementResult;
-                var nextStmtInstance = arg.Instance.Children[1];
+                var stmtRawRet = instance.Children[0].Execute(arg).StatementResult;
+                var nextStmtInstance = instance.Children[1];
                 switch (stmtRawRet)
                 {
                     case StatementResultOneCase stmtRet:
@@ -732,11 +734,9 @@ namespace code0k_cc.Parse
                                                 break;
                                             case StatementResultType.Normal:
                                                 // execute next statement at this overlay
-                                                var retRaw = nextStmtInstance.Execute(new ExeArg()
-                                                {
-                                                    Block = new OverlayBlock(item.Overlay, arg.Block.Block),
-                                                    StdOut = arg.StdOut
-                                                }).StatementResult;
+                                                var newExeArg = arg.Clone() as ExeArg;
+                                                newExeArg.Block = new OverlayBlock(item.Overlay, arg.Block.Block);
+                                                var retRaw = nextStmtInstance.Execute(newExeArg).StatementResult;
 
                                                 //optimization: if all the retRaw are all Break or all Continue or all normal (not possible), combining overlay can be done here
                                                 retRaw = NizkUtils.NizkCombineStatementResult(retRaw, arg.Block.Block);
@@ -782,7 +782,7 @@ namespace code0k_cc.Parse
                 StatementSemicolonCollection,
                 TokenUnits[TokenType.Semicolon],
             };
-            StatementSemicolon.Execute = arg => arg.Instance.Children[0].Execute(arg);
+            StatementSemicolon.Execute = (instance, arg) => instance.Children[0].Execute(arg);
 
             StatementSemicolonCollection.Name = "Statement Semicolon Collection";
             StatementSemicolonCollection.Type = ParseUnitType.SingleOptional; // null statement included
@@ -796,12 +796,12 @@ namespace code0k_cc.Parse
                 PrintStatement,
                 Expression,
             };
-            StatementSemicolonCollection.Execute = arg =>
+            StatementSemicolonCollection.Execute = (instance, arg) =>
              {
-                 Debug.WriteLine("i.e. Statement " + arg.Instance.Children[0].ParseUnit.Name);
-                 if (arg.Instance.Children[0].ParseUnit == Expression)
+                 Debug.WriteLine("i.e. Statement " + instance.Children[0].ParseUnit.Name);
+                 if (instance.Children[0].ParseUnit == Expression)
                  {
-                     _ = arg.Instance.Children[0].Execute(arg);
+                     _ = instance.Children[0].Execute(arg);
 
                      return new ExeResult()
                      {
@@ -814,7 +814,7 @@ namespace code0k_cc.Parse
                  }
                  else
                  {
-                     return arg.Instance.Children[0].Execute(arg);
+                     return instance.Children[0].Execute(arg);
                  }
              };
 
@@ -830,10 +830,10 @@ namespace code0k_cc.Parse
                 WhileStatement,
                 StatementSemicolon,
             };
-            Statement.Execute = arg =>
+            Statement.Execute = (instance, arg) =>
             {
-                Debug.WriteLine("Executing Statement " + arg.Instance.Children[0].ParseUnit.Name);
-                return arg.Instance.Children[0].Execute(arg);
+                Debug.WriteLine("Executing Statement " + instance.Children[0].ParseUnit.Name);
+                return instance.Children[0].Execute(arg);
             };
 
             GlobalDefinitionStatement.Name = "Global Definition Statement";
@@ -844,7 +844,7 @@ namespace code0k_cc.Parse
                 DefinitionStatement,
                 TokenUnits[TokenType.Semicolon],
             };
-            GlobalDefinitionStatement.Execute = arg => arg.Instance.Children[0].Execute(arg);
+            GlobalDefinitionStatement.Execute = (instance, arg) => instance.Children[0].Execute(arg);
 
             GlobalFunctionDeclarationStatement.Name = "Global Function Declaration Statement";
             GlobalFunctionDeclarationStatement.Type = ParseUnitType.Single;
@@ -854,7 +854,7 @@ namespace code0k_cc.Parse
                 FunctionDeclaration,
                 TokenUnits[TokenType.Semicolon],
             };
-            GlobalFunctionDeclarationStatement.Execute = arg => arg.Instance.Children[0].Execute(arg);
+            GlobalFunctionDeclarationStatement.Execute = (instance, arg) => instance.Children[0].Execute(arg);
 
             PrintStatement.Name = "Print Statement";
             PrintStatement.Type = ParseUnitType.Single;
@@ -866,9 +866,9 @@ namespace code0k_cc.Parse
                 Expression,
                 TokenUnits[TokenType.RightBracket],
             };
-            PrintStatement.Execute = arg =>
+            PrintStatement.Execute = (instance, arg) =>
             {
-                var outputExp = arg.Instance.Children[2].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                var outputExp = instance.Children[2].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
                 var outputStr = outputExp.GetString();
                 arg.StdOut.Write(outputStr);
 
@@ -892,7 +892,7 @@ namespace code0k_cc.Parse
                 ReturnStatementA,
                 ReturnStatementB,
             };
-            ReturnStatement.Execute = arg => arg.Instance.Children[0].Execute(arg);
+            ReturnStatement.Execute = (instance, arg) => instance.Children[0].Execute(arg);
 
 
             ReturnStatementA.Name = "Return Statement";
@@ -903,9 +903,9 @@ namespace code0k_cc.Parse
                 TokenUnits[TokenType.Return],
                 Expression,
             };
-            ReturnStatementA.Execute = arg =>
+            ReturnStatementA.Execute = (instance, arg) =>
             {
-                var expRefRef = arg.Instance.Children[1].Execute(arg).ExpressionResult.VariableRefRef;
+                var expRefRef = instance.Children[1].Execute(arg).ExpressionResult.VariableRefRef;
                 return new ExeResult()
                 {
                     StatementResult = new StatementResultOneCase()
@@ -924,7 +924,7 @@ namespace code0k_cc.Parse
             {
                 TokenUnits[TokenType.Return],
             };
-            ReturnStatementB.Execute = arg =>
+            ReturnStatementB.Execute = (instance, arg) =>
             {
                 return new ExeResult()
                 {
@@ -944,7 +944,7 @@ namespace code0k_cc.Parse
             {
                 TokenUnits[TokenType.Break],
             };
-            BreakStatement.Execute = arg => new ExeResult()
+            BreakStatement.Execute = (instance, arg) => new ExeResult()
             {
                 StatementResult = new StatementResultOneCase()
                 {
@@ -960,7 +960,7 @@ namespace code0k_cc.Parse
             {
                 TokenUnits[TokenType.Continue],
             };
-            ContinueStatement.Execute = arg => new ExeResult()
+            ContinueStatement.Execute = (instance, arg) => new ExeResult()
             {
                 StatementResult = new StatementResultOneCase()
                 {
@@ -979,13 +979,13 @@ namespace code0k_cc.Parse
                 TokenUnits[TokenType.Assign],
                 Expression
             };
-            DefinitionStatement.Execute = arg =>
+            DefinitionStatement.Execute = (instance, arg) =>
             {
-                var typeR = arg.Instance.Children[0].Execute(arg).TypeUnitResult;
+                var typeR = instance.Children[0].Execute(arg).TypeUnitResult;
                 var ntype = NType.GetNType(typeR);
-                var varName = arg.Instance.Children[1].Token.Value;
+                var varName = instance.Children[1].Token.Value;
 
-                var expRefRef = arg.Instance.Children[3].Execute(arg).ExpressionResult.VariableRefRef;
+                var expRefRef = instance.Children[3].Execute(arg).ExpressionResult.VariableRefRef;
 
                 var newExp = expRefRef.VariableRef.Variable.Assign(ntype);
 
@@ -1017,10 +1017,10 @@ namespace code0k_cc.Parse
                 CompoundStatement,
                 OptionalElseStatement
             };
-            IfStatement.Execute = arg =>
+            IfStatement.Execute = (instance, arg) =>
             {
                 // first : judge whether the expression is nizk node
-                var conditionVar = arg.Instance.Children[2].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                var conditionVar = instance.Children[2].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
                 if (conditionVar.Type != NType.Bool)
                 {
                     //try implicit convert to bool type
@@ -1032,12 +1032,12 @@ namespace code0k_cc.Parse
                     // traditional if-statement   
                     if (( (NizkBoolValue) conditionVar.Value ).Value)
                     {
-                        return new ExeResult() { StatementResult = arg.Instance.Children[4].Execute(arg).StatementResult };
+                        return new ExeResult() { StatementResult = instance.Children[4].Execute(arg).StatementResult };
                     }
 
                     else
                     {
-                        if (arg.Instance.Children[5] == null)
+                        if (instance.Children[5] == null)
                         {
                             return new ExeResult()
                             {
@@ -1050,7 +1050,7 @@ namespace code0k_cc.Parse
                         }
                         else
                         {
-                            return new ExeResult() { StatementResult = arg.Instance.Children[5].Execute(arg).StatementResult };
+                            return new ExeResult() { StatementResult = instance.Children[5].Execute(arg).StatementResult };
                         }
                     }
                 }
@@ -1066,9 +1066,14 @@ namespace code0k_cc.Parse
                     var trueOverlayBlock = new OverlayBlock(trueOverlay, arg.Block.Block);
                     var falseOverlayBlock = new OverlayBlock(falseOverlay, arg.Block.Block);
 
-                    var trueRetRaw = arg.Instance.Children[4].Execute(new ExeArg() { Block = trueOverlayBlock, StdOut = arg.StdOut }).StatementResult;
+                    StatementResult trueRetRaw;
+                    {
+                        var newExeArg = arg.Clone() as ExeArg;
+                        newExeArg.Block = trueOverlayBlock;
+                        trueRetRaw = instance.Children[4].Execute(newExeArg).StatementResult;
+                    }
                     StatementResult falseRetRaw;
-                    if (arg.Instance.Children[5] == null)
+                    if (instance.Children[5] == null)
                     {
                         falseRetRaw = new StatementResultOneCase()
                         {
@@ -1078,7 +1083,9 @@ namespace code0k_cc.Parse
                     }
                     else
                     {
-                        falseRetRaw = arg.Instance.Children[5].Execute(new ExeArg() { Block = falseOverlayBlock, StdOut = arg.StdOut }).StatementResult;
+                        var newExeArg = arg.Clone() as ExeArg;
+                        newExeArg.Block = falseOverlayBlock;
+                        falseRetRaw = instance.Children[5].Execute(newExeArg).StatementResult;
                     }
 
 
@@ -1103,7 +1110,7 @@ namespace code0k_cc.Parse
                 TokenUnits[TokenType.Else],
                 CompoundStatement
             };
-            OptionalElseStatement.Execute = arg => arg.Instance.Children[1].Execute(arg);
+            OptionalElseStatement.Execute = (instance, arg) => instance.Children[1].Execute(arg);
 
 
             WhileStatement.Name = "While Statement";
@@ -1121,10 +1128,10 @@ namespace code0k_cc.Parse
                 TokenUnits[TokenType.RightBracket],
                 CompoundStatement
             };
-            WhileStatement.Execute = arg =>
+            WhileStatement.Execute = (instance, arg) =>
             {
                 // get max loop count
-                var maxIntVar = arg.Instance.Children[6].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                var maxIntVar = instance.Children[6].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
                 if (maxIntVar.Type != NType.UInt32)
                 {
                     //try implicit convert to UInt32 type
@@ -1155,7 +1162,7 @@ namespace code0k_cc.Parse
                 {
 
                     // execute condition var and judge its content every time in the loop
-                    var conditionVar = arg.Instance.Children[2].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                    var conditionVar = instance.Children[2].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
                     if (conditionVar.Type != NType.Bool)
                     {
                         //try implicit convert to bool type
@@ -1198,18 +1205,20 @@ namespace code0k_cc.Parse
                                     case StatementResultType.Continue:
                                     case StatementResultType.Normal:
                                         StatementResult retSave;
+
                                         if (conditionVar.Value.IsConstant)
                                         {
                                             Debug.Assert(( (NizkBoolValue) conditionVar.Value ).Value);
-                                            retSave = arg.Instance.Children[8].Execute(new ExeArg()
-                                            {
-                                                Block = new OverlayBlock(item.Overlay, arg.Block.Block),
-                                                StdOut = arg.StdOut,
-                                            }).StatementResult;
+                                            var newExeArg = arg.Clone() as ExeArg;
+                                            newExeArg.Block = new OverlayBlock(item.Overlay, arg.Block.Block);
+                                            retSave = instance.Children[8].Execute(newExeArg).StatementResult;
                                         }
                                         else
                                         {
                                             // while (condition) is just like while (true){if (condition) do_something; else break;} 
+
+                                            var newExeArg = arg.Clone() as ExeArg;
+                                            newExeArg.Block = new OverlayBlock(new Overlay(item.Overlay), arg.Block.Block);
 
                                             retSave = new StatementResultTwoCase()
                                             {
@@ -1220,11 +1229,7 @@ namespace code0k_cc.Parse
                                                     Overlay = new Overlay(item.Overlay),
                                                 },
                                                 // execute
-                                                TrueCase = arg.Instance.Children[8].Execute(new ExeArg()
-                                                {
-                                                    Block = new OverlayBlock(new Overlay(item.Overlay), arg.Block.Block),
-                                                    StdOut = arg.StdOut,
-                                                }).StatementResult,
+                                                TrueCase = instance.Children[8].Execute(newExeArg).StatementResult,
                                             };
 
                                         }
@@ -1310,9 +1315,9 @@ namespace code0k_cc.Parse
                 StatementBody,
                 TokenUnits[TokenType.End],
             };
-            CompoundStatement.Execute = arg =>
+            CompoundStatement.Execute = (instance, arg) =>
             {
-                if (arg.Instance.Children[1] == null)
+                if (instance.Children[1] == null)
                 {
                     return new ExeResult() { StatementResult = new StatementResultOneCase() { ExecutionResultType = StatementResultType.Normal, Overlay = arg.Block.Overlay } };
                 }
@@ -1321,7 +1326,9 @@ namespace code0k_cc.Parse
                     // new block
                     BasicBlock newBlock = new BasicBlock(arg.Block.Block);
                     OverlayBlock newOverlayBlock = new OverlayBlock(arg.Block.Overlay, newBlock);
-                    return arg.Instance.Children[1].Execute(new ExeArg() { Block = newOverlayBlock, StdOut = arg.StdOut, });
+                    var newExeArg = arg.Clone() as ExeArg;
+                    newExeArg.Block = newOverlayBlock;
+                    return instance.Children[1].Execute(newExeArg);
                 }
             };
 
@@ -1335,7 +1342,7 @@ namespace code0k_cc.Parse
                 TokenUnits[TokenType.Identifier],
                 TokenUnits[TokenType.Semicolon],
             };
-            GlobalNizkDefinitionStatement.Execute = arg =>
+            GlobalNizkDefinitionStatement.Execute = (instance, arg) =>
             {
                 //// note that these variable are so special that they are stored at the ROOT block and the ROOT overlay
                 //// todo maybe a nicer way? maybe just define at current block and let "MainProgram" handle it?
@@ -1354,18 +1361,18 @@ namespace code0k_cc.Parse
                 //OverlayBlock rootOverlayBlock = new OverlayBlock(overlay, rootBlock);
 
 
-                var varName = arg.Instance.Children[2].Token.Value;
+                var varName = instance.Children[2].Token.Value;
 
                 NizkVariableType nizkType;
-                if (arg.Instance.Children[0].Children[0].Token.TokenType == TokenType.Input)
+                if (instance.Children[0].Children[0].Token.TokenType == TokenType.Input)
                 {
                     nizkType = NizkVariableType.Input;
                 }
-                else if (arg.Instance.Children[0].Children[0].Token.TokenType == TokenType.NizkInput)
+                else if (instance.Children[0].Children[0].Token.TokenType == TokenType.NizkInput)
                 {
                     nizkType = NizkVariableType.NizkInput;
                 }
-                else if (arg.Instance.Children[0].Children[0].Token.TokenType == TokenType.Output)
+                else if (instance.Children[0].Children[0].Token.TokenType == TokenType.Output)
                 {
                     nizkType = NizkVariableType.Output;
                 }
@@ -1374,7 +1381,7 @@ namespace code0k_cc.Parse
                     throw new Exception("Assert failed!");
                 }
 
-                NType type = NType.GetNType(arg.Instance.Children[1].Execute(arg).TypeUnitResult);
+                NType type = NType.GetNType(instance.Children[1].Execute(arg).TypeUnitResult);
                 arg.Block.AddVariable(varName, type.GetNewNizkVariable(), false);
                 var newVar = arg.Block.GetVariableRefRef(varName, false, true);
                 newVar.VariableRef.NizkAttribute = nizkType;
@@ -1408,10 +1415,10 @@ namespace code0k_cc.Parse
                 TokenUnits[TokenType.Identifier],
                 LeftValueSuffixLoop,
             };
-            LeftValue.Execute = arg =>
+            LeftValue.Execute = (instance, arg) =>
             {
                 //todo LeftValueSuffixItem
-                string varName = arg.Instance.Children[0].Token.Value;
+                string varName = instance.Children[0].Token.Value;
                 var varRefRef = arg.Block.GetVariableRefRef(varName, true, true);
                 return new ExeResult() { ExpressionResult = new ExpressionResult() { VariableRefRef = varRefRef } };
             };
@@ -1450,7 +1457,7 @@ namespace code0k_cc.Parse
             {
                 Expressions[OPERATOR_PRECEDENCE_LEVEL - 1]
             };
-            Expression.Execute = arg => new ExeResult() { ExpressionResult = arg.Instance.Children[0].Execute(arg).ExpressionResult };
+            Expression.Execute = (instance, arg) => new ExeResult() { ExpressionResult = instance.Children[0].Execute(arg).ExpressionResult };
 
             BracketExpression.Name = "Bracket Expression";
             BracketExpression.Type = ParseUnitType.Single;
@@ -1461,7 +1468,7 @@ namespace code0k_cc.Parse
                 Expression,
                 TokenUnits[TokenType.RightBracket]
             };
-            BracketExpression.Execute = arg => new ExeResult() { ExpressionResult = arg.Instance.Children[1].Execute(arg).ExpressionResult };
+            BracketExpression.Execute = (instance, arg) => new ExeResult() { ExpressionResult = instance.Children[1].Execute(arg).ExpressionResult };
 
 
             foreach (var i in Enumerable.Range(0, OPERATOR_PRECEDENCE_LEVEL))
@@ -1485,7 +1492,7 @@ namespace code0k_cc.Parse
 
             // level 0: Identifier or number 
             Expressions[0].Children = new List<ParseUnit>() { Operators[0] };
-            Expressions[0].Execute = arg => arg.Instance.Children[0].Execute(arg);
+            Expressions[0].Execute = (instance, arg) => instance.Children[0].Execute(arg);
 
             Operators[0].Children = new List<ParseUnit>()
             {
@@ -1496,11 +1503,11 @@ namespace code0k_cc.Parse
                 TokenUnits[TokenType.False],
                 BracketExpression,
             };
-            Operators[0].Execute = arg =>
+            Operators[0].Execute = (instance, arg) =>
             {
-                if (arg.Instance.Children[0].ParseUnit == TokenUnits[TokenType.Identifier])
+                if (instance.Children[0].ParseUnit == TokenUnits[TokenType.Identifier])
                 {
-                    string str = arg.Instance.Children[0].Token.Value;
+                    string str = instance.Children[0].Token.Value;
                     return new ExeResult()
                     {
                         ExpressionResult = new ExpressionResult()
@@ -1509,9 +1516,9 @@ namespace code0k_cc.Parse
                         }
                     };
                 }
-                else if (arg.Instance.Children[0].ParseUnit == TokenUnits[TokenType.Number])
+                else if (instance.Children[0].ParseUnit == TokenUnits[TokenType.Number])
                 {
-                    string str = arg.Instance.Children[0].Token.Value;
+                    string str = instance.Children[0].Token.Value;
                     //todo: currently, only support UInt32, will add other number type later
                     var retVar = NType.UInt32.Parse(str);
                     return new ExeResult()
@@ -1519,32 +1526,32 @@ namespace code0k_cc.Parse
                         ExpressionResult = new ExpressionResult() { VariableRefRef = new VariableRefRef(new VariableRef() { Variable = retVar }) }
                     };
                 }
-                else if (arg.Instance.Children[0].ParseUnit == TokenUnits[TokenType.String])
+                else if (instance.Children[0].ParseUnit == TokenUnits[TokenType.String])
                 {
-                    string str = arg.Instance.Children[0].Token.Value;
+                    string str = instance.Children[0].Token.Value;
                     var retVar = NType.String.Parse(str);
                     return new ExeResult()
                     {
                         ExpressionResult = new ExpressionResult() { VariableRefRef = new VariableRefRef(new VariableRef() { Variable = retVar }) }
                     };
                 }
-                else if (arg.Instance.Children[0].ParseUnit == TokenUnits[TokenType.True])
+                else if (instance.Children[0].ParseUnit == TokenUnits[TokenType.True])
                 {
                     return new ExeResult()
                     {
                         ExpressionResult = new ExpressionResult() { VariableRefRef = new VariableRefRef(new VariableRef() { Variable = NizkUtils.BoolTrue }) }
                     };
                 }
-                else if (arg.Instance.Children[0].ParseUnit == TokenUnits[TokenType.False])
+                else if (instance.Children[0].ParseUnit == TokenUnits[TokenType.False])
                 {
                     return new ExeResult()
                     {
                         ExpressionResult = new ExpressionResult() { VariableRefRef = new VariableRefRef(new VariableRef() { Variable = NizkUtils.BoolFalse }) }
                     };
                 }
-                else if (arg.Instance.Children[0].ParseUnit == BracketExpression)
+                else if (instance.Children[0].ParseUnit == BracketExpression)
                 {
-                    return arg.Instance.Children[0].Execute(arg);
+                    return instance.Children[0].Execute(arg);
                 }
                 else
                 {
@@ -1554,7 +1561,7 @@ namespace code0k_cc.Parse
 
             // level 1: not used
             Expressions[1].Children = new List<ParseUnit>() { Expressions[0] };
-            Expressions[1].Execute = arg => arg.Instance.Children[0].Execute(arg);
+            Expressions[1].Execute = (instance, arg) => instance.Children[0].Execute(arg);
 
             // level 2: Function call, Subscript, Member access
             //
@@ -1574,10 +1581,10 @@ namespace code0k_cc.Parse
 
 
             Expressions[2].Children = new List<ParseUnit>() { Expressions[1], ExpressionsHelper[2] };
-            Expressions[2].Execute = arg =>
+            Expressions[2].Execute = (instance, arg) =>
             {
-                var exp = arg.Instance.Children[0].Execute(arg).ExpressionResult;
-                var ins = arg.Instance.Children[1];
+                var exp = instance.Children[0].Execute(arg).ExpressionResult;
+                var ins = instance.Children[1];
                 while (true)
                 {
                     var op = ins?.Children[0]?.Children[0];
@@ -1673,7 +1680,7 @@ namespace code0k_cc.Parse
             {
                 Expression,
             };
-            FunctionCallArgumentItem.Execute = arg => arg.Instance.Children[0].Execute(arg);
+            FunctionCallArgumentItem.Execute = (instance, arg) => instance.Children[0].Execute(arg);
 
             ArraySubscripting.Name = "Array Subscripting";
             ArraySubscripting.Type = ParseUnitType.Single;
@@ -1684,7 +1691,7 @@ namespace code0k_cc.Parse
                 Expression,
                 TokenUnits[TokenType.RightSquareBracket],
             };
-            ArraySubscripting.Execute = arg =>
+            ArraySubscripting.Execute = (instance, arg) =>
             {
                 //todo
                 throw new NotImplementedException();
@@ -1698,7 +1705,7 @@ namespace code0k_cc.Parse
                 TokenUnits[TokenType.Dot],
                 LeftValue,
             };
-            MemberAccess.Execute = arg =>
+            MemberAccess.Execute = (instance, arg) =>
             {
                 //todo
                 throw new NotImplementedException();
@@ -1714,7 +1721,7 @@ namespace code0k_cc.Parse
                 ExpressionsHelper[3],
                 Expressions[2],
             };
-            Expressions[3].Execute = arg => arg.Instance.Children[0].Execute(arg);
+            Expressions[3].Execute = (instance, arg) => instance.Children[0].Execute(arg);
 
             ExpressionsHelper[3].Type = ParseUnitType.Single;
             ExpressionsHelper[3].Children = new List<ParseUnit>()
@@ -1722,23 +1729,23 @@ namespace code0k_cc.Parse
                 Operators[3],
                 Expressions[3],
             };
-            ExpressionsHelper[3].Execute = arg =>
+            ExpressionsHelper[3].Execute = (instance, arg) =>
             {
-                var variable = arg.Instance.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                var variable = instance.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
                 Variable retVar;
-                if (arg.Instance.Children[0].Children[0].Token.TokenType == TokenType.Plus)
+                if (instance.Children[0].Children[0].Token.TokenType == TokenType.Plus)
                 {
                     retVar = variable.Type.UnaryOperation(variable, UnaryOperation.UnaryPlus);
                 }
-                else if (arg.Instance.Children[0].Children[0].Token.TokenType == TokenType.Minus)
+                else if (instance.Children[0].Children[0].Token.TokenType == TokenType.Minus)
                 {
                     retVar = variable.Type.UnaryOperation(variable, UnaryOperation.UnaryMinus);
                 }
-                else if (arg.Instance.Children[0].Children[0].Token.TokenType == TokenType.BooleanNot)
+                else if (instance.Children[0].Children[0].Token.TokenType == TokenType.BooleanNot)
                 {
                     retVar = variable.Type.UnaryOperation(variable, UnaryOperation.BooleanNot);
                 }
-                else if (arg.Instance.Children[0].Children[0].Token.TokenType == TokenType.BitwiseNot)
+                else if (instance.Children[0].Children[0].Token.TokenType == TokenType.BitwiseNot)
                 {
                     retVar = variable.Type.UnaryOperation(variable, UnaryOperation.BitwiseNot);
                 }
@@ -1762,7 +1769,7 @@ namespace code0k_cc.Parse
 
             // level-4: not used
             Expressions[4].Children = new List<ParseUnit>() { Expressions[3] };
-            Expressions[4].Execute = arg => arg.Instance.Children[0].Execute(arg);
+            Expressions[4].Execute = (instance, arg) => instance.Children[0].Execute(arg);
 
             // level-5: Multiplication, division, remainder
             //
@@ -1790,10 +1797,10 @@ namespace code0k_cc.Parse
                     TokenUnits[TokenType.Mod],
                 };
 
-                Expressions[i].Execute = arg =>
+                Expressions[i].Execute = (instance, arg) =>
                 {
-                    var var1 = arg.Instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
-                    var h5ins = arg.Instance.Children[1];
+                    var var1 = instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                    var h5ins = instance.Children[1];
                     while (h5ins != null)
                     {
                         var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
@@ -1831,10 +1838,10 @@ namespace code0k_cc.Parse
 
                 Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.Plus], TokenUnits[TokenType.Minus] };
 
-                Expressions[i].Execute = arg =>
+                Expressions[i].Execute = (instance, arg) =>
                 {
-                    var var1 = arg.Instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
-                    var h5ins = arg.Instance.Children[1];
+                    var var1 = instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                    var h5ins = instance.Children[1];
                     while (h5ins != null)
                     {
                         var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
@@ -1876,10 +1883,10 @@ namespace code0k_cc.Parse
                 };
 
 
-                Expressions[i].Execute = arg =>
+                Expressions[i].Execute = (instance, arg) =>
                 {
-                    var var1 = arg.Instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
-                    var h5ins = arg.Instance.Children[1];
+                    var var1 = instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                    var h5ins = instance.Children[1];
                     while (h5ins != null)
                     {
                         var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
@@ -1916,7 +1923,7 @@ namespace code0k_cc.Parse
 
             // level-8: not used
             Expressions[8].Children = new List<ParseUnit>() { Expressions[7] };
-            Expressions[8].Execute = arg => arg.Instance.Children[0].Execute(arg);
+            Expressions[8].Execute = (instance, arg) => instance.Children[0].Execute(arg);
 
             // level-9: <   <= 	>   >=
             {
@@ -1933,10 +1940,10 @@ namespace code0k_cc.Parse
                 };
 
 
-                Expressions[i].Execute = arg =>
+                Expressions[i].Execute = (instance, arg) =>
                 {
-                    var var1 = arg.Instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
-                    var h5ins = arg.Instance.Children[1];
+                    var var1 = instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                    var h5ins = instance.Children[1];
                     while (h5ins != null)
                     {
                         var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
@@ -1977,10 +1984,10 @@ namespace code0k_cc.Parse
                 ExpressionsHelper[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper[i] };
 
                 Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.EqualTo], TokenUnits[TokenType.NotEqualTo] };
-                Expressions[i].Execute = arg =>
+                Expressions[i].Execute = (instance, arg) =>
                 {
-                    var var1 = arg.Instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
-                    var h5ins = arg.Instance.Children[1];
+                    var var1 = instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                    var h5ins = instance.Children[1];
                     while (h5ins != null)
                     {
                         var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
@@ -2013,10 +2020,10 @@ namespace code0k_cc.Parse
                 ExpressionsHelper[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper[i] };
 
                 Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.BitwiseAnd] };
-                Expressions[i].Execute = arg =>
+                Expressions[i].Execute = (instance, arg) =>
                 {
-                    var var1 = arg.Instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
-                    var h5ins = arg.Instance.Children[1];
+                    var var1 = instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                    var h5ins = instance.Children[1];
                     while (h5ins != null)
                     {
                         var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
@@ -2045,10 +2052,10 @@ namespace code0k_cc.Parse
                 ExpressionsHelper[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper[i] };
 
                 Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.BitwiseXor] };
-                Expressions[i].Execute = arg =>
+                Expressions[i].Execute = (instance, arg) =>
                 {
-                    var var1 = arg.Instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
-                    var h5ins = arg.Instance.Children[1];
+                    var var1 = instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                    var h5ins = instance.Children[1];
                     while (h5ins != null)
                     {
                         var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
@@ -2077,10 +2084,10 @@ namespace code0k_cc.Parse
                 ExpressionsHelper[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper[i] };
 
                 Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.BitwiseOr] };
-                Expressions[i].Execute = arg =>
+                Expressions[i].Execute = (instance, arg) =>
                 {
-                    var var1 = arg.Instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
-                    var h5ins = arg.Instance.Children[1];
+                    var var1 = instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                    var h5ins = instance.Children[1];
                     while (h5ins != null)
                     {
                         var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
@@ -2109,10 +2116,10 @@ namespace code0k_cc.Parse
                 ExpressionsHelper[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper[i] };
 
                 Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.BooleanAnd] };
-                Expressions[i].Execute = arg =>
+                Expressions[i].Execute = (instance, arg) =>
                 {
-                    var var1 = arg.Instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
-                    var h5ins = arg.Instance.Children[1];
+                    var var1 = instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                    var h5ins = instance.Children[1];
                     while (h5ins != null)
                     {
                         var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
@@ -2141,10 +2148,10 @@ namespace code0k_cc.Parse
                 ExpressionsHelper[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper[i] };
 
                 Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.BooleanXor] };
-                Expressions[i].Execute = arg =>
+                Expressions[i].Execute = (instance, arg) =>
                 {
-                    var var1 = arg.Instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
-                    var h5ins = arg.Instance.Children[1];
+                    var var1 = instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                    var h5ins = instance.Children[1];
                     while (h5ins != null)
                     {
                         var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
@@ -2173,10 +2180,10 @@ namespace code0k_cc.Parse
                 ExpressionsHelper[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper[i] };
 
                 Operators[i].Children = new List<ParseUnit>() { TokenUnits[TokenType.BooleanOr] };
-                Expressions[i].Execute = arg =>
+                Expressions[i].Execute = (instance, arg) =>
                 {
-                    var var1 = arg.Instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
-                    var h5ins = arg.Instance.Children[1];
+                    var var1 = instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
+                    var h5ins = instance.Children[1];
                     while (h5ins != null)
                     {
                         var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.VariableRefRef.VariableRef.Variable;
@@ -2207,16 +2214,16 @@ namespace code0k_cc.Parse
                 Operators[17],
                 Expressions[17]
             };
-            ExpressionsHelper[17].Execute = arg =>
+            ExpressionsHelper[17].Execute = (instance, arg) =>
             {
-                Debug.Assert(arg.Instance.Children[1].Children[0].Token.TokenType == TokenType.Assign);
+                Debug.Assert(instance.Children[1].Children[0].Token.TokenType == TokenType.Assign);
 
-                var leftVarRefRef = arg.Instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef;
+                var leftVarRefRef = instance.Children[0].Execute(arg).ExpressionResult.VariableRefRef;
 
-                var rightExpRefRef = arg.Instance.Children[2].Execute(arg).ExpressionResult.VariableRefRef;
+                var rightExpRefRef = instance.Children[2].Execute(arg).ExpressionResult.VariableRefRef;
 
                 //assign
-                if (arg.Instance.Children[1].Children[0].Token.TokenType == TokenType.Assign)
+                if (instance.Children[1].Children[0].Token.TokenType == TokenType.Assign)
                 {
                     leftVarRefRef.VariableRef.Variable = rightExpRefRef.VariableRef.Variable.Assign(leftVarRefRef.VariableRef.Variable.Type);
                 }
@@ -2234,7 +2241,7 @@ namespace code0k_cc.Parse
                 ExpressionsHelper[17],
                 Expressions[16]
             };
-            Expressions[17].Execute = arg => arg.Instance.Children[0].Execute(arg);
+            Expressions[17].Execute = (instance, arg) => instance.Children[0].Execute(arg);
 
             Operators[17].Children = new List<ParseUnit>() { TokenUnits[TokenType.Assign] };
             Operators[17].Execute = null;

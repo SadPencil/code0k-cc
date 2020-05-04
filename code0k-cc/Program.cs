@@ -13,7 +13,7 @@ namespace code0k_cc
         static void Main(string[] args)
         {
             Debug.WriteLine(null);
-            ParseInstance mainProgram;
+            ParseUnitInstance mainProgram;
             var path = @"C:\Users\SadPencil\source\repos\code0k-cc\code0k-cc\bin\Debug\netcoreapp3.1\test.txt";
             using (var fs = File.OpenRead(path))
             {
@@ -34,7 +34,7 @@ namespace code0k_cc
 
             OverlayBlock blk = new OverlayBlock(new Overlay(null), new BasicBlock(null));
             Debug.WriteLine($"root blk {blk}");
-            var ret = mainProgram.Execute(new ExeArg() { Block = blk,StdOut = Console.Out });
+            var ret = mainProgram.Execute(new ExeArg(blk, new CallStack(null, null), Console.Out));
 
 
             //debug
@@ -43,7 +43,7 @@ namespace code0k_cc
             Debug.WriteLine(ret.ExpressionResult.VariableRefRef.VariableRef.Variable);
         }
 
-        static void test(ParseInstance p, int tab)
+        static void test(ParseUnitInstance p, int tab)
         {
             for (int i = 0; i < tab; ++i)
                 Console.Write(" ");

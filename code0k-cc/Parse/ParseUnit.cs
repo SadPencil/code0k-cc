@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using code0k_cc.Lex;
 using code0k_cc.Runtime;
 using code0k_cc.Runtime.ExeArg;
-using code0k_cc.Runtime.ExeResult; 
+using code0k_cc.Runtime.ExeResult;
 
 namespace code0k_cc.Parse
 {
@@ -15,6 +15,6 @@ namespace code0k_cc.Parse
         public TokenType TerminalTokenType;
         public string Name;
 
-        public Func<ExeArg, ExeResult> Execute;
+        public Func<ParseUnitInstance, ExeArg, ExeResult> Execute;
     }
 }

@@ -3,7 +3,7 @@
     class ParseResult
     {
         public bool Success;
-        public ParseInstance ResultInstance;
+        public ParseUnitInstance ResultInstance;
         public int Position;
 
         public int Depth;

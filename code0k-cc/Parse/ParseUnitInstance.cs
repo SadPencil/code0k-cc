@@ -6,16 +6,15 @@ using code0k_cc.Runtime.ExeResult;
 
 namespace code0k_cc.Parse
 {
-    class ParseInstance
+    class ParseUnitInstance
     {
         public ParseUnit ParseUnit = null;
         public Token Token = null;
-        public IReadOnlyList<ParseInstance> Children;
+        public IReadOnlyList<ParseUnitInstance> Children;
 
         public ExeResult Execute(ExeArg arg)
         {
-            arg.Instance = this;
-            return this.ParseUnit.Execute(arg);
+            return this.ParseUnit.Execute(this, arg);
         }
     }
 }
