@@ -18,7 +18,7 @@ namespace code0k_cc.Runtime.Nizk
             Value = new NizkBoolValue()
             {
                 IsConstant = true,
-                Value = true, 
+                Value = true,
             }
         };
 
@@ -28,7 +28,7 @@ namespace code0k_cc.Runtime.Nizk
             Value = new NizkBoolValue()
             {
                 IsConstant = true,
-                Value = false, 
+                Value = false,
             }
         };
 
@@ -38,7 +38,7 @@ namespace code0k_cc.Runtime.Nizk
             Value = new NizkUInt32Value()
             {
                 IsConstant = true,
-                Value = 0, 
+                Value = 0,
             }
         };
 
@@ -48,7 +48,7 @@ namespace code0k_cc.Runtime.Nizk
             Value = new NizkUInt32Value()
             {
                 IsConstant = true,
-                Value = 1, 
+                Value = 1,
             }
         };
         public static readonly Variable UInt32NegOne = new Variable()
@@ -134,7 +134,7 @@ namespace code0k_cc.Runtime.Nizk
                                     {
                                         Debug.Assert(trueOneCase.Overlay.ParentOverlay == falseOneCase.Overlay.ParentOverlay);
                                         retOverlay = trueOneCase.Overlay.ParentOverlay;
-                                        
+
                                         //combine two overlay
                                         NizkCombineOverlay(
                                             ret.Condition,
@@ -190,41 +190,49 @@ namespace code0k_cc.Runtime.Nizk
         {
             Debug.Assert(nizkConditionVariable.Type == NType.Bool);
             Debug.Assert(trueOverlayBlock.Block == falseOverlayBlock.Block);
-            //Debug.Assert(trueOverlayBlock.Overlay.ParentOverlay == retOverlay.ParentOverlay && falseOverlayBlock.Overlay.ParentOverlay == retOverlay.ParentOverlay);
-
+            Debug.Assert(trueOverlayBlock.Overlay.ParentOverlay == falseOverlayBlock.Overlay.ParentOverlay);
+            //Debug.Assert(trueOverlayBlock.Overlay.ParentOverlay == retOverlay);
 
             Overlay trueOverlay = trueOverlayBlock.Overlay;
             Overlay falseOverlay = falseOverlayBlock.Overlay;
+            Overlay parentOverlay = trueOverlay.ParentOverlay;
 
             for (var block = trueOverlayBlock.Block; block != null; block = block.ParentBlock)
             {
-                var retOverlayBlock = new OverlayBlock(retOverlay, block);
-                var nameList = block.GetVariableDict(trueOverlay).Keys.Union(block.GetVariableDict(falseOverlay).Keys).ToList();
+                var newRetOverlayBlock = new OverlayBlock(retOverlay, block);
+                var newTrueOverlayBlock = new OverlayBlock(trueOverlay, block);
+                var newFalseOverlayBlock = new OverlayBlock(falseOverlay, block);
+                var newParentOverlayBlock = new OverlayBlock(parentOverlay, block);
+
+                var nameList = newTrueOverlayBlock.GetVariableDict().Keys.Union(newFalseOverlayBlock.GetVariableDict().Keys).ToList();
 
                 foreach (var name in nameList)
                 {
                     Variable retVar = null;
 
-                    Variable trueVar = block.GetVariableDict(trueOverlay).GetValueOrDefault(name).Variable;
-                    Variable falseVar = block.GetVariableDict(falseOverlay).GetValueOrDefault(name).Variable;
+                    Variable trueVar = newTrueOverlayBlock.GetVariableRefRef(name, false, false)?.VariableRef?.Variable;
+                    Variable falseVar = newFalseOverlayBlock.GetVariableRefRef(name, false, false)?.VariableRef?.Variable;
+                    Debug.Assert(( trueVar != null ) || ( falseVar != null ));
 
                     Variable parentVar = null;
                     for (var ol = trueOverlay.ParentOverlay; ol != null; ol = ol.ParentOverlay)
                     {
-                        parentVar = block.GetVariableDict(trueOverlay.ParentOverlay)?.GetValueOrDefault(name).Variable;
+                        parentVar = new OverlayBlock(ol, block).GetVariableRefRef(name, false, false)?.VariableRef?.Variable;
                         if (parentVar != null) break;
                     }
-                    Debug.Assert(( trueVar != null ) || ( falseVar != null ));
 
                     // note that parentVar is nullable
-                    if (trueVar == null)
+                    if (parentVar != null)
                     {
-                        trueVar = parentVar;
-                    }
+                        if (trueVar == null)
+                        {
+                            trueVar = parentVar;
+                        }
 
-                    if (falseVar == null)
-                    {
-                        falseVar = parentVar;
+                        if (falseVar == null)
+                        {
+                            falseVar = parentVar;
+                        }
                     }
 
                     if (( trueVar == falseVar ))
@@ -246,10 +254,9 @@ namespace code0k_cc.Runtime.Nizk
                         retVar = NizkConditionVariable(nizkConditionVariable, trueVar, falseVar);
                     }
 
-
                     //add var to retOverlay
                     Debug.Assert(retVar != null);
-                    retOverlayBlock.AddVariable(name, retVar, true);
+                    newRetOverlayBlock.AddVariable(name, retVar, true);
                 }
 
 

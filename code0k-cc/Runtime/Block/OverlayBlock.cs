@@ -102,8 +102,8 @@ namespace code0k_cc.Runtime.Block
             {
                 Debug.Assert(!( block.GetVariableDict(this.Overlay).ContainsKey(name) ));
 
-                // make a copy of this variableRef
-                var newRef = new VariableRef() { Variable = varRef.Variable };
+                // make a shallow copy of this variableRef
+                var newRef = varRef.Clone() as VariableRef;
                 block.GetVariableDict(this.Overlay).Add(name, newRef);
                 overlay = this.Overlay;
                 //block = block;
