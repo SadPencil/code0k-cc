@@ -145,9 +145,9 @@ namespace code0k_cc.Runtime.Nizk
                                     }
                                     else
                                     {
-                                        //todo why?
+                                        //todo is it possible or not?
                                         Debug.Assert(false);
-                                        retOverlay = trueOneCase.Overlay;
+                                        throw new NotImplementedException();
                                     }
 
                                     return new StatementResultOneCase()
