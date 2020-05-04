@@ -1374,9 +1374,10 @@ namespace code0k_cc.Parse
                     throw new Exception("Assert failed!");
                 }
 
-                NType type = NType.GetNType(arg.Instance.Children[1].Execute(arg).TypeUnitResult);
-                Variable nizkVar = type.GetNewNizkVariable(nizkType, null);
-                arg.Block.AddVariable(varName, nizkVar, false);
+                NType type = NType.GetNType(arg.Instance.Children[1].Execute(arg).TypeUnitResult); 
+                arg.Block.AddVariable(varName, type.GetNewNizkVariable(), false);
+                var newVar = arg.Block.GetVariableRefRef(varName, false, true);
+                newVar.VariableRef.NizkAttribute = nizkType; 
 
                 return new ExeResult()
                 {

@@ -9,7 +9,7 @@ namespace code0k_cc.Runtime.Block
         private Guid Guid { get; } = Guid.NewGuid();
 
         private Dictionary<Overlay, Dictionary<string, VariableRef>> Variables { get; } = new Dictionary<Overlay, Dictionary<string, VariableRef>>();
-
+        
         public Dictionary<string, VariableRef> GetVariableDict(Overlay overlay)
         {
             if (this.Variables.ContainsKey(overlay))

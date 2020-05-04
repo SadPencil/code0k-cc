@@ -10,7 +10,11 @@ namespace code0k_cc.Runtime
     {
         public NType Type;
         public IValueOfType Value;
-        public readonly List<VariableConnection> Connections = new List<VariableConnection>();
+
+        /// <summary>
+        /// Get all parent connections. Note that children connections are not saved.
+        /// </summary>
+        public readonly List<VariableConnection> ParentConnections = new List<VariableConnection>();
         
         public string GetString()
         {

@@ -34,13 +34,13 @@ namespace code0k_cc.Runtime
         /// </summary>
         private Func<Variable> GetNewEmptyVariableFunc;
 
-        public Variable GetNewNizkVariable(NizkVariableType nizkType, Variable tagVariable)
+        public Variable GetNewNizkVariable()
         {
-            var variable = this.GetNewNizkVariableFunc(nizkType, tagVariable);
+            var variable = this.GetNewNizkVariableFunc();
             return variable;
         }
 
-        private Func<NizkVariableType, Variable, Variable> GetNewNizkVariableFunc;
+        private Func<Variable> GetNewNizkVariableFunc;
 
         public Variable Parse(string str)
         {
@@ -89,11 +89,10 @@ namespace code0k_cc.Runtime
 
             // add connection
             var newCon = new VariableConnection() { Type = new VariableConnectionType() { SpecialOperation = SpecialOperation.TypeCast } };
-
-            variable.Connections.Add(newCon);
             newCon.InVariables.Add(variable);
-
             newCon.OutVariables.Add(retVariable);
+
+            retVariable.ParentConnections.Add(newCon);
 
             return retVariable;
         }
@@ -109,11 +108,10 @@ namespace code0k_cc.Runtime
 
             // add connection
             var newCon = new VariableConnection() { Type = new VariableConnectionType() { SpecialOperation = SpecialOperation.TypeCast } };
-
-            variable.Connections.Add(newCon);
             newCon.InVariables.Add(variable);
-
             newCon.OutVariables.Add(retVariable);
+
+            retVariable.ParentConnections.Add(newCon);
 
             return retVariable;
         }
@@ -136,11 +134,10 @@ namespace code0k_cc.Runtime
 
                 // add connection
                 var newCon = new VariableConnection() { Type = new VariableConnectionType() { UnaryOperation = op } };
-
-                variable.Connections.Add(newCon);
                 newCon.InVariables.Add(variable);
-
                 newCon.OutVariables.Add(retVariable);
+
+                retVariable.ParentConnections.Add(newCon);
 
                 // note: retVariable might be unused. The calculation of unused variables MUST be done, but the result will be cleared out later
 
@@ -161,14 +158,12 @@ namespace code0k_cc.Runtime
                 var retVariable = this.BinaryOperationFuncs[op](variable, another);
                 // add connection
                 var newCon = new VariableConnection() { Type = new VariableConnectionType() { BinaryOperation = op } };
-
-                variable.Connections.Add(newCon);
                 newCon.InVariables.Add(variable);
-
-                another.Connections.Add(newCon);
                 newCon.InVariables.Add(another);
-
                 newCon.OutVariables.Add(retVariable);
+
+                retVariable.ParentConnections.Add(newCon);
+
 
                 // note: retVariable might be unused. The calculation of unused variables MUST be done, but the result will be cleared out later
 
@@ -212,7 +207,7 @@ namespace code0k_cc.Runtime
 
             this.GetStringFunc = variable => throw new Exception($"Type \"{this.TypeCodeName}\" doesn't support String().");
             this.ParseFunc = s => throw new Exception($"Type \"{this.TypeCodeName}\" doesn't support Parse().");
-            this.GetNewNizkVariableFunc = (nizkType, tagVariable) => throw new Exception($"Type \"{this.TypeCodeName}\" is not nizk-compatible.");
+            this.GetNewNizkVariableFunc = () => throw new Exception($"Type \"{this.TypeCodeName}\" is not nizk-compatible.");
         }
 
         public static readonly NType String = new NType("string")
@@ -279,7 +274,7 @@ namespace code0k_cc.Runtime
                 {
                     IsConstant = true,
                     Value = 0,
-                    VariableType = NizkVariableType.Intermediate
+
                 }
             },
             ParseFunc = (str) =>
@@ -293,7 +288,7 @@ namespace code0k_cc.Runtime
                         {
                             IsConstant = true,
                             Value = retV,
-                            VariableType = NizkVariableType.Intermediate
+
                         }
                     };
                 }
@@ -303,15 +298,13 @@ namespace code0k_cc.Runtime
                 }
             },
             GetStringFunc = variable => ( (NizkUInt32Value) variable.Value ).Value.ToString(CultureInfo.InvariantCulture),
-            GetNewNizkVariableFunc = (nizkType, tagVariable) => new Variable()
+            GetNewNizkVariableFunc = () => new Variable()
             {
                 Type = NType.UInt32,
                 Value = new NizkUInt32Value()
                 {
                     IsConstant = false,
                     Value = 0,
-                    VariableType = nizkType,
-                    TagVariable = tagVariable,
                 }
             },
             ExplicitConvertFunc = (variable, type) =>
@@ -331,13 +324,13 @@ namespace code0k_cc.Runtime
                             {
                                 IsConstant = true,
                                 Value = ( (NizkUInt32Value) variable.Value ).Value != 0,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                         };
                     }
                     else
                     {
-                        return NType.Bool.GetNewNizkVariableFunc(NizkVariableType.Intermediate, null);
+                        return NType.Bool.GetNewNizkVariableFunc();
                     }
 
                 }
@@ -357,11 +350,11 @@ namespace code0k_cc.Runtime
                             new NizkUInt32Value() {
                                 IsConstant = true,
                                 Value = + v1.Value ,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                             : new NizkUInt32Value() {
                                 IsConstant = false,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                     };
                 }},
@@ -375,11 +368,11 @@ namespace code0k_cc.Runtime
                             new NizkUInt32Value() {
                                 IsConstant = true,
                                 Value = ((UInt32)0) - v1.Value ,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                             : new NizkUInt32Value() {
                                 IsConstant = false,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                     };
                 }},
@@ -393,11 +386,11 @@ namespace code0k_cc.Runtime
                             new NizkUInt32Value() {
                                 IsConstant = true,
                                 Value = ~ v1.Value ,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                             : new NizkUInt32Value() {
                                 IsConstant = false,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                     };
                 }},
@@ -416,11 +409,11 @@ namespace code0k_cc.Runtime
                             new NizkUInt32Value() {
                             IsConstant = true,
                             Value = v1.Value+v2.Value,
-                            VariableType = NizkVariableType.Intermediate,
+
                         }
                             : new NizkUInt32Value() {
                                 IsConstant = false,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                     };
                 }},
@@ -435,11 +428,11 @@ namespace code0k_cc.Runtime
                             new NizkUInt32Value() {
                                 IsConstant = true,
                                 Value = v1.Value-v2.Value,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                             : new NizkUInt32Value() {
                                 IsConstant = false,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                     };
                 }},
@@ -454,11 +447,11 @@ namespace code0k_cc.Runtime
                             new NizkUInt32Value() {
                                 IsConstant = true,
                                 Value = v1.Value*v2.Value,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                             : new NizkUInt32Value() {
                                 IsConstant = false,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                     };
                 }},
@@ -473,11 +466,11 @@ namespace code0k_cc.Runtime
                             new NizkUInt32Value() {
                                 IsConstant = true,
                                 Value = v1.Value/v2.Value,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                             : new NizkUInt32Value() {
                                 IsConstant = false,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                     };
                 }},
@@ -492,11 +485,11 @@ namespace code0k_cc.Runtime
                             new NizkUInt32Value() {
                                 IsConstant = true,
                                 Value = v1.Value%v2.Value,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                             : new NizkUInt32Value() {
                                 IsConstant = false,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                     };
                 }},
@@ -511,11 +504,11 @@ namespace code0k_cc.Runtime
                             new NizkBoolValue() {
                                 IsConstant = true,
                                 Value = v1.Value==v2.Value,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                             : new NizkBoolValue() {
                                 IsConstant = false,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                     };
                 }},
@@ -530,11 +523,11 @@ namespace code0k_cc.Runtime
                             new NizkBoolValue() {
                                 IsConstant = true,
                                 Value = v1.Value<v2.Value,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                             : new NizkBoolValue() {
                                 IsConstant = false,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                     };
                 }},
@@ -549,11 +542,11 @@ namespace code0k_cc.Runtime
                             new NizkBoolValue() {
                                 IsConstant = true,
                                 Value = v1.Value<=v2.Value,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                             : new NizkBoolValue() {
                                 IsConstant = false,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                     };
                 }},
@@ -568,11 +561,11 @@ namespace code0k_cc.Runtime
                             new NizkBoolValue() {
                                 IsConstant = true,
                                 Value = v1.Value>v2.Value,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                             : new NizkBoolValue() {
                                 IsConstant = false,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                     };
                 }},
@@ -587,11 +580,11 @@ namespace code0k_cc.Runtime
                             new NizkBoolValue() {
                                 IsConstant = true,
                                 Value = v1.Value>=v2.Value,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                             : new NizkBoolValue() {
                                 IsConstant = false,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                     };
                 }},
@@ -606,11 +599,11 @@ namespace code0k_cc.Runtime
                             new NizkBoolValue() {
                                 IsConstant = true,
                                 Value = v1.Value!=v2.Value,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                             : new NizkBoolValue() {
                                 IsConstant = false,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                     };
                 }},
@@ -625,11 +618,11 @@ namespace code0k_cc.Runtime
                             new NizkUInt32Value() {
                                 IsConstant = true,
                                 Value = v1.Value&v2.Value,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                             : new NizkUInt32Value() {
                                 IsConstant = false,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                     };
                 }},
@@ -644,11 +637,11 @@ namespace code0k_cc.Runtime
                             new NizkUInt32Value() {
                                 IsConstant = true,
                                 Value = v1.Value|v2.Value,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                             : new NizkUInt32Value() {
                                 IsConstant = false,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                     };
                 }},
@@ -663,11 +656,11 @@ namespace code0k_cc.Runtime
                             new NizkUInt32Value() {
                                 IsConstant = true,
                                 Value = v1.Value^v2.Value,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                             : new NizkUInt32Value() {
                                 IsConstant = false,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                     };
                 }}, 
@@ -688,7 +681,7 @@ namespace code0k_cc.Runtime
                 {
                     IsConstant = true,
                     Value = false,
-                    VariableType = NizkVariableType.Intermediate
+
                 }
             },
             ParseFunc = (str) =>
@@ -702,7 +695,7 @@ namespace code0k_cc.Runtime
                         {
                             IsConstant = true,
                             Value = retV,
-                            VariableType = NizkVariableType.Intermediate
+
                         }
                     };
                 }
@@ -712,15 +705,13 @@ namespace code0k_cc.Runtime
                 }
             },
             GetStringFunc = variable => ( (NizkBoolValue) variable.Value ).Value.ToString(CultureInfo.InvariantCulture),
-            GetNewNizkVariableFunc = (nizkType, tagVariable) => new Variable()
+            GetNewNizkVariableFunc = () => new Variable()
             {
                 Type = NType.Bool,
                 Value = new NizkBoolValue()
                 {
                     IsConstant = false,
                     Value = false,
-                    VariableType = nizkType,
-                    TagVariable = tagVariable,
                 }
             },
             ExplicitConvertFunc = (variable, type) =>
@@ -740,13 +731,13 @@ namespace code0k_cc.Runtime
                             {
                                 IsConstant = true,
                                 Value = ( ( (NizkBoolValue) variable.Value ).Value ) ? (System.UInt32) 1 : (System.UInt32) 0,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                         };
                     }
                     else
                     {
-                        return NType.UInt32.GetNewNizkVariableFunc(NizkVariableType.Intermediate, null);
+                        return NType.UInt32.GetNewNizkVariableFunc();
                     }
 
                 }
@@ -766,11 +757,11 @@ namespace code0k_cc.Runtime
                             new NizkBoolValue() {
                                 IsConstant = true,
                                 Value = ! v1.Value ,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                             : new NizkBoolValue() {
                                 IsConstant = false,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                     };
                 }},
@@ -787,11 +778,11 @@ namespace code0k_cc.Runtime
                             new NizkBoolValue() {
                                 IsConstant = true,
                                 Value = v1.Value==v2.Value,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                             : new NizkBoolValue() {
                                 IsConstant = false,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                     };
                 }},
@@ -806,11 +797,11 @@ namespace code0k_cc.Runtime
                             new NizkBoolValue() {
                                 IsConstant = true,
                                 Value = v1.Value!=v2.Value,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                             : new NizkBoolValue() {
                                 IsConstant = false,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                     };
                 }},
@@ -825,11 +816,11 @@ namespace code0k_cc.Runtime
                             new NizkBoolValue() {
                                 IsConstant = true,
                                 Value = v1.Value&&v2.Value,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                             : new NizkBoolValue() {
                                 IsConstant = false,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                     };
                 }},
@@ -844,11 +835,11 @@ namespace code0k_cc.Runtime
                             new NizkBoolValue() {
                                 IsConstant = true,
                                 Value = v1.Value||v2.Value,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                             : new NizkBoolValue() {
                                 IsConstant = false,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                     };
                 }},
@@ -863,11 +854,11 @@ namespace code0k_cc.Runtime
                             new NizkBoolValue() {
                                 IsConstant = true,
                                 Value = v1.Value!=v2.Value,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                             : new NizkBoolValue() {
                                 IsConstant = false,
-                                VariableType = NizkVariableType.Intermediate,
+
                             }
                     };
                 }},

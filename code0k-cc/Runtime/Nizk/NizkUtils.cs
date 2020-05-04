@@ -18,8 +18,7 @@ namespace code0k_cc.Runtime.Nizk
             Value = new NizkBoolValue()
             {
                 IsConstant = true,
-                Value = true,
-                VariableType = NizkVariableType.Intermediate,
+                Value = true, 
             }
         };
 
@@ -29,8 +28,7 @@ namespace code0k_cc.Runtime.Nizk
             Value = new NizkBoolValue()
             {
                 IsConstant = true,
-                Value = false,
-                VariableType = NizkVariableType.Intermediate,
+                Value = false, 
             }
         };
 
@@ -40,8 +38,7 @@ namespace code0k_cc.Runtime.Nizk
             Value = new NizkUInt32Value()
             {
                 IsConstant = true,
-                Value = 0,
-                VariableType = NizkVariableType.Intermediate,
+                Value = 0, 
             }
         };
 
@@ -51,8 +48,7 @@ namespace code0k_cc.Runtime.Nizk
             Value = new NizkUInt32Value()
             {
                 IsConstant = true,
-                Value = 1,
-                VariableType = NizkVariableType.Intermediate,
+                Value = 1, 
             }
         };
         public static readonly Variable UInt32NegOne = new Variable()
@@ -61,8 +57,7 @@ namespace code0k_cc.Runtime.Nizk
             Value = new NizkUInt32Value()
             {
                 IsConstant = true,
-                Value = System.UInt32.MaxValue, //todo 
-                VariableType = NizkVariableType.Intermediate,
+                Value = System.UInt32.MaxValue, //todo  
             }
         };
 
@@ -138,8 +133,8 @@ namespace code0k_cc.Runtime.Nizk
                                     if (trueOneCase.Overlay != falseOneCase.Overlay)
                                     {
                                         Debug.Assert(trueOneCase.Overlay.ParentOverlay == falseOneCase.Overlay.ParentOverlay);
-                                        retOverlay = new Overlay(trueOneCase.Overlay.ParentOverlay);
-
+                                        retOverlay = trueOneCase.Overlay.ParentOverlay;
+                                        
                                         //combine two overlay
                                         NizkCombineOverlay(
                                             ret.Condition,
@@ -150,6 +145,8 @@ namespace code0k_cc.Runtime.Nizk
                                     }
                                     else
                                     {
+                                        //todo why?
+                                        Debug.Assert(false);
                                         retOverlay = trueOneCase.Overlay;
                                     }
 
@@ -193,7 +190,7 @@ namespace code0k_cc.Runtime.Nizk
         {
             Debug.Assert(nizkConditionVariable.Type == NType.Bool);
             Debug.Assert(trueOverlayBlock.Block == falseOverlayBlock.Block);
-            Debug.Assert(trueOverlayBlock.Overlay.ParentOverlay == retOverlay.ParentOverlay && falseOverlayBlock.Overlay.ParentOverlay == retOverlay.ParentOverlay);
+            //Debug.Assert(trueOverlayBlock.Overlay.ParentOverlay == retOverlay.ParentOverlay && falseOverlayBlock.Overlay.ParentOverlay == retOverlay.ParentOverlay);
 
 
             Overlay trueOverlay = trueOverlayBlock.Overlay;

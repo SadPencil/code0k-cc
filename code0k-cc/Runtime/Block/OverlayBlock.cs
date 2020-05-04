@@ -16,6 +16,11 @@ namespace code0k_cc.Runtime.Block
             this.Block = block;
         }
 
+        public Dictionary<string, VariableRef> GetVariableDict()
+        {
+            return this.Block.GetVariableDict(this.Overlay);
+        }
+
         public override string ToString()
         {
             return $"OverlayBlock{{Block:{this.Block.ToString()},Overlay:{this.Overlay.ToString()}}}";
@@ -27,7 +32,7 @@ namespace code0k_cc.Runtime.Block
             for (var block = this.Block; block != null; block = block.ParentBlock)
             {
                 for (var overlay = this.Overlay; overlay != null; overlay = overlay.ParentOverlay)
-                { 
+                {
                     if (block.GetVariableDict(overlay).ContainsKey(name))
                     {
                         return new OverlayBlock(overlay, block);
