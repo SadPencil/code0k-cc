@@ -40,7 +40,7 @@ namespace code0k_cc
             //debug
 
 
-            Debug.WriteLine(ret.ExpressionResult.VariableRefRef.VariableRef.Variable);
+            Debug.WriteLine(ret.ExpressionResult.Variable);
         }
 
         static void test(ParseUnitInstance p, int tab)

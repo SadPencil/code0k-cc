@@ -4,8 +4,8 @@ using System.Text;
 
 namespace code0k_cc.Runtime.ExeResult
 {
-    class ExpressionResult
+    class LeftValueResult
     {
-        public Variable Variable;
+        public VariableRefRef VariableRefRef;
     }
 }

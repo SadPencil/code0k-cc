@@ -7,9 +7,14 @@ namespace code0k_cc.Runtime
 {
     class VariableRef : ICloneable
     {
-        public Variable Variable;
+        public Variable Variable { get; set; }
 
-        public NizkVariableType NizkAttribute = NizkVariableType.NonNizkVariable;
+        public NizkVariableType NizkAttribute { get; set; } = NizkVariableType.NonNizkVariable;
+
+        public VariableRef(Variable variable)
+        {
+            this.Variable = variable;
+        }
 
         /// <summary>
         /// Memberwise Clone

@@ -10,7 +10,8 @@ namespace code0k_cc.Runtime.ExeResult
         // union; one of them has value, others == null
         public TypeResult TypeUnitResult;
         public GenericsTypeResult GenericsTypeResult;
-        public ExpressionResult ExpressionResult; 
+        public ExpressionResult ExpressionResult;
+        public LeftValueResult LeftValueResult;
         public FunctionDeclarationValue FunctionDeclarationValue;
         public StatementResult StatementResult;
     }
