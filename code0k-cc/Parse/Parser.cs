@@ -1072,7 +1072,7 @@ namespace code0k_cc.Parse
                     {
                         falseRetRaw = new StatementResultOneCase()
                         {
-                            Overlay = arg.Block.Overlay,
+                            Overlay = new Overlay(arg.Block.Overlay),
                             ExecutionResultType = StatementResultType.Normal,
                         };
                     }
@@ -1374,10 +1374,10 @@ namespace code0k_cc.Parse
                     throw new Exception("Assert failed!");
                 }
 
-                NType type = NType.GetNType(arg.Instance.Children[1].Execute(arg).TypeUnitResult); 
+                NType type = NType.GetNType(arg.Instance.Children[1].Execute(arg).TypeUnitResult);
                 arg.Block.AddVariable(varName, type.GetNewNizkVariable(), false);
                 var newVar = arg.Block.GetVariableRefRef(varName, false, true);
-                newVar.VariableRef.NizkAttribute = nizkType; 
+                newVar.VariableRef.NizkAttribute = nizkType;
 
                 return new ExeResult()
                 {
