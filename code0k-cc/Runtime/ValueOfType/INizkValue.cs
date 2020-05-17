@@ -5,7 +5,7 @@ using code0k_cc.Runtime.Nizk;
 
 namespace code0k_cc.Runtime.ValueOfType
 {
-    abstract class INizkValue : IValueOfType
-    { 
+    interface INizkValue : IValueOfType
+    {
     }
 }

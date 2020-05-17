@@ -10,14 +10,26 @@ namespace code0k_cc.Runtime.ExeArg
     {
         public OverlayBlock Block;
 
+        /// <summary>
+        /// To count on how many times the function has been called.
+        /// </summary>
         public CallStack CallStack;
 
+        /// <summary>
+        /// Debug purpose only. Do not use under an nizk-if/while statements.
+        /// </summary>
         public TextWriter StdOut;
 
-        public ExeArg(OverlayBlock block, CallStack callStack, TextWriter stdOut)
+        /// <summary>
+        /// The writer of the output code file.
+        /// </summary>
+        public TextWriter CodeOut;
+
+        public ExeArg(OverlayBlock block, CallStack callStack, TextWriter codeOut, TextWriter stdOut)
         {
             this.Block = block;
             this.CallStack = callStack;
+            this.CodeOut = codeOut;
             this.StdOut = stdOut;
         }
 

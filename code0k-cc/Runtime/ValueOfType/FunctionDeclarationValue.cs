@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using code0k_cc.Immutable;
 using code0k_cc.Parse;
 using code0k_cc.Runtime.Block;
 
 namespace code0k_cc.Runtime.ValueOfType
 {
-    sealed class FunctionDeclarationValue : IValueOfType
+    sealed class FunctionDeclarationValue : IImmutable, IValueOfType
     {
+        public bool IsConstant { get; set; } = true;
+
         private Guid Guid { get; } = Guid.NewGuid();
 
         /// <summary>
@@ -49,5 +52,6 @@ namespace code0k_cc.Runtime.ValueOfType
         {
             return !( op1 == op2 );
         }
+
     }
 }

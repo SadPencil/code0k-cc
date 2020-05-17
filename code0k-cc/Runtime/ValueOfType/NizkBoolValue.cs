@@ -7,6 +7,7 @@ namespace code0k_cc.Runtime.ValueOfType
 {
     sealed class NizkBoolValue : INizkValue
     {
+        public bool IsConstant { get; set; } = true;
         public Boolean Value;
     }
 }

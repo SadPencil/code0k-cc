@@ -6,5 +6,6 @@ namespace code0k_cc.Runtime.ValueOfType
 {
     sealed class VoidValue : IValueOfType
     {
+        public bool IsConstant { get; set; } = true;
     }
 }

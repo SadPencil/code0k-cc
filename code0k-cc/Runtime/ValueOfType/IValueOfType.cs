@@ -4,13 +4,8 @@ using System.Text;
 
 namespace code0k_cc.Runtime.ValueOfType
 {
-    abstract class IValueOfType
+    interface IValueOfType
     {
         public bool IsConstant { get; set; }
-
-        public IValueOfType()
-        {
-            this.IsConstant = true;
-        }
     }
 }

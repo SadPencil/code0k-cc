@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text; 
 using code0k_cc.Parse;
 using code0k_cc.Runtime.Block;
 using code0k_cc.Runtime.ExeArg;
@@ -14,7 +15,7 @@ namespace code0k_cc
         {
             Debug.WriteLine(null);
             ParseUnitInstance mainProgram;
-            var path = @"C:\Users\SadPencil\source\repos\code0k-cc\code0k-cc\bin\Debug\netcoreapp3.1\test.txt";
+            var path = @"input.txt";
             using (var fs = File.OpenRead(path))
             {
                 var tokens = Lex.Lex.Analyze(fs);
@@ -31,16 +32,25 @@ namespace code0k_cc
             //   var ret = Parser.Parse(tokens);
             test(mainProgram, 0);
 
+            using (var fs = File.OpenWrite("output.txt"))
+            {
+                using (var outputWriter = new StreamWriter(fs, new UTF8Encoding(false), -1, false))
+                {
+                    OverlayBlock blk = new OverlayBlock(new Overlay(null), new BasicBlock(null));
+                    Debug.WriteLine($"root blk {blk}");
+                    var ret = mainProgram.Execute(
+                        new ExeArg(
+                            blk,
+                            new CallStack(null, null),
+                            outputWriter,
+                            Console.Out));
+                    
+                    Debug.WriteLine(ret.ExpressionResult.Variable);
 
-            OverlayBlock blk = new OverlayBlock(new Overlay(null), new BasicBlock(null));
-            Debug.WriteLine($"root blk {blk}");
-            var ret = mainProgram.Execute(new ExeArg(blk, new CallStack(null, null), Console.Out));
 
 
-            //debug
-
-
-            Debug.WriteLine(ret.ExpressionResult.Variable);
+                }
+            }
         }
 
         static void test(ParseUnitInstance p, int tab)

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using code0k_cc.Runtime.Operation;
 
-namespace code0k_cc.Runtime.VariableMap
+namespace code0k_cc.Runtime
 {
     class VariableConnectionType
     {

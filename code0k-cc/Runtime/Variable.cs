@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using code0k_cc.Immutable;
 using code0k_cc.Runtime.ValueOfType;
 using code0k_cc.Runtime.VariableMap;
 
 namespace code0k_cc.Runtime
 {
-    class Variable
+    class Variable : IImmutable
     {
         public NType Type;
         public IValueOfType Value;
@@ -15,7 +16,7 @@ namespace code0k_cc.Runtime
         /// Get all parent connections. Note that children connections are not saved.
         /// </summary>
         public readonly List<VariableConnection> ParentConnections = new List<VariableConnection>();
-        
+
         public string GetString()
         {
             return this.Type.GetString(this);
@@ -30,5 +31,6 @@ namespace code0k_cc.Runtime
         {
             return this.Type.ExplicitConvert(this, leftType);
         }
+
     }
 }
