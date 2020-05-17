@@ -29,6 +29,7 @@ namespace code0k_cc.Runtime
             var variable = this.GetNewEmptyVariableFunc();
             return variable;
         }
+
         /// <summary>
         /// Method to get a new value. Throw exceptions.
         /// </summary>
@@ -40,6 +41,9 @@ namespace code0k_cc.Runtime
             return variable;
         }
 
+        /// <summary>
+        /// Method to get a new nizk value. Throw exceptions.
+        /// </summary>
         private Func<Variable> GetNewNizkVariableFunc;
 
         public Variable Parse(string str)
@@ -47,6 +51,7 @@ namespace code0k_cc.Runtime
             var variable = this.ParseFunc(str);
             return variable;
         }
+
         /// <summary>
         /// Method to get a new value from a token string. Throw exceptions.
         /// </summary>
@@ -57,6 +62,7 @@ namespace code0k_cc.Runtime
             Debug.Assert(variable.Type == this);
             return this.GetStringFunc(variable);
         }
+
         /// <summary>
         /// Method to get a string from a value. Throw exceptions.
         /// </summary>
@@ -67,17 +73,13 @@ namespace code0k_cc.Runtime
         /// </summary>
         public IReadOnlyList<NType> GenericsTypes { get; private set; }
 
+
+
         public Variable Assign(Variable variable, NType type)
         {
             return this.ImplicitConvert(variable, type);
         }
-
-        ///// <summary>
-        ///// RightVal, LeftType, LeftVal
-        ///// </summary>
-        //private Func<Variable, NType, Variable> AssignFunc;
-
-
+        
         public Variable ExplicitConvert(Variable variable, NType type)
         {
             Debug.Assert(variable.Type == this);
@@ -115,10 +117,12 @@ namespace code0k_cc.Runtime
 
             return retVariable;
         }
+
         /// <summary>
         /// RightVal, LeftType, LeftVal
         /// </summary>
         private Func<Variable, NType, Variable> ImplicitConvertFunc;
+
         /// <summary>
         /// RightVal, LeftType, LeftVal
         /// </summary>
@@ -163,7 +167,6 @@ namespace code0k_cc.Runtime
                 newCon.OutVariables.Add(retVariable);
 
                 retVariable.ParentConnections.Add(newCon);
-
 
                 // note: retVariable might be unused. The calculation of unused variables MUST be done, but the result will be cleared out later
 
@@ -761,7 +764,6 @@ namespace code0k_cc.Runtime
                             }
                             : new NizkBoolValue() {
                                 IsConstant = false,
-
                             }
                     };
                 }},
@@ -782,7 +784,6 @@ namespace code0k_cc.Runtime
                             }
                             : new NizkBoolValue() {
                                 IsConstant = false,
-
                             }
                     };
                 }},
@@ -801,7 +802,6 @@ namespace code0k_cc.Runtime
                             }
                             : new NizkBoolValue() {
                                 IsConstant = false,
-
                             }
                     };
                 }},
@@ -820,7 +820,6 @@ namespace code0k_cc.Runtime
                             }
                             : new NizkBoolValue() {
                                 IsConstant = false,
-
                             }
                     };
                 }},
@@ -839,7 +838,6 @@ namespace code0k_cc.Runtime
                             }
                             : new NizkBoolValue() {
                                 IsConstant = false,
-
                             }
                     };
                 }},
@@ -858,7 +856,6 @@ namespace code0k_cc.Runtime
                             }
                             : new NizkBoolValue() {
                                 IsConstant = false,
-
                             }
                     };
                 }},

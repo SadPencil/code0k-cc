@@ -5,7 +5,7 @@ using code0k_cc.Runtime.Block;
 
 namespace code0k_cc.Runtime.ValueOfType
 {
-    class FunctionDeclarationValue : IValueOfType
+    sealed class FunctionDeclarationValue : IValueOfType
     {
         private Guid Guid { get; } = Guid.NewGuid();
 

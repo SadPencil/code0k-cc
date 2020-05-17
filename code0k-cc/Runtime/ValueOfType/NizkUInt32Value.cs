@@ -5,7 +5,7 @@ using code0k_cc.Runtime.Nizk;
 
 namespace code0k_cc.Runtime.ValueOfType
 {
-    class NizkUInt32Value : INizkValue
+    sealed class NizkUInt32Value : INizkValue
     {
         public UInt32 Value; 
     }

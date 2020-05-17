@@ -4,7 +4,7 @@ using System.Text;
 
 namespace code0k_cc.Runtime.ValueOfType
 {
-    class StringValue : IValueOfType
+    sealed class StringValue : IValueOfType
     {
         public String Value;
     }

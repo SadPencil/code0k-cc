@@ -4,7 +4,7 @@ using System.Text;
 
 namespace code0k_cc.Runtime.ValueOfType
 {
-    class VoidValue : IValueOfType
+    sealed class VoidValue : IValueOfType
     {
     }
 }

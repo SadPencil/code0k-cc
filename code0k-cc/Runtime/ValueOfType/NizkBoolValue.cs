@@ -5,7 +5,7 @@ using code0k_cc.Runtime.Nizk;
 
 namespace code0k_cc.Runtime.ValueOfType
 {
-    class NizkBoolValue : INizkValue
+    sealed class NizkBoolValue : INizkValue
     {
         public Boolean Value;
     }
