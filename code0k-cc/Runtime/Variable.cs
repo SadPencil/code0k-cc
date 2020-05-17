@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using code0k_cc.Immutable;
+using code0k_cc.Standalone;
 using code0k_cc.Runtime.ValueOfType;
 using code0k_cc.Runtime.VariableMap;
 
 namespace code0k_cc.Runtime
 {
-    class Variable : IImmutable
+    class Variable : IStandalone
     {
         public NType Type;
         public IValueOfType Value;

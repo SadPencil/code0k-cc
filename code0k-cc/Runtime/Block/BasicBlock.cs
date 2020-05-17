@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using code0k_cc.Immutable;
+using code0k_cc.Standalone;
 
 namespace code0k_cc.Runtime.Block
 {
-    class BasicBlock : IImmutable
+    class BasicBlock : IStandalone
     {
         //todo remove invalid overlay to save memory
         private Dictionary<Overlay, Dictionary<string, VariableRef>> Variables { get; } = new Dictionary<Overlay, Dictionary<string, VariableRef>>();

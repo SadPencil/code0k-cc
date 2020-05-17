@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using code0k_cc.Immutable;
+using code0k_cc.Standalone;
 
 namespace code0k_cc.Runtime.Block
 {
-    class Overlay : IImmutable
+    class Overlay : IStandalone
     {
         public Overlay ParentOverlay { get; }
 

@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Text;
 using code0k_cc.Runtime.VariableMap;
 
-namespace code0k_cc.Immutable
+namespace code0k_cc.Standalone
 {
-    abstract class IImmutable
+    abstract class IStandalone
     {
         protected Guid Guid { get; } = Guid.NewGuid();
 
         public override bool Equals(object obj)
         {
-            if (obj is IImmutable o)
+            if (obj is IStandalone o)
             {
                 return this.Guid == o.Guid;
             }
@@ -26,11 +26,11 @@ namespace code0k_cc.Immutable
             return HashCode.Combine(this.Guid);
         }
 
-        public static bool operator ==(IImmutable op1, IImmutable op2)
+        public static bool operator ==(IStandalone op1, IStandalone op2)
         {
             return op1?.Guid == op2?.Guid;
         }
-        public static bool operator !=(IImmutable op1, IImmutable op2)
+        public static bool operator !=(IStandalone op1, IStandalone op2)
         {
             return !( op1 == op2 );
         }
