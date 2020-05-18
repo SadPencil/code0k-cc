@@ -45,7 +45,6 @@ namespace code0k_cc
                             outputWriter,
                             Console.Out));
                     
-                    Debug.WriteLine(ret.ExpressionResult.Variable);
 
 
 

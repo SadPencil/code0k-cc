@@ -14,6 +14,7 @@ using code0k_cc.Runtime.ExeResult;
 using code0k_cc.Runtime.Nizk;
 using code0k_cc.Runtime.Operation;
 using code0k_cc.Runtime.ValueOfType;
+using code0k_cc.Runtime.VariableMap;
 
 namespace code0k_cc.Parse
 {
@@ -468,8 +469,28 @@ namespace code0k_cc.Parse
                     }
                 }
 
+                var map = VariableMap.GetMapFromVariableConnection(nizkVars[NizkVariableType.Output]);
+                var sortResult = map.TopologicalSort();
+                foreach (var node in sortResult)
+                {
+                    //test
+                    
+                    switch (node)
+                    {
+                        case VariableNode nnode:
+                            Console.WriteLine(nnode.Variable.Type.TypeCodeName);
+                            break;
+                        case VariableOperationNode nnode:
+                            Console.WriteLine(nnode.ConnectionType.ToString());
+                            break;
+                        default:
+                            Console.WriteLine("default");
+                            break;
+                    }
+                }
+                //todo
 
-                return new ExeResult() { ExpressionResult = expRet };
+                return new ExeResult() { MainProgramResult = new MainProgramResult() };
             };
 
             MainProgramItem.Name = "Main Program Item";

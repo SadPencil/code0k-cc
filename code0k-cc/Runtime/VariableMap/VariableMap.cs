@@ -84,8 +84,8 @@ namespace code0k_cc.Runtime.VariableMap
             {
                 _ = AddVariableNode(variable);
             }
-
-            Debug.Assert(mapAllNodes.Where(node => node.PrevNodes.Count == 0).SequenceEqual(mapRootNodes));
+             
+            Debug.Assert(mapAllNodes.Where(node => node.PrevNodes.Count == 0).Intersect(mapRootNodes).Count() == mapRootNodes.Count);
 
             return new VariableMap()
             {
@@ -105,11 +105,11 @@ namespace code0k_cc.Runtime.VariableMap
 
             // copy node collection
             var remainingNodes = new HashSet<IVariableMapNode>(this.Nodes);
-            var remainingOrphanNodes = new List<IVariableMapNode>(this.RootNodes); // remainingNodes.Where(node => nodePrevsDict[node].Count == 0);
+            var remainingOrphanNodes = new List<IVariableMapNode>(this.RootNodes); 
 
             while (true)
             {
-                Debug.Assert(remainingNodes.Where(node => nodePrevsDict[node].Count == 0).SequenceEqual(remainingOrphanNodes));
+                Debug.Assert(remainingNodes.Where(node => nodePrevsDict[node].Count == 0).Intersect(remainingOrphanNodes).Count()== remainingOrphanNodes.Count);
 
                 //find orphan node
                 if (remainingOrphanNodes.Count <= 0)
