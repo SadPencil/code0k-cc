@@ -142,7 +142,7 @@ namespace code0k_cc.Runtime.Block
             }
             else
             {
-                this.Block.GetVariableDict(this.Overlay).Add(name, new VariableRef(value) );
+                this.Block.GetVariableDict(this.Overlay).Add(name, new VariableRef(value) { VarName = name });
             }
         }
 

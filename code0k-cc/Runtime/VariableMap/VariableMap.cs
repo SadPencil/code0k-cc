@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using code0k_cc.Runtime.Nizk;
 
 namespace code0k_cc.Runtime.VariableMap
 {
@@ -16,8 +17,22 @@ namespace code0k_cc.Runtime.VariableMap
 
         private VariableMap() { }
 
-        public static VariableMap GetMapFromVariableConnection(ICollection<Variable> outputVariables)
+        public static VariableMap GetMapFromVariableConnection(ICollection<VariableRef> inputVariables, ICollection<VariableRef> nizkVariables, ICollection<VariableRef> outputVariables)
         {
+            var varToVarRefs = new Dictionary<Variable, VariableRef>();
+            foreach (var inputVariable in inputVariables)
+            {
+                varToVarRefs.Add(inputVariable.Variable, inputVariable);
+            }
+            foreach (var nizkVariable in nizkVariables)
+            {
+                varToVarRefs.Add(nizkVariable.Variable, nizkVariable);
+            }
+            foreach (var outputVariable in outputVariables)
+            {
+                varToVarRefs.Add(outputVariable.Variable, outputVariable);
+            }
+
             var varToNode = new Dictionary<Variable, VariableNode>();
 
             var conToNode = new Dictionary<VariableConnection, VariableOperationNode>();
@@ -33,6 +48,24 @@ namespace code0k_cc.Runtime.VariableMap
                 }
 
                 var varNode = new VariableNode(itemVariable);
+                if (varToVarRefs.ContainsKey(itemVariable))
+                {
+                    var varRef = varToVarRefs[itemVariable];
+                    switch (varRef.NizkAttribute)
+                    {
+                        case NizkVariableType.Input:
+                        case NizkVariableType.NizkInput:
+                        case NizkVariableType.Output:
+                            varNode.NizkAttribute = varRef.NizkAttribute;
+                            varNode.VarName = varRef.VarName;
+                            break;
+                            
+                        case NizkVariableType.Intermediate:
+                        default:
+                            throw new Exception("Assert failed!");
+                    }
+                }
+
                 varToNode.Add(itemVariable, varNode);
                 mapAllNodes.Add(varNode);
 
@@ -80,12 +113,52 @@ namespace code0k_cc.Runtime.VariableMap
                 return varNode;
             }
 
-            foreach (var variable in outputVariables)
+            foreach (var variableRef in outputVariables)
             {
-                _ = AddVariableNode(variable);
+                _ = AddVariableNode(variableRef.Variable);
             }
-             
+
             Debug.Assert(mapAllNodes.Where(node => node.PrevNodes.Count == 0).Intersect(mapRootNodes).Count() == mapRootNodes.Count);
+
+
+
+
+            foreach (var mapNode in mapRootNodes)
+            {
+                // only the following are permitted: (IsConstant=True) or (IsConstant=false and input/nizk)
+
+                if (mapNode is VariableNode varNode)
+                {
+                    if (varToVarRefs.ContainsKey(varNode.Variable))
+                    {
+                        var varRef = varToVarRefs[varNode.Variable];
+                        switch (varRef.NizkAttribute)
+                        {
+                            case NizkVariableType.Input:
+                            case NizkVariableType.NizkInput:
+                                Debug.Assert(!varNode.Variable.Value.IsConstant);
+                                break;
+
+                            case NizkVariableType.Output:
+                                throw new Exception($"Runtime error: output variable \"{varRef.VarName}\" has not been assigned.");
+
+                            case NizkVariableType.Intermediate:
+                            default:
+                                throw new Exception("Assert failed!");
+                        }
+                    }
+                    else
+                    {
+                        Debug.Assert(varNode.Variable.Value.IsConstant);
+                    }
+                    
+                }
+                else
+                {
+                    throw new Exception("Assert failed!");
+                }
+
+            }
 
             return new VariableMap()
             {
@@ -105,11 +178,11 @@ namespace code0k_cc.Runtime.VariableMap
 
             // copy node collection
             var remainingNodes = new HashSet<IVariableMapNode>(this.Nodes);
-            var remainingOrphanNodes = new List<IVariableMapNode>(this.RootNodes); 
+            var remainingOrphanNodes = new List<IVariableMapNode>(this.RootNodes);
 
             while (true)
             {
-                Debug.Assert(remainingNodes.Where(node => nodePrevsDict[node].Count == 0).Intersect(remainingOrphanNodes).Count()== remainingOrphanNodes.Count);
+                Debug.Assert(remainingNodes.Where(node => nodePrevsDict[node].Count == 0).Intersect(remainingOrphanNodes).Count() == remainingOrphanNodes.Count);
 
                 //find orphan node
                 if (remainingOrphanNodes.Count <= 0)

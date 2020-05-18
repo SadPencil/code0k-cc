@@ -6,10 +6,9 @@ namespace code0k_cc.Runtime.Nizk
 {
     enum NizkVariableType
     {
-        NonNizkVariable,
+        Intermediate,
         Input,
         NizkInput,
-        Output,
-        Intermediate,
+        Output, 
     }
 }

@@ -455,26 +455,27 @@ namespace code0k_cc.Parse
                 var expRet = FunctionCallFunc(arg, mainFuncDec, new List<Variable>()).ExpressionResult;
 
                 // todo: save nizk variables
-                Dictionary<NizkVariableType, List<Variable>> nizkVars = new Dictionary<NizkVariableType, List<Variable>>()
+                Dictionary<NizkVariableType, List<VariableRef>> nizkVars = new Dictionary<NizkVariableType, List<VariableRef>>()
                 {
-                    { NizkVariableType.Input, new List<Variable>() },
-                    { NizkVariableType.NizkInput, new List<Variable>() },
-                    { NizkVariableType.Output, new List<Variable>() },
+                    { NizkVariableType.Input, new List<VariableRef>() },
+                    { NizkVariableType.NizkInput, new List<VariableRef>() },
+                    { NizkVariableType.Output, new List<VariableRef>() },
                 };
                 foreach (var varRef in mainBlockOverlay.GetVariableDict().Values)
                 {
                     if (nizkVars.ContainsKey(varRef.NizkAttribute))
                     {
-                        nizkVars[varRef.NizkAttribute].Add(varRef.Variable);
+                        nizkVars[varRef.NizkAttribute].Add(varRef);
                     }
                 }
 
-                var map = VariableMap.GetMapFromVariableConnection(nizkVars[NizkVariableType.Output]);
+                var map = VariableMap.GetMapFromVariableConnection(nizkVars[NizkVariableType.Input], nizkVars[NizkVariableType.NizkInput], nizkVars[NizkVariableType.Output]);
+
                 var sortResult = map.TopologicalSort();
                 foreach (var node in sortResult)
                 {
                     //test
-                    
+
                     switch (node)
                     {
                         case VariableNode nnode:

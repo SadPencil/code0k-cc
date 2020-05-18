@@ -9,7 +9,9 @@ namespace code0k_cc.Runtime
     {
         public Variable Variable { get; set; }
 
-        public NizkVariableType NizkAttribute { get; set; } = NizkVariableType.NonNizkVariable;
+        public NizkVariableType NizkAttribute { get; set; } = NizkVariableType.Intermediate;
+
+        public string VarName { get; set; }
 
         public VariableRef(Variable variable)
         {
