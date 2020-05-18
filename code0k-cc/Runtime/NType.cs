@@ -5,10 +5,12 @@ using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using code0k_cc.Lex;
+using code0k_cc.Pinocchio;
 using code0k_cc.Runtime.ExeResult;
 using code0k_cc.Runtime.Nizk;
 using code0k_cc.Runtime.Operation;
@@ -79,11 +81,11 @@ namespace code0k_cc.Runtime
         {
             return this.ImplicitConvert(variable, type);
         }
-        
-        public Variable ExplicitConvert(Variable variable, NType type)
+
+        public Variable ExplicitConvert(Variable variable, NType targetType)
         {
             Debug.Assert(variable.Type == this);
-            var retVariable = this.ExplicitConvertFunc(variable, type);
+            var retVariable = this.ExplicitConvertFunc(variable, targetType);
             if (Object.ReferenceEquals(retVariable, variable))
             {
                 return retVariable;
@@ -99,10 +101,10 @@ namespace code0k_cc.Runtime
             return retVariable;
         }
 
-        public Variable ImplicitConvert(Variable variable, NType type)
+        public Variable ImplicitConvert(Variable variable, NType targetType)
         {
             Debug.Assert(variable.Type == this);
-            var retVariable = this.ImplicitConvertFunc(variable, type);
+            var retVariable = this.ImplicitConvertFunc(variable, targetType);
             if (Object.ReferenceEquals(retVariable, variable))
             {
                 return retVariable;
@@ -179,6 +181,14 @@ namespace code0k_cc.Runtime
         }
         private IReadOnlyDictionary<BinaryOperation, Func<Variable, Variable, Variable>> BinaryOperationFuncs { get; set; }
 
+        public (List<PinocchioWire> Wires, List<PinocchioConstraint> Constraints) ToPinocchioWires(Variable variable, PinocchioCommonArg arg, bool checkRange)
+        {
+            Debug.Assert(variable.Type == this);
+            return this.ToPinocchioWiresFunc(variable, arg, checkRange);
+        }
+
+        private Func<Variable, PinocchioCommonArg, bool, (List<PinocchioWire> Wires, List<PinocchioConstraint> Constraints)> ToPinocchioWiresFunc { get; set; }
+
         private NType(string TypeCodeName)
         {
             this.TypeCodeName = TypeCodeName;
@@ -211,6 +221,7 @@ namespace code0k_cc.Runtime
             this.GetStringFunc = variable => throw new Exception($"Type \"{this.TypeCodeName}\" doesn't support String().");
             this.ParseFunc = s => throw new Exception($"Type \"{this.TypeCodeName}\" doesn't support Parse().");
             this.GetNewNizkVariableFunc = () => throw new Exception($"Type \"{this.TypeCodeName}\" is not nizk-compatible.");
+            this.ToPinocchioWiresFunc = (variable, arg, checkRange) => throw new Exception($"Type \"{this.TypeCodeName}\" is not nizk-compatible.");
         }
 
         public static readonly NType String = new NType("string")
@@ -353,11 +364,9 @@ namespace code0k_cc.Runtime
                             new NizkUInt32Value() {
                                 IsConstant = true,
                                 Value = + v1.Value ,
-
                             }
                             : new NizkUInt32Value() {
                                 IsConstant = false,
-
                             }
                     };
                 }},
@@ -371,11 +380,9 @@ namespace code0k_cc.Runtime
                             new NizkUInt32Value() {
                                 IsConstant = true,
                                 Value = ((UInt32)0) - v1.Value ,
-
                             }
                             : new NizkUInt32Value() {
                                 IsConstant = false,
-
                             }
                     };
                 }},
@@ -389,11 +396,9 @@ namespace code0k_cc.Runtime
                             new NizkUInt32Value() {
                                 IsConstant = true,
                                 Value = ~ v1.Value ,
-
                             }
                             : new NizkUInt32Value() {
                                 IsConstant = false,
-
                             }
                     };
                 }},
@@ -410,10 +415,9 @@ namespace code0k_cc.Runtime
                         Type = NType.UInt32,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
                             new NizkUInt32Value() {
-                            IsConstant = true,
-                            Value = v1.Value+v2.Value,
-
-                        }
+                                IsConstant = true,
+                                Value = v1.Value+v2.Value,
+                            }
                             : new NizkUInt32Value() {
                                 IsConstant = false,
 
@@ -431,11 +435,9 @@ namespace code0k_cc.Runtime
                             new NizkUInt32Value() {
                                 IsConstant = true,
                                 Value = v1.Value-v2.Value,
-
                             }
                             : new NizkUInt32Value() {
                                 IsConstant = false,
-
                             }
                     };
                 }},
@@ -450,11 +452,9 @@ namespace code0k_cc.Runtime
                             new NizkUInt32Value() {
                                 IsConstant = true,
                                 Value = v1.Value*v2.Value,
-
                             }
                             : new NizkUInt32Value() {
                                 IsConstant = false,
-
                             }
                     };
                 }},
@@ -469,11 +469,9 @@ namespace code0k_cc.Runtime
                             new NizkUInt32Value() {
                                 IsConstant = true,
                                 Value = v1.Value/v2.Value,
-
                             }
                             : new NizkUInt32Value() {
                                 IsConstant = false,
-
                             }
                     };
                 }},
@@ -488,11 +486,9 @@ namespace code0k_cc.Runtime
                             new NizkUInt32Value() {
                                 IsConstant = true,
                                 Value = v1.Value%v2.Value,
-
                             }
                             : new NizkUInt32Value() {
                                 IsConstant = false,
-
                             }
                     };
                 }},
@@ -507,11 +503,9 @@ namespace code0k_cc.Runtime
                             new NizkBoolValue() {
                                 IsConstant = true,
                                 Value = v1.Value==v2.Value,
-
                             }
                             : new NizkBoolValue() {
                                 IsConstant = false,
-
                             }
                     };
                 }},
@@ -526,11 +520,9 @@ namespace code0k_cc.Runtime
                             new NizkBoolValue() {
                                 IsConstant = true,
                                 Value = v1.Value<v2.Value,
-
                             }
                             : new NizkBoolValue() {
                                 IsConstant = false,
-
                             }
                     };
                 }},
@@ -545,11 +537,9 @@ namespace code0k_cc.Runtime
                             new NizkBoolValue() {
                                 IsConstant = true,
                                 Value = v1.Value<=v2.Value,
-
                             }
                             : new NizkBoolValue() {
                                 IsConstant = false,
-
                             }
                     };
                 }},
@@ -564,11 +554,9 @@ namespace code0k_cc.Runtime
                             new NizkBoolValue() {
                                 IsConstant = true,
                                 Value = v1.Value>v2.Value,
-
                             }
                             : new NizkBoolValue() {
                                 IsConstant = false,
-
                             }
                     };
                 }},
@@ -583,11 +571,9 @@ namespace code0k_cc.Runtime
                             new NizkBoolValue() {
                                 IsConstant = true,
                                 Value = v1.Value>=v2.Value,
-
                             }
                             : new NizkBoolValue() {
                                 IsConstant = false,
-
                             }
                     };
                 }},
@@ -602,7 +588,6 @@ namespace code0k_cc.Runtime
                             new NizkBoolValue() {
                                 IsConstant = true,
                                 Value = v1.Value!=v2.Value,
-
                             }
                             : new NizkBoolValue() {
                                 IsConstant = false,
@@ -621,11 +606,9 @@ namespace code0k_cc.Runtime
                             new NizkUInt32Value() {
                                 IsConstant = true,
                                 Value = v1.Value&v2.Value,
-
                             }
                             : new NizkUInt32Value() {
                                 IsConstant = false,
-
                             }
                     };
                 }},
@@ -640,7 +623,6 @@ namespace code0k_cc.Runtime
                             new NizkUInt32Value() {
                                 IsConstant = true,
                                 Value = v1.Value|v2.Value,
-
                             }
                             : new NizkUInt32Value() {
                                 IsConstant = false,
@@ -659,11 +641,9 @@ namespace code0k_cc.Runtime
                             new NizkUInt32Value() {
                                 IsConstant = true,
                                 Value = v1.Value^v2.Value,
-
                             }
                             : new NizkUInt32Value() {
                                 IsConstant = false,
-
                             }
                     };
                 }}, 
@@ -672,7 +652,43 @@ namespace code0k_cc.Runtime
                 //todo implement Bitwise Shift
             },
 
+            ToPinocchioWiresFunc = (variable, arg, checkRange) =>
+            {
+                var ret = (Wires: new List<PinocchioWire>(), Constraints: new List<PinocchioConstraint>());
 
+                var uint32Value = variable.Value as NizkUInt32Value;
+                if (uint32Value.IsConstant)
+                {
+                    ret.Wires.Add(new PinocchioWire(new BigInteger(uint32Value.Value)));
+                }
+                else
+                {
+                    var newWire = new PinocchioWire(null);
+                    ret.Wires.Add(newWire);
+                    if (checkRange)
+                    {
+                        var packCon = new PinocchioConstraint(PinocchioConstraintType.Pack);
+                        ret.Constraints.Add(packCon);
+
+                        packCon.InWires.Add(newWire);
+                        foreach (var i in Enumerable.Range(0, 32))
+                        {
+                            var boolWire = new PinocchioWire(null);
+                            ret.Wires.Add(boolWire);
+
+                            var boolCon = new PinocchioConstraint(PinocchioConstraintType.ZeroP);
+                            ret.Constraints.Add(boolCon);
+
+                            boolCon.InWires.Add(boolWire);
+                            boolCon.OutWires.Add(boolWire);
+
+                            packCon.OutWires.Add(boolWire);
+                        }
+                    }
+                }
+
+                return ret;
+            }
         };
 
         public static readonly NType Bool = new NType("bool")
@@ -684,7 +700,6 @@ namespace code0k_cc.Runtime
                 {
                     IsConstant = true,
                     Value = false,
-
                 }
             },
             ParseFunc = (str) =>
@@ -698,7 +713,6 @@ namespace code0k_cc.Runtime
                         {
                             IsConstant = true,
                             Value = retV,
-
                         }
                     };
                 }
@@ -734,7 +748,6 @@ namespace code0k_cc.Runtime
                             {
                                 IsConstant = true,
                                 Value = ( ( (NizkBoolValue) variable.Value ).Value ) ? (System.UInt32) 1 : (System.UInt32) 0,
-
                             }
                         };
                     }
@@ -760,7 +773,6 @@ namespace code0k_cc.Runtime
                             new NizkBoolValue() {
                                 IsConstant = true,
                                 Value = ! v1.Value ,
-
                             }
                             : new NizkBoolValue() {
                                 IsConstant = false,
@@ -780,7 +792,6 @@ namespace code0k_cc.Runtime
                             new NizkBoolValue() {
                                 IsConstant = true,
                                 Value = v1.Value==v2.Value,
-
                             }
                             : new NizkBoolValue() {
                                 IsConstant = false,
@@ -798,7 +809,6 @@ namespace code0k_cc.Runtime
                             new NizkBoolValue() {
                                 IsConstant = true,
                                 Value = v1.Value!=v2.Value,
-
                             }
                             : new NizkBoolValue() {
                                 IsConstant = false,
@@ -816,7 +826,6 @@ namespace code0k_cc.Runtime
                             new NizkBoolValue() {
                                 IsConstant = true,
                                 Value = v1.Value&&v2.Value,
-
                             }
                             : new NizkBoolValue() {
                                 IsConstant = false,
@@ -834,7 +843,6 @@ namespace code0k_cc.Runtime
                             new NizkBoolValue() {
                                 IsConstant = true,
                                 Value = v1.Value||v2.Value,
-
                             }
                             : new NizkBoolValue() {
                                 IsConstant = false,
@@ -852,7 +860,6 @@ namespace code0k_cc.Runtime
                             new NizkBoolValue() {
                                 IsConstant = true,
                                 Value = v1.Value!=v2.Value,
-
                             }
                             : new NizkBoolValue() {
                                 IsConstant = false,
@@ -862,6 +869,32 @@ namespace code0k_cc.Runtime
 
             },
 
+            ToPinocchioWiresFunc = (variable, arg, checkRange) =>
+            {
+                var ret = (Wires: new List<PinocchioWire>(), Constraints: new List<PinocchioConstraint>());
+
+                var boolValue = variable.Value as NizkBoolValue;
+                if (boolValue.IsConstant)
+                {
+                    ret.Wires.Add(new PinocchioWire(new BigInteger(boolValue.Value ? 1 : 0)));
+                }
+                else
+                {
+                    var newWire = new PinocchioWire(null);
+                    ret.Wires.Add(newWire);
+
+                    if (checkRange)
+                    {
+                        var boolCon = new PinocchioConstraint(PinocchioConstraintType.ZeroP);
+                        ret.Constraints.Add(boolCon);
+
+                        boolCon.InWires.Add(newWire);
+                        boolCon.OutWires.Add(newWire);
+                    }
+                }
+
+                return ret;
+            }
         };
 
         public static readonly NType Void = new NType("void")
