@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
+using code0k_cc.Runtime;
 using code0k_cc.Runtime.VariableMap;
 using code0k_cc.Standalone;
 
@@ -22,11 +23,11 @@ namespace code0k_cc.Pinocchio
         Pack,
          */
 
-        public (List<PinocchioWire> Wires, List<PinocchioConstraint> Constraints) Convert(
-            List<(VariableNode inVariableNode, List<PinocchioWire> inPinocchioWires)> inList,
+        public (List<PinocchioWire> Wires, List<PinocchioConstraint> Constraints)
+            Convert(List<(VariableNode inVariableNode, List<PinocchioWire> inPinocchioWires)> inList,
             List<VariableNode> outVariableNodes)
         {
-            return  this.ConvertFunc(inList, outVariableNodes);
+            return this.ConvertFunc(inList, outVariableNodes);
         }
 
         private Func<
@@ -42,6 +43,10 @@ namespace code0k_cc.Pinocchio
             ConvertFunc = (inList, outVariableNodes) =>
             {
                 //todo
+
+
+
+
             }
         };
 
@@ -64,6 +69,25 @@ namespace code0k_cc.Pinocchio
             ConvertFunc = (inList, outVariableNodes) =>
             {
                 //todo
+                if (inList.Count == 2)
+                {
+                    if (inList[0].inVariableNode.Variable.Type == NType.Bool &&
+                        inList[1].inVariableNode.Variable.Type == NType.Bool)
+                    {
+                        //todo
+                    }
+                    else
+                    {
+                        throw new Exception("Assert failed.");
+                    }
+                }
+                else
+                {
+                    throw new Exception("Assert failed.");
+                }
+
+
+
             }
         };
         public static PinocchioConstraintType Or = new PinocchioConstraintType()
@@ -86,7 +110,7 @@ namespace code0k_cc.Pinocchio
             {
                 //todo
             }
-        }; 
+        };
 
 
     }

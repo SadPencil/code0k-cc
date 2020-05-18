@@ -121,15 +121,14 @@ namespace code0k_cc.Runtime
         }
 
         /// <summary>
-        /// RightVal, LeftType, LeftVal
+        /// RightVal, TargetType, TargetVal
         /// </summary>
         private Func<Variable, NType, Variable> ImplicitConvertFunc;
 
         /// <summary>
-        /// RightVal, LeftType, LeftVal
+        /// RightVal, TargetType, TargetVal
         /// </summary>
         private Func<Variable, NType, Variable> ExplicitConvertFunc;
-
 
         public Variable UnaryOperation(Variable variable, UnaryOperation op)
         {
@@ -154,7 +153,9 @@ namespace code0k_cc.Runtime
                 throw new Exception($"Type \"{this.TypeCodeName}\" doesn't support \"{op.ToString()}\" operation.");
             }
         }
-
+        /// <summary>
+        /// The variable's type is granted to be same as `this`
+        /// </summary>
         private IReadOnlyDictionary<UnaryOperation, Func<Variable, Variable>> UnaryOperationFuncs { get; set; }
         public Variable BinaryOperation(Variable variable, Variable another, BinaryOperation op)
         {
@@ -179,6 +180,10 @@ namespace code0k_cc.Runtime
                 throw new Exception($"Type \"{this.TypeCodeName}\" doesn't support \"{op.ToString()}\" operation.");
             }
         }
+        /// <summary>
+        /// The first variable's type is granted to be same as `this`
+        /// While the second variable's type can be anything
+        /// </summary>
         private IReadOnlyDictionary<BinaryOperation, Func<Variable, Variable, Variable>> BinaryOperationFuncs { get; set; }
 
         public (List<PinocchioWire> Wires, List<PinocchioConstraint> Constraints) ToPinocchioWires(Variable variable, PinocchioCommonArg arg, bool checkRange)
@@ -409,8 +414,10 @@ namespace code0k_cc.Runtime
             {
                 {Operation.BinaryOperation.Addition, (var1, var2) =>
                 {
-                    var v1 = ((NizkUInt32Value) var1.Value);
-                    var v2 = ((NizkUInt32Value) var2.Value);
+                    var newVar1 = var1;
+                    var newVar2 = var2.Assign(NType.UInt32);
+                    var v1 = ((NizkUInt32Value) newVar1.Value);
+                    var v2 = ((NizkUInt32Value) newVar2.Value);
                     return new Variable() {
                         Type = NType.UInt32,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
@@ -420,15 +427,16 @@ namespace code0k_cc.Runtime
                             }
                             : new NizkUInt32Value() {
                                 IsConstant = false,
-
                             }
                     };
                 }},
 
                 {Operation.BinaryOperation.Subtract, (var1, var2) =>
                 {
-                    var v1 = ((NizkUInt32Value) var1.Value);
-                    var v2 = ((NizkUInt32Value) var2.Value);
+                    var newVar1 = var1;
+                    var newVar2 = var2.Assign(NType.UInt32);
+                    var v1 = ((NizkUInt32Value) newVar1.Value);
+                    var v2 = ((NizkUInt32Value) newVar2.Value);
                     return new Variable() {
                         Type = NType.UInt32,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
@@ -444,8 +452,10 @@ namespace code0k_cc.Runtime
 
                 {Operation.BinaryOperation.Multiplication, (var1, var2) =>
                 {
-                    var v1 = ((NizkUInt32Value) var1.Value);
-                    var v2 = ((NizkUInt32Value) var2.Value);
+                    var newVar1 = var1;
+                    var newVar2 = var2.Assign(NType.UInt32);
+                    var v1 = ((NizkUInt32Value) newVar1.Value);
+                    var v2 = ((NizkUInt32Value) newVar2.Value);
                     return new Variable() {
                         Type = NType.UInt32,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
@@ -461,8 +471,10 @@ namespace code0k_cc.Runtime
 
                 {Operation.BinaryOperation.Division, (var1, var2) =>
                 {
-                    var v1 = ((NizkUInt32Value) var1.Value);
-                    var v2 = ((NizkUInt32Value) var2.Value);
+                    var newVar1 = var1;
+                    var newVar2 = var2.Assign(NType.UInt32);
+                    var v1 = ((NizkUInt32Value) newVar1.Value);
+                    var v2 = ((NizkUInt32Value) newVar2.Value);
                     return new Variable() {
                         Type = NType.UInt32,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
@@ -478,8 +490,10 @@ namespace code0k_cc.Runtime
 
                 {Operation.BinaryOperation.Remainder, (var1, var2) =>
                 {
-                    var v1 = ((NizkUInt32Value) var1.Value);
-                    var v2 = ((NizkUInt32Value) var2.Value);
+                    var newVar1 = var1;
+                    var newVar2 = var2.Assign(NType.UInt32);
+                    var v1 = ((NizkUInt32Value) newVar1.Value);
+                    var v2 = ((NizkUInt32Value) newVar2.Value);
                     return new Variable() {
                         Type = NType.UInt32,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
@@ -495,8 +509,10 @@ namespace code0k_cc.Runtime
 
                 {Operation.BinaryOperation.EqualTo, (var1, var2) =>
                 {
-                    var v1 = ((NizkUInt32Value) var1.Value);
-                    var v2 = ((NizkUInt32Value) var2.Value);
+                    var newVar1 = var1;
+                    var newVar2 = var2.Assign(NType.UInt32);
+                    var v1 = ((NizkUInt32Value) newVar1.Value);
+                    var v2 = ((NizkUInt32Value) newVar2.Value);
                     return new Variable() {
                         Type = NType.Bool,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
@@ -512,8 +528,10 @@ namespace code0k_cc.Runtime
 
                 {Operation.BinaryOperation.LessThan, (var1, var2) =>
                 {
-                    var v1 = ((NizkUInt32Value) var1.Value);
-                    var v2 = ((NizkUInt32Value) var2.Value);
+                    var newVar1 = var1;
+                    var newVar2 = var2.Assign(NType.UInt32);
+                    var v1 = ((NizkUInt32Value) newVar1.Value);
+                    var v2 = ((NizkUInt32Value) newVar2.Value);
                     return new Variable() {
                         Type = NType.Bool,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
@@ -529,8 +547,10 @@ namespace code0k_cc.Runtime
 
                 {Operation.BinaryOperation.LessEqualThan, (var1, var2) =>
                 {
-                    var v1 = ((NizkUInt32Value) var1.Value);
-                    var v2 = ((NizkUInt32Value) var2.Value);
+                    var newVar1 = var1;
+                    var newVar2 = var2.Assign(NType.UInt32);
+                    var v1 = ((NizkUInt32Value) newVar1.Value);
+                    var v2 = ((NizkUInt32Value) newVar2.Value);
                     return new Variable() {
                         Type = NType.Bool,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
@@ -546,8 +566,10 @@ namespace code0k_cc.Runtime
 
                 {Operation.BinaryOperation.GreaterThan, (var1, var2) =>
                 {
-                    var v1 = ((NizkUInt32Value) var1.Value);
-                    var v2 = ((NizkUInt32Value) var2.Value);
+                    var newVar1 = var1;
+                    var newVar2 = var2.Assign(NType.UInt32);
+                    var v1 = ((NizkUInt32Value) newVar1.Value);
+                    var v2 = ((NizkUInt32Value) newVar2.Value);
                     return new Variable() {
                         Type = NType.Bool,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
@@ -563,8 +585,10 @@ namespace code0k_cc.Runtime
 
                 {Operation.BinaryOperation.GreaterEqualThan, (var1, var2) =>
                 {
-                    var v1 = ((NizkUInt32Value) var1.Value);
-                    var v2 = ((NizkUInt32Value) var2.Value);
+                    var newVar1 = var1;
+                    var newVar2 = var2.Assign(NType.UInt32);
+                    var v1 = ((NizkUInt32Value) newVar1.Value);
+                    var v2 = ((NizkUInt32Value) newVar2.Value);
                     return new Variable() {
                         Type = NType.Bool,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
@@ -580,8 +604,10 @@ namespace code0k_cc.Runtime
 
                 {Operation.BinaryOperation.NotEqualTo, (var1, var2) =>
                 {
-                    var v1 = ((NizkUInt32Value) var1.Value);
-                    var v2 = ((NizkUInt32Value) var2.Value);
+                    var newVar1 = var1;
+                    var newVar2 = var2.Assign(NType.UInt32);
+                    var v1 = ((NizkUInt32Value) newVar1.Value);
+                    var v2 = ((NizkUInt32Value) newVar2.Value);
                     return new Variable() {
                         Type = NType.Bool,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
@@ -598,8 +624,10 @@ namespace code0k_cc.Runtime
 
                 {Operation.BinaryOperation.BitwiseAnd, (var1, var2) =>
                 {
-                    var v1 = ((NizkUInt32Value) var1.Value);
-                    var v2 = ((NizkUInt32Value) var2.Value);
+                    var newVar1 = var1;
+                    var newVar2 = var2.Assign(NType.UInt32);
+                    var v1 = ((NizkUInt32Value) newVar1.Value);
+                    var v2 = ((NizkUInt32Value) newVar2.Value);
                     return new Variable() {
                         Type = NType.UInt32,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
@@ -615,8 +643,10 @@ namespace code0k_cc.Runtime
 
                 {Operation.BinaryOperation.BitwiseOr, (var1, var2) =>
                 {
-                    var v1 = ((NizkUInt32Value) var1.Value);
-                    var v2 = ((NizkUInt32Value) var2.Value);
+                    var newVar1 = var1;
+                    var newVar2 = var2.Assign(NType.UInt32);
+                    var v1 = ((NizkUInt32Value) newVar1.Value);
+                    var v2 = ((NizkUInt32Value) newVar2.Value);
                     return new Variable() {
                         Type = NType.UInt32,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
@@ -626,15 +656,16 @@ namespace code0k_cc.Runtime
                             }
                             : new NizkUInt32Value() {
                                 IsConstant = false,
-
                             }
                     };
                 }},
 
                 {Operation.BinaryOperation.BitwiseXor, (var1, var2) =>
                 {
-                    var v1 = ((NizkUInt32Value) var1.Value);
-                    var v2 = ((NizkUInt32Value) var2.Value);
+                    var newVar1 = var1;
+                    var newVar2 = var2.Assign(NType.UInt32);
+                    var v1 = ((NizkUInt32Value) newVar1.Value);
+                    var v2 = ((NizkUInt32Value) newVar2.Value);
                     return new Variable() {
                         Type = NType.UInt32,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
@@ -646,8 +677,7 @@ namespace code0k_cc.Runtime
                                 IsConstant = false,
                             }
                     };
-                }}, 
-                
+                }},
 
                 //todo implement Bitwise Shift
             },
@@ -783,9 +813,11 @@ namespace code0k_cc.Runtime
             BinaryOperationFuncs = new Dictionary<BinaryOperation, Func<Variable, Variable, Variable>>()
             {
                 {Operation.BinaryOperation.EqualTo, (var1, var2) =>
-                {
-                    var v1 = ((NizkBoolValue) var1.Value);
-                    var v2 = ((NizkBoolValue) var2.Value);
+                {                    
+                    var newVar1 = var1;
+                    var newVar2 = var2.Assign(NType.Bool);
+                    var v1 = ((NizkBoolValue) newVar1.Value);
+                    var v2 = ((NizkBoolValue) newVar2.Value);
                     return new Variable() {
                         Type = NType.Bool,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
@@ -801,8 +833,10 @@ namespace code0k_cc.Runtime
 
                 {Operation.BinaryOperation.NotEqualTo, (var1, var2) =>
                 {
-                    var v1 = ((NizkBoolValue) var1.Value);
-                    var v2 = ((NizkBoolValue) var2.Value);
+                    var newVar1 = var1;
+                    var newVar2 = var2.Assign(NType.Bool);
+                    var v1 = ((NizkBoolValue) newVar1.Value);
+                    var v2 = ((NizkBoolValue) newVar2.Value);
                     return new Variable() {
                         Type = NType.Bool,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
@@ -818,8 +852,10 @@ namespace code0k_cc.Runtime
 
                 {Operation.BinaryOperation.BooleanAnd, (var1, var2) =>
                 {
-                    var v1 = ((NizkBoolValue) var1.Value);
-                    var v2 = ((NizkBoolValue) var2.Value);
+                    var newVar1 = var1;
+                    var newVar2 = var2.Assign(NType.Bool);
+                    var v1 = ((NizkBoolValue) newVar1.Value);
+                    var v2 = ((NizkBoolValue) newVar2.Value);
                     return new Variable() {
                         Type = NType.Bool,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
@@ -835,8 +871,10 @@ namespace code0k_cc.Runtime
 
                 {Operation.BinaryOperation.BooleanOr, (var1, var2) =>
                 {
-                    var v1 = ((NizkBoolValue) var1.Value);
-                    var v2 = ((NizkBoolValue) var2.Value);
+                    var newVar1 = var1;
+                    var newVar2 = var2.Assign(NType.Bool);
+                    var v1 = ((NizkBoolValue) newVar1.Value);
+                    var v2 = ((NizkBoolValue) newVar2.Value);
                     return new Variable() {
                         Type = NType.Bool,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
@@ -852,8 +890,10 @@ namespace code0k_cc.Runtime
 
                 {Operation.BinaryOperation.BooleanXor, (var1, var2) =>
                 {
-                    var v1 = ((NizkBoolValue) var1.Value);
-                    var v2 = ((NizkBoolValue) var2.Value);
+                    var newVar1 = var1;
+                    var newVar2 = var2.Assign(NType.Bool);
+                    var v1 = ((NizkBoolValue) newVar1.Value);
+                    var v2 = ((NizkBoolValue) newVar2.Value);
                     return new Variable() {
                         Type = NType.Bool,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
