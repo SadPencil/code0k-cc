@@ -35,7 +35,7 @@ namespace code0k_cc.Runtime.VariableMap
 
             var varToNode = new Dictionary<RawVariable, VariableNode>();
 
-            var conToNode = new Dictionary<VariableConnection, VariableOperationNode>();
+            var conToNode = new Dictionary<VariableConnection, OperationNode>();
 
             var mapAllNodes = new List<IVariableMapNode>();
             var mapRootNodes = new List<IVariableMapNode>();
@@ -83,7 +83,7 @@ namespace code0k_cc.Runtime.VariableMap
                         //save connection 
                         if (!conToNode.ContainsKey(connection))
                         {
-                            var conNode = new VariableOperationNode()
+                            var conNode = new OperationNode()
                             {
                                 ConnectionType = connection.OperationType,
                             };

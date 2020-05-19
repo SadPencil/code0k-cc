@@ -4,7 +4,7 @@ using System.Text;
 
 namespace code0k_cc.Runtime.VariableMap
 {
-    class VariableOperationNode : IVariableMapNode
+    class OperationNode : IVariableMapNode
     {
         public VariableOperationType ConnectionType;
     }

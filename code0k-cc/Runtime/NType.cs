@@ -186,13 +186,16 @@ namespace code0k_cc.Runtime
         /// </summary>
         private IReadOnlyDictionary<VariableOperationType, Func<Variable, Variable, Variable>> BinaryOperationFuncs { get; set; }
 
-        public PinocchioOutput VariableToPinocchio(RawVariable rawVariable, PinocchioCommonArg commonArg, bool checkRange)
+        // pinocchio staffs
+        public PinocchioOutput VariableNodeToPinocchio(VariableNode variableNode, PinocchioCommonArg commonArg, bool checkRange)
         {
-            Debug.Assert(rawVariable.Type == this);
-            return this.ToPinocchioWiresFunc(rawVariable, commonArg, checkRange);
+            Debug.Assert(variableNode.RawVariable.Type == this);
+            return this.VariableNodeToPinocchioFunc(variableNode, commonArg, checkRange);
         }
 
-        private Func<RawVariable, PinocchioCommonArg, bool, PinocchioOutput> ToPinocchioWiresFunc { get; set; }
+        private Func<VariableNode, PinocchioCommonArg, bool, PinocchioOutput> VariableNodeToPinocchioFunc { get; set; }
+
+
 
         private NType(string TypeCodeName)
         {
@@ -226,7 +229,7 @@ namespace code0k_cc.Runtime
             this.GetStringFunc = variable => throw new Exception($"Type \"{this.TypeCodeName}\" doesn't support String().");
             this.ParseFunc = s => throw new Exception($"Type \"{this.TypeCodeName}\" doesn't support Parse().");
             this.GetNewNizkVariableFunc = () => throw new Exception($"Type \"{this.TypeCodeName}\" is not nizk-compatible.");
-            this.ToPinocchioWiresFunc = (variable, arg, checkRange) => throw new Exception($"Type \"{this.TypeCodeName}\" is not nizk-compatible.");
+            this.VariableNodeToPinocchioFunc = (variable, arg, checkRange) => throw new Exception($"Type \"{this.TypeCodeName}\" is not nizk-compatible.");
         }
 
         public static readonly NType String = new NType("string")
@@ -699,11 +702,11 @@ namespace code0k_cc.Runtime
                 //todo implement Bitwise Shift
             },
 
-            ToPinocchioWiresFunc = (variable, commonArg, checkRange) =>
+            VariableNodeToPinocchioFunc = (variableNode, commonArg, checkRange) =>
             {
-                var ret = new PinocchioOutput() { VariableWires = new PinocchioVariableWires() { RawVariable = variable } };
+                var ret = new PinocchioOutput() { VariableWires = new PinocchioVariableWires() { RawVariable = variableNode.RawVariable } };
 
-                var uint32Value = variable.Value as NizkUInt32Value;
+                var uint32Value = variableNode.RawVariable.Value as NizkUInt32Value;
                 if (uint32Value.IsConstant)
                 {
                     ret.VariableWires.Wires.Add(new PinocchioWire(new BigInteger(uint32Value.Value)));
@@ -932,11 +935,11 @@ namespace code0k_cc.Runtime
 
             },
 
-            ToPinocchioWiresFunc = (variable, commonArg, checkRange) =>
+            VariableNodeToPinocchioFunc = (variableNode, commonArg, checkRange) =>
             {
-                var ret = new PinocchioOutput() { VariableWires = new PinocchioVariableWires() { RawVariable = variable } }; 
+                var ret = new PinocchioOutput() { VariableWires = new PinocchioVariableWires() { RawVariable = variableNode.RawVariable } };
 
-                var boolValue = variable.Value as NizkBoolValue;
+                var boolValue = variableNode.RawVariable.Value as NizkBoolValue;
                 if (boolValue.IsConstant)
                 {
                     ret.VariableWires.Wires.Add(new PinocchioWire(new BigInteger(boolValue.Value ? 1 : 0)));

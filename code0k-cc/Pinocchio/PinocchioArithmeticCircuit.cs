@@ -94,11 +94,11 @@ namespace code0k_cc.Pinocchio
                             // policy: checkRange is applied for nizkinput, and not applied for others
                             if (variableNode.NizkAttribute == NizkVariableType.NizkInput)
                             {
-                                ret = variableNode.RawVariable.Type.VariableToPinocchio(variableNode.RawVariable, commonArg, true);
+                                ret = variableNode.RawVariable.Type.VariableNodeToPinocchio(variableNode, commonArg, true);
                             }
                             else
                             {
-                                ret = variableNode.RawVariable.Type.VariableToPinocchio(variableNode.RawVariable, commonArg, false);
+                                ret = variableNode.RawVariable.Type.VariableNodeToPinocchio(variableNode, commonArg, false);
                             }
 
                             AddWireConstraint(ret);
@@ -113,7 +113,7 @@ namespace code0k_cc.Pinocchio
                         }
 
                         break;
-                    case VariableOperationNode operationNode:
+                    case OperationNode operationNode:
                         // get all in-variable
                         foreach (var prevNode in operationNode.PrevNodes)
                         {

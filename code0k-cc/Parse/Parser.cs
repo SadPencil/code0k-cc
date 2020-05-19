@@ -480,7 +480,7 @@ namespace code0k_cc.Parse
                         case VariableNode nnode:
                             Console.WriteLine(nnode.RawVariable.Type.TypeCodeName);
                             break;
-                        case VariableOperationNode nnode:
+                        case OperationNode nnode:
                             Console.WriteLine(nnode.ConnectionType.ToString());
                             break;
                         default:
