@@ -163,7 +163,7 @@ namespace code0k_cc.Pinocchio
 
                             outputs.ForEach(AddPinocchioOutput);
                         }
-                        
+                        break;
                     default:
                         throw CommonException.AssertFailedException();
                 }
