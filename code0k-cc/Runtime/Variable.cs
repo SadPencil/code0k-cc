@@ -41,12 +41,6 @@ namespace code0k_cc.Runtime
         {
             return this.Type.ExplicitConvert(this, leftType);
         }
-
-        public (List<PinocchioWire> Wires, List<PinocchioConstraint> Constraints) ToPinocchioWires(
-            PinocchioCommonArg commonArg, bool checkRange)
-        {
-            return this.Type.ToPinocchioWires(this, commonArg, checkRange);
-        }
-
+         
     }
 }

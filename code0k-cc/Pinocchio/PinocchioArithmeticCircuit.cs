@@ -45,6 +45,12 @@ namespace code0k_cc.Pinocchio
                 conList.Add(con);
             }
 
+            void AddWireConstraint(PinocchioOutput ret)
+            {
+                ret.VariableWires.Wires.ForEach(AddWire);
+                ret.Constraints.ForEach(AddConstraint);
+            }
+
             var commonArg = new PinocchioCommonArg();
 
             {
@@ -83,22 +89,21 @@ namespace code0k_cc.Pinocchio
                                 variableNode.NizkAttribute == NizkVariableType.Input ||
                                 variableNode.NizkAttribute == NizkVariableType.NizkInput);
 
-                            (List<PinocchioWire> Wires, List<PinocchioConstraint> Constraints) ret;
+                            PinocchioOutput ret;
 
                             // policy: checkRange is applied for nizkinput, and not applied for others
                             if (variableNode.NizkAttribute == NizkVariableType.NizkInput)
                             {
-                                ret = variableNode.RawVariable.ToPinocchioWires(commonArg, true);
+                                ret = variableNode.RawVariable.Type.VariableToPinocchio(variableNode.RawVariable, commonArg, true);
                             }
                             else
                             {
-                                ret = variableNode.RawVariable.ToPinocchioWires(commonArg, false);
+                                ret = variableNode.RawVariable.Type.VariableToPinocchio(variableNode.RawVariable, commonArg, false);
                             }
 
-                            ret.Wires.ForEach(AddWire);
-                            ret.Constraints.ForEach(AddConstraint);
+                            AddWireConstraint(ret);
 
-                            variableNodeToWires.Add(variableNode, ret.Wires);
+                            variableNodeToWires.Add(variableNode, ret.VariableWires.Wires);
                         }
                         else
                         {

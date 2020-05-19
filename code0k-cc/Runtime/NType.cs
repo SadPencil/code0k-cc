@@ -186,13 +186,13 @@ namespace code0k_cc.Runtime
         /// </summary>
         private IReadOnlyDictionary<VariableOperationType, Func<Variable, Variable, Variable>> BinaryOperationFuncs { get; set; }
 
-        public (List<PinocchioWire> Wires, List<PinocchioConstraint> Constraints) ToPinocchioWires(Variable variable, PinocchioCommonArg commonArg, bool checkRange)
+        public PinocchioOutput VariableToPinocchio(RawVariable rawVariable, PinocchioCommonArg commonArg, bool checkRange)
         {
-            Debug.Assert(variable.Type == this);
-            return this.ToPinocchioWiresFunc(variable, commonArg, checkRange);
+            Debug.Assert(rawVariable.Type == this);
+            return this.ToPinocchioWiresFunc(rawVariable, commonArg, checkRange);
         }
 
-        private Func<Variable, PinocchioCommonArg, bool, (List<PinocchioWire> Wires, List<PinocchioConstraint> Constraints)> ToPinocchioWiresFunc { get; set; }
+        private Func<RawVariable, PinocchioCommonArg, bool, PinocchioOutput> ToPinocchioWiresFunc { get; set; }
 
         private NType(string TypeCodeName)
         {
@@ -701,17 +701,17 @@ namespace code0k_cc.Runtime
 
             ToPinocchioWiresFunc = (variable, commonArg, checkRange) =>
             {
-                var ret = (Wires: new List<PinocchioWire>(), Constraints: new List<PinocchioConstraint>());
+                var ret = new PinocchioOutput() { VariableWires = new PinocchioVariableWires() { RawVariable = variable } };
 
                 var uint32Value = variable.Value as NizkUInt32Value;
                 if (uint32Value.IsConstant)
                 {
-                    ret.Wires.Add(new PinocchioWire(new BigInteger(uint32Value.Value)));
+                    ret.VariableWires.Wires.Add(new PinocchioWire(new BigInteger(uint32Value.Value)));
                 }
                 else
                 {
                     var newWire = new PinocchioWire(null);
-                    ret.Wires.Add(newWire);
+                    ret.VariableWires.Wires.Add(newWire);
                     if (checkRange)
                     {
                         var packCon = new PinocchioConstraint(PinocchioConstraintType.Pack);
@@ -721,7 +721,7 @@ namespace code0k_cc.Runtime
                         foreach (var i in Enumerable.Range(0, 32))
                         {
                             var boolWire = new PinocchioWire(null);
-                            ret.Wires.Add(boolWire);
+                            ret.VariableWires.Wires.Add(boolWire);
 
                             var boolCon = new PinocchioConstraint(PinocchioConstraintType.ZeroP);
                             ret.Constraints.Add(boolCon);
@@ -934,17 +934,17 @@ namespace code0k_cc.Runtime
 
             ToPinocchioWiresFunc = (variable, commonArg, checkRange) =>
             {
-                var ret = (Wires: new List<PinocchioWire>(), Constraints: new List<PinocchioConstraint>());
+                var ret = new PinocchioOutput() { VariableWires = new PinocchioVariableWires() { RawVariable = variable } }; 
 
                 var boolValue = variable.Value as NizkBoolValue;
                 if (boolValue.IsConstant)
                 {
-                    ret.Wires.Add(new PinocchioWire(new BigInteger(boolValue.Value ? 1 : 0)));
+                    ret.VariableWires.Wires.Add(new PinocchioWire(new BigInteger(boolValue.Value ? 1 : 0)));
                 }
                 else
                 {
                     var newWire = new PinocchioWire(null);
-                    ret.Wires.Add(newWire);
+                    ret.VariableWires.Wires.Add(newWire);
 
                     if (checkRange)
                     {

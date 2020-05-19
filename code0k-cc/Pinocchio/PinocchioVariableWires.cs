@@ -8,6 +8,6 @@ namespace code0k_cc.Pinocchio
     class PinocchioVariableWires
     {
         public RawVariable RawVariable;
-        public List<PinocchioVariableWires> Wires;
+        public readonly List<PinocchioWire> Wires = new List<PinocchioWire>();
     }
 }
