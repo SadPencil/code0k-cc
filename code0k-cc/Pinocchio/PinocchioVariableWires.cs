@@ -7,6 +7,9 @@ namespace code0k_cc.Pinocchio
 {
     class PinocchioVariableWires
     {
+        /// <summary>
+        /// Can be null. Being null means that it's anonymous wires.
+        /// </summary>
         public RawVariable RawVariable;
 
         public readonly List<PinocchioWire> Wires = new List<PinocchioWire>();
