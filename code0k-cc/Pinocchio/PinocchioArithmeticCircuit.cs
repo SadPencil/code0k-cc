@@ -78,8 +78,8 @@ namespace code0k_cc.Pinocchio
                         if (!variableNodeToWires.ContainsKey(variableNode))
                         {
                             Debug.Assert(
-                                (variableNode.NizkAttribute == NizkVariableType.Intermediate &&
-                                 variableNode.Variable.Value.IsConstant) ||
+                                ( variableNode.NizkAttribute == NizkVariableType.Intermediate &&
+                                 variableNode.Variable.Value.IsConstant ) ||
                                 variableNode.NizkAttribute == NizkVariableType.Input ||
                                 variableNode.NizkAttribute == NizkVariableType.NizkInput);
 
@@ -125,13 +125,12 @@ namespace code0k_cc.Pinocchio
                         // make connection between each out variable and the corresponding List<wire>
                         // and save them to the board by ret.Wires.ForEach(AddWire); ret.Constraints.ForEach(AddConstraint);
 
-
-                        ret = op
+                        throw new NotImplementedException();
                         break;
 
                     default:
                         throw new Exception("Assert failed!");
-                } 
+                }
             }
 
             // todo: write these wire & constraints

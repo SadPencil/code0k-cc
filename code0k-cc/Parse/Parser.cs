@@ -11,8 +11,7 @@ using code0k_cc.Runtime;
 using code0k_cc.Runtime.Block;
 using code0k_cc.Runtime.ExeArg;
 using code0k_cc.Runtime.ExeResult;
-using code0k_cc.Runtime.Nizk;
-using code0k_cc.Runtime.Operation;
+using code0k_cc.Runtime.Nizk; 
 using code0k_cc.Runtime.ValueOfType;
 using code0k_cc.Runtime.VariableMap;
 
@@ -1771,19 +1770,19 @@ namespace code0k_cc.Parse
                 Variable retVar;
                 if (instance.Children[0].Children[0].Token.TokenType == TokenType.Plus)
                 {
-                    retVar = variable.Type.UnaryOperation(variable, UnaryOperation.UnaryPlus);
+                    retVar = variable.Type.UnaryOperation(variable,  VariableOperationType.Unary_Addition);
                 }
                 else if (instance.Children[0].Children[0].Token.TokenType == TokenType.Minus)
                 {
-                    retVar = variable.Type.UnaryOperation(variable, UnaryOperation.UnaryMinus);
+                    retVar = variable.Type.UnaryOperation(variable, VariableOperationType.Unary_Subtract);
                 }
                 else if (instance.Children[0].Children[0].Token.TokenType == TokenType.BooleanNot)
                 {
-                    retVar = variable.Type.UnaryOperation(variable, UnaryOperation.BooleanNot);
+                    retVar = variable.Type.UnaryOperation(variable, VariableOperationType.Unary_BooleanNot);
                 }
                 else if (instance.Children[0].Children[0].Token.TokenType == TokenType.BitwiseNot)
                 {
-                    retVar = variable.Type.UnaryOperation(variable, UnaryOperation.BitwiseNot);
+                    retVar = variable.Type.UnaryOperation(variable, VariableOperationType.Unary_BitwiseNot);
                 }
                 else
                 {
@@ -1843,15 +1842,15 @@ namespace code0k_cc.Parse
 
                         if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.Times)
                         {
-                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.Multiplication);
+                            var1 = var1.Type.BinaryOperation(var1, var2, VariableOperationType.Binary_Multiplication);
                         }
                         else if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.Divide)
                         {
-                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.Division);
+                            var1 = var1.Type.BinaryOperation(var1, var2, VariableOperationType.Binary_Division);
                         }
                         else if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.Mod)
                         {
-                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.Remainder);
+                            var1 = var1.Type.BinaryOperation(var1, var2, VariableOperationType.Binary_Remainder);
                         }
                         else
                         {
@@ -1884,11 +1883,11 @@ namespace code0k_cc.Parse
 
                         if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.Plus)
                         {
-                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.Addition);
+                            var1 = var1.Type.BinaryOperation(var1, var2, VariableOperationType.Binary_Addition);
                         }
                         else if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.Minus)
                         {
-                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.Subtract);
+                            var1 = var1.Type.BinaryOperation(var1, var2, VariableOperationType.Binary_Subtract);
                         }
                         else
                         {
@@ -1903,58 +1902,62 @@ namespace code0k_cc.Parse
             }
 
 
-            // level-7:  Bitwise left shift and right shift 
-            // note: eliminate left recursion
-            {
-                const int i = 7;
-                Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper[i] };
-                ExpressionsHelper[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper[i] };
 
-                Operators[i].Children = new List<ParseUnit>()
-                {
-                    TokenUnits[TokenType.BitwiseLeftShiftUnsigned],
-                    TokenUnits[TokenType.BitwiseRightShiftUnsigned],
-                    TokenUnits[TokenType.BitwiseLeftShiftSigned],
-                    TokenUnits[TokenType.BitwiseRightShiftSigned],
-                };
+            // level-7: not used
+            Expressions[7].Children = new List<ParseUnit>() { Expressions[6] };
+            Expressions[7].Execute = (instance, arg) => instance.Children[0].Execute(arg);
+            //// level-7:  Bitwise left shift and right shift 
+            //// note: eliminate left recursion
+            //{
+            //    const int i = 7;
+            //    Expressions[i].Children = new List<ParseUnit>() { Expressions[i - 1], ExpressionsHelper[i] };
+            //    ExpressionsHelper[i].Children = new List<ParseUnit>() { Operators[i], Expressions[i - 1], ExpressionsHelper[i] };
+
+            //    Operators[i].Children = new List<ParseUnit>()
+            //    {
+            //        TokenUnits[TokenType.BitwiseLeftShiftUnsigned],
+            //        TokenUnits[TokenType.BitwiseRightShiftUnsigned],
+            //        TokenUnits[TokenType.BitwiseLeftShiftSigned],
+            //        TokenUnits[TokenType.BitwiseRightShiftSigned],
+            //    };
 
 
-                Expressions[i].Execute = (instance, arg) =>
-                {
-                    var var1 = instance.Children[0].Execute(arg).ExpressionResult.Variable;
-                    var h5ins = instance.Children[1];
-                    while (h5ins != null)
-                    {
-                        var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.Variable;
+            //    Expressions[i].Execute = (instance, arg) =>
+            //    {
+            //        var var1 = instance.Children[0].Execute(arg).ExpressionResult.Variable;
+            //        var h5ins = instance.Children[1];
+            //        while (h5ins != null)
+            //        {
+            //            var var2 = h5ins.Children[1].Execute(arg).ExpressionResult.Variable;
 
-                        if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.BitwiseLeftShiftUnsigned)
-                        {
-                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.BitwiseLeftShiftUnsigned);
-                        }
-                        else if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.BitwiseRightShiftUnsigned)
-                        {
-                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.BitwiseRightShiftUnsigned);
-                        }
-                        else if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.BitwiseLeftShiftSigned)
-                        {
-                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.BitwiseLeftShiftSigned);
-                        }
-                        else if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.BitwiseRightShiftSigned)
-                        {
-                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.BitwiseRightShiftSigned);
-                        }
-                        else
-                        {
-                            throw new Exception("Assert failed!");
-                        }
+            //            if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.BitwiseLeftShiftUnsigned)
+            //            {
+            //                var1 = var1.Type.BinaryOperation(var1, var2, VariableOperationType.Binary_BitwiseLeftShiftUnsigned);
+            //            }
+            //            else if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.BitwiseRightShiftUnsigned)
+            //            {
+            //                var1 = var1.Type.BinaryOperation(var1, var2, VariableOperationType.Binary_BitwiseRightShiftUnsigned);
+            //            }
+            //            else if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.BitwiseLeftShiftSigned)
+            //            {
+            //                var1 = var1.Type.BinaryOperation(var1, var2, VariableOperationType.Binary_BitwiseLeftShiftSigned);
+            //            }
+            //            else if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.BitwiseRightShiftSigned)
+            //            {
+            //                var1 = var1.Type.BinaryOperation(var1, var2, VariableOperationType.Binary_BitwiseRightShiftSigned);
+            //            }
+            //            else
+            //            {
+            //                throw new Exception("Assert failed!");
+            //            }
 
-                        h5ins = h5ins.Children[2];
-                    }
+            //            h5ins = h5ins.Children[2];
+            //        }
 
-                    return new ExeResult() { ExpressionResult = new ExpressionResult() { Variable = var1 } };
-                };
+            //        return new ExeResult() { ExpressionResult = new ExpressionResult() { Variable = var1 } };
+            //    };
 
-            }
+            //}
 
 
             // level-8: not used
@@ -1986,19 +1989,19 @@ namespace code0k_cc.Parse
 
                         if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.LessThan)
                         {
-                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.LessThan);
+                            var1 = var1.Type.BinaryOperation(var1, var2, VariableOperationType.Binary_LessThan);
                         }
                         else if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.LessEqualThan)
                         {
-                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.LessEqualThan);
+                            var1 = var1.Type.BinaryOperation(var1, var2, VariableOperationType.Binary_LessEqualThan);
                         }
                         else if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.GreaterThan)
                         {
-                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.GreaterThan);
+                            var1 = var1.Type.BinaryOperation(var1, var2, VariableOperationType.Binary_GreaterThan);
                         }
                         else if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.GreaterEqualThan)
                         {
-                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.GreaterEqualThan);
+                            var1 = var1.Type.BinaryOperation(var1, var2, VariableOperationType.Binary_GreaterEqualThan);
                         }
                         else
                         {
@@ -2030,11 +2033,11 @@ namespace code0k_cc.Parse
 
                         if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.EqualTo)
                         {
-                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.EqualTo);
+                            var1 = var1.Type.BinaryOperation(var1, var2, VariableOperationType.Binary_EqualTo);
                         }
                         else if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.NotEqualTo)
                         {
-                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.NotEqualTo);
+                            var1 = var1.Type.BinaryOperation(var1, var2, VariableOperationType.Binary_NotEqualTo);
                         }
                         else
                         {
@@ -2066,7 +2069,7 @@ namespace code0k_cc.Parse
 
                         if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.BitwiseAnd)
                         {
-                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.BitwiseAnd);
+                            var1 = var1.Type.BinaryOperation(var1, var2, VariableOperationType.Binary_BitwiseAnd);
                         }
                         else
                         {
@@ -2098,7 +2101,7 @@ namespace code0k_cc.Parse
 
                         if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.BitwiseXor)
                         {
-                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.BitwiseXor);
+                            var1 = var1.Type.BinaryOperation(var1, var2, VariableOperationType.Binary_BitwiseXor);
                         }
                         else
                         {
@@ -2130,7 +2133,7 @@ namespace code0k_cc.Parse
 
                         if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.BitwiseOr)
                         {
-                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.BitwiseOr);
+                            var1 = var1.Type.BinaryOperation(var1, var2, VariableOperationType.Binary_BitwiseOr);
                         }
                         else
                         {
@@ -2162,7 +2165,7 @@ namespace code0k_cc.Parse
 
                         if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.BooleanAnd)
                         {
-                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.BooleanAnd);
+                            var1 = var1.Type.BinaryOperation(var1, var2, VariableOperationType.Binary_BooleanAnd);
                         }
                         else
                         {
@@ -2194,7 +2197,7 @@ namespace code0k_cc.Parse
 
                         if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.BooleanXor)
                         {
-                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.BooleanXor);
+                            var1 = var1.Type.BinaryOperation(var1, var2, VariableOperationType.Binary_BooleanXor);
                         }
                         else
                         {
@@ -2226,7 +2229,7 @@ namespace code0k_cc.Parse
 
                         if (h5ins.Children[0].Children[0].Token.TokenType == TokenType.BooleanOr)
                         {
-                            var1 = var1.Type.BinaryOperation(var1, var2, BinaryOperation.BooleanOr);
+                            var1 = var1.Type.BinaryOperation(var1, var2, VariableOperationType.Binary_BooleanOr);
                         }
                         else
                         {

@@ -6,6 +6,6 @@ namespace code0k_cc.Runtime.VariableMap
 {
     class VariableOperationNode : IVariableMapNode
     {
-        public VariableConnectionType ConnectionType;
+        public VariableOperationType ConnectionType;
     }
 }

@@ -12,8 +12,7 @@ using System.Text;
 using code0k_cc.Lex;
 using code0k_cc.Pinocchio;
 using code0k_cc.Runtime.ExeResult;
-using code0k_cc.Runtime.Nizk;
-using code0k_cc.Runtime.Operation;
+using code0k_cc.Runtime.Nizk; 
 using code0k_cc.Runtime.ValueOfType;
 using code0k_cc.Runtime.VariableMap;
 
@@ -92,7 +91,7 @@ namespace code0k_cc.Runtime
             }
 
             // add connection
-            var newCon = new VariableConnection() { Type = new VariableConnectionType() { SpecialOperation = SpecialOperation.TypeCast } };
+            var newCon = new VariableConnection() { OperationType = VariableOperationType.TypeCast };
             newCon.InVariables.Add(variable);
             newCon.OutVariables.Add(retVariable);
 
@@ -111,7 +110,7 @@ namespace code0k_cc.Runtime
             }
 
             // add connection
-            var newCon = new VariableConnection() { Type = new VariableConnectionType() { SpecialOperation = SpecialOperation.TypeCast } };
+            var newCon = new VariableConnection() { OperationType = VariableOperationType.TypeCast };
             newCon.InVariables.Add(variable);
             newCon.OutVariables.Add(retVariable);
 
@@ -130,15 +129,16 @@ namespace code0k_cc.Runtime
         /// </summary>
         private Func<Variable, NType, Variable> ExplicitConvertFunc;
 
-        public Variable UnaryOperation(Variable variable, UnaryOperation op)
+        public Variable UnaryOperation(Variable variable, VariableOperationType op)
         {
             Debug.Assert(variable.Type == this);
+            
             if (( this.UnaryOperationFuncs?.ContainsKey(op) ).GetValueOrDefault())
             {
                 var retVariable = this.UnaryOperationFuncs[op](variable);
 
                 // add connection
-                var newCon = new VariableConnection() { Type = new VariableConnectionType() { UnaryOperation = op } };
+                var newCon = new VariableConnection() { OperationType = op };
                 newCon.InVariables.Add(variable);
                 newCon.OutVariables.Add(retVariable);
 
@@ -156,15 +156,15 @@ namespace code0k_cc.Runtime
         /// <summary>
         /// The variable's type is granted to be same as `this`
         /// </summary>
-        private IReadOnlyDictionary<UnaryOperation, Func<Variable, Variable>> UnaryOperationFuncs { get; set; }
-        public Variable BinaryOperation(Variable variable, Variable another, BinaryOperation op)
+        private IReadOnlyDictionary<VariableOperationType, Func<Variable, Variable>> UnaryOperationFuncs { get; set; }
+        public Variable BinaryOperation(Variable variable, Variable another, VariableOperationType op)
         {
             Debug.Assert(variable.Type == this);
             if (( this.BinaryOperationFuncs?.ContainsKey(op) ).GetValueOrDefault())
             {
                 var retVariable = this.BinaryOperationFuncs[op](variable, another);
                 // add connection
-                var newCon = new VariableConnection() { Type = new VariableConnectionType() { BinaryOperation = op } };
+                var newCon = new VariableConnection() { OperationType = op };
                 newCon.InVariables.Add(variable);
                 newCon.InVariables.Add(another);
                 newCon.OutVariables.Add(retVariable);
@@ -184,7 +184,7 @@ namespace code0k_cc.Runtime
         /// The first variable's type is granted to be same as `this`
         /// While the second variable's type can be anything
         /// </summary>
-        private IReadOnlyDictionary<BinaryOperation, Func<Variable, Variable, Variable>> BinaryOperationFuncs { get; set; }
+        private IReadOnlyDictionary<VariableOperationType, Func<Variable, Variable, Variable>> BinaryOperationFuncs { get; set; }
 
         public (List<PinocchioWire> Wires, List<PinocchioConstraint> Constraints) ToPinocchioWires(Variable variable, PinocchioCommonArg commonArg, bool checkRange)
         {
@@ -358,9 +358,9 @@ namespace code0k_cc.Runtime
                     throw new Exception($"Can't explicit convert \"{NType.UInt32.TypeCodeName }\" to \"{type.TypeCodeName}\".");
                 }
             },
-            UnaryOperationFuncs = new Dictionary<UnaryOperation, Func<Variable, Variable>>()
+            UnaryOperationFuncs = new Dictionary<VariableOperationType , Func<Variable, Variable>>()
             {
-                {Operation.UnaryOperation.UnaryPlus, (var1) =>
+                {VariableOperationType.Unary_Addition, (var1) =>
                 {
                     var v1 = ((NizkUInt32Value) var1.Value);
                     return new Variable() {
@@ -376,7 +376,7 @@ namespace code0k_cc.Runtime
                     };
                 }},
 
-                {Operation.UnaryOperation.UnaryMinus, (var1) =>
+                {VariableOperationType.Unary_Subtract, (var1) =>
                 {
                     var v1 = ((NizkUInt32Value) var1.Value);
                     return new Variable() {
@@ -392,7 +392,7 @@ namespace code0k_cc.Runtime
                     };
                 }},
 
-                {Operation.UnaryOperation.BitwiseNot, (var1) =>
+                {VariableOperationType.Unary_BitwiseNot, (var1) =>
                 {
                     var v1 = ((NizkUInt32Value) var1.Value);
                     return new Variable() {
@@ -410,9 +410,9 @@ namespace code0k_cc.Runtime
 
             },
 
-            BinaryOperationFuncs = new Dictionary<BinaryOperation, Func<Variable, Variable, Variable>>()
+            BinaryOperationFuncs = new Dictionary<VariableOperationType, Func<Variable, Variable, Variable>>()
             {
-                {Operation.BinaryOperation.Addition, (var1, var2) =>
+                {VariableOperationType.Binary_Addition, (var1, var2) =>
                 {
                     var newVar1 = var1;
                     var newVar2 = var2.Assign(NType.UInt32);
@@ -431,7 +431,7 @@ namespace code0k_cc.Runtime
                     };
                 }},
 
-                {Operation.BinaryOperation.Subtract, (var1, var2) =>
+                {VariableOperationType.Binary_Subtract, (var1, var2) =>
                 {
                     var newVar1 = var1;
                     var newVar2 = var2.Assign(NType.UInt32);
@@ -450,7 +450,7 @@ namespace code0k_cc.Runtime
                     };
                 }},
 
-                {Operation.BinaryOperation.Multiplication, (var1, var2) =>
+                {VariableOperationType.Binary_Multiplication, (var1, var2) =>
                 {
                     var newVar1 = var1;
                     var newVar2 = var2.Assign(NType.UInt32);
@@ -469,7 +469,7 @@ namespace code0k_cc.Runtime
                     };
                 }},
 
-                {Operation.BinaryOperation.Division, (var1, var2) =>
+                {VariableOperationType.Binary_Division, (var1, var2) =>
                 {
                     var newVar1 = var1;
                     var newVar2 = var2.Assign(NType.UInt32);
@@ -488,7 +488,7 @@ namespace code0k_cc.Runtime
                     };
                 }},
 
-                {Operation.BinaryOperation.Remainder, (var1, var2) =>
+                {VariableOperationType.Binary_Remainder, (var1, var2) =>
                 {
                     var newVar1 = var1;
                     var newVar2 = var2.Assign(NType.UInt32);
@@ -507,7 +507,7 @@ namespace code0k_cc.Runtime
                     };
                 }},
 
-                {Operation.BinaryOperation.EqualTo, (var1, var2) =>
+                {VariableOperationType.Binary_EqualTo, (var1, var2) =>
                 {
                     var newVar1 = var1;
                     var newVar2 = var2.Assign(NType.UInt32);
@@ -526,7 +526,7 @@ namespace code0k_cc.Runtime
                     };
                 }},
 
-                {Operation.BinaryOperation.LessThan, (var1, var2) =>
+                {VariableOperationType.Binary_LessThan, (var1, var2) =>
                 {
                     var newVar1 = var1;
                     var newVar2 = var2.Assign(NType.UInt32);
@@ -545,7 +545,7 @@ namespace code0k_cc.Runtime
                     };
                 }},
 
-                {Operation.BinaryOperation.LessEqualThan, (var1, var2) =>
+                {VariableOperationType.Binary_LessEqualThan, (var1, var2) =>
                 {
                     var newVar1 = var1;
                     var newVar2 = var2.Assign(NType.UInt32);
@@ -564,7 +564,7 @@ namespace code0k_cc.Runtime
                     };
                 }},
 
-                {Operation.BinaryOperation.GreaterThan, (var1, var2) =>
+                {VariableOperationType.Binary_GreaterThan, (var1, var2) =>
                 {
                     var newVar1 = var1;
                     var newVar2 = var2.Assign(NType.UInt32);
@@ -583,7 +583,7 @@ namespace code0k_cc.Runtime
                     };
                 }},
 
-                {Operation.BinaryOperation.GreaterEqualThan, (var1, var2) =>
+                {VariableOperationType.Binary_GreaterEqualThan, (var1, var2) =>
                 {
                     var newVar1 = var1;
                     var newVar2 = var2.Assign(NType.UInt32);
@@ -602,7 +602,7 @@ namespace code0k_cc.Runtime
                     };
                 }},
 
-                {Operation.BinaryOperation.NotEqualTo, (var1, var2) =>
+                {VariableOperationType.Binary_NotEqualTo, (var1, var2) =>
                 {
                     var newVar1 = var1;
                     var newVar2 = var2.Assign(NType.UInt32);
@@ -622,7 +622,7 @@ namespace code0k_cc.Runtime
                     };
                 }},
 
-                {Operation.BinaryOperation.BitwiseAnd, (var1, var2) =>
+                {VariableOperationType.Binary_BitwiseAnd, (var1, var2) =>
                 {
                     var newVar1 = var1;
                     var newVar2 = var2.Assign(NType.UInt32);
@@ -641,7 +641,7 @@ namespace code0k_cc.Runtime
                     };
                 }},
 
-                {Operation.BinaryOperation.BitwiseOr, (var1, var2) =>
+                {VariableOperationType.Binary_BitwiseOr, (var1, var2) =>
                 {
                     var newVar1 = var1;
                     var newVar2 = var2.Assign(NType.UInt32);
@@ -660,7 +660,7 @@ namespace code0k_cc.Runtime
                     };
                 }},
 
-                {Operation.BinaryOperation.BitwiseXor, (var1, var2) =>
+                {VariableOperationType.Binary_BitwiseXor, (var1, var2) =>
                 {
                     var newVar1 = var1;
                     var newVar2 = var2.Assign(NType.UInt32);
@@ -792,9 +792,9 @@ namespace code0k_cc.Runtime
                     throw new Exception($"Can't explicit convert \"{NType.Bool.TypeCodeName }\" to \"{type.TypeCodeName}\".");
                 }
             },
-            UnaryOperationFuncs = new Dictionary<UnaryOperation, Func<Variable, Variable>>()
+            UnaryOperationFuncs = new Dictionary<VariableOperationType, Func<Variable, Variable>>()
             {
-                {Operation.UnaryOperation.BooleanNot, (var1) =>
+                {VariableOperationType.Unary_BooleanNot, (var1) =>
                 {
                     var v1 = ((NizkBoolValue) var1.Value);
                     return new Variable() {
@@ -810,9 +810,9 @@ namespace code0k_cc.Runtime
                     };
                 }},
             },
-            BinaryOperationFuncs = new Dictionary<BinaryOperation, Func<Variable, Variable, Variable>>()
+            BinaryOperationFuncs = new Dictionary<VariableOperationType, Func<Variable, Variable, Variable>>()
             {
-                {Operation.BinaryOperation.EqualTo, (var1, var2) =>
+                {VariableOperationType.Binary_EqualTo, (var1, var2) =>
                 {
                     var newVar1 = var1;
                     var newVar2 = var2.Assign(NType.Bool);
@@ -831,7 +831,7 @@ namespace code0k_cc.Runtime
                     };
                 }},
 
-                {Operation.BinaryOperation.NotEqualTo, (var1, var2) =>
+                {VariableOperationType.Binary_NotEqualTo, (var1, var2) =>
                 {
                     var newVar1 = var1;
                     var newVar2 = var2.Assign(NType.Bool);
@@ -850,7 +850,7 @@ namespace code0k_cc.Runtime
                     };
                 }},
 
-                {Operation.BinaryOperation.BooleanAnd, (var1, var2) =>
+                {VariableOperationType.Binary_BooleanAnd, (var1, var2) =>
                 {
                     var newVar1 = var1;
                     var newVar2 = var2.Assign(NType.Bool);
@@ -869,7 +869,7 @@ namespace code0k_cc.Runtime
                     };
                 }},
 
-                {Operation.BinaryOperation.BooleanOr, (var1, var2) =>
+                {VariableOperationType.Binary_BooleanOr, (var1, var2) =>
                 {
                     var newVar1 = var1;
                     var newVar2 = var2.Assign(NType.Bool);
@@ -888,7 +888,7 @@ namespace code0k_cc.Runtime
                     };
                 }},
 
-                {Operation.BinaryOperation.BooleanXor, (var1, var2) =>
+                {VariableOperationType.Binary_BooleanXor, (var1, var2) =>
                 {
                     var newVar1 = var1;
                     var newVar2 = var2.Assign(NType.Bool);

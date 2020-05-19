@@ -82,7 +82,7 @@ namespace code0k_cc.Runtime.VariableMap
                         {
                             var conNode = new VariableOperationNode()
                             {
-                                ConnectionType = connection.Type,
+                                ConnectionType = connection.OperationType,
                             };
 
                             conToNode.Add(connection, conNode);
