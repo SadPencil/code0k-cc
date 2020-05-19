@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Numerics;
 using System.Text;
+using code0k_cc.CustomException;
 using code0k_cc.Runtime.Nizk;
 using code0k_cc.Runtime.VariableMap;
 using code0k_cc.Standalone;

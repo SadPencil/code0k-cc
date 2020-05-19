@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using code0k_cc.CustomException;
 using code0k_cc.Lex;
 using code0k_cc.Runtime;
 using code0k_cc.Runtime.Block;
