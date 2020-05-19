@@ -11,7 +11,7 @@ using code0k_cc.Runtime;
 using code0k_cc.Runtime.Block;
 using code0k_cc.Runtime.ExeArg;
 using code0k_cc.Runtime.ExeResult;
-using code0k_cc.Runtime.Nizk; 
+using code0k_cc.Runtime.Nizk;
 using code0k_cc.Runtime.ValueOfType;
 using code0k_cc.Runtime.VariableMap;
 
@@ -559,7 +559,7 @@ namespace code0k_cc.Parse
                     ParentBlock = null,
                 };
 
-                arg.Block.AddVariable(funName, new Variable() { Type = NType.Function, Value = funT }, true);
+                arg.Block.AddVariable(funName, new Variable(new RawVariable() { Type = NType.Function, Value = funT }), true);
 
                 return new ExeResult() { FunctionDeclarationValue = funT };
             };
@@ -1770,7 +1770,7 @@ namespace code0k_cc.Parse
                 Variable retVar;
                 if (instance.Children[0].Children[0].Token.TokenType == TokenType.Plus)
                 {
-                    retVar = variable.Type.UnaryOperation(variable,  VariableOperationType.Unary_Addition);
+                    retVar = variable.Type.UnaryOperation(variable, VariableOperationType.Unary_Addition);
                 }
                 else if (instance.Children[0].Children[0].Token.TokenType == TokenType.Minus)
                 {

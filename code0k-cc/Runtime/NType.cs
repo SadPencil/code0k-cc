@@ -12,7 +12,7 @@ using System.Text;
 using code0k_cc.Lex;
 using code0k_cc.Pinocchio;
 using code0k_cc.Runtime.ExeResult;
-using code0k_cc.Runtime.Nizk; 
+using code0k_cc.Runtime.Nizk;
 using code0k_cc.Runtime.ValueOfType;
 using code0k_cc.Runtime.VariableMap;
 
@@ -132,7 +132,7 @@ namespace code0k_cc.Runtime
         public Variable UnaryOperation(Variable variable, VariableOperationType op)
         {
             Debug.Assert(variable.Type == this);
-            
+
             if (( this.UnaryOperationFuncs?.ContainsKey(op) ).GetValueOrDefault())
             {
                 var retVariable = this.UnaryOperationFuncs[op](variable);
@@ -231,11 +231,11 @@ namespace code0k_cc.Runtime
 
         public static readonly NType String = new NType("string")
         {
-            GetNewEmptyVariableFunc = () => new Variable()
+            GetNewEmptyVariableFunc = () => new Variable(new RawVariable()
             {
                 Type = NType.String,
                 Value = new StringValue(),
-            },
+            }),
             GetStringFunc = variable => ( (StringValue) ( variable.Value ) ).Value,
             ParseFunc = str =>
             {
@@ -276,17 +276,17 @@ namespace code0k_cc.Runtime
                     }
                 }
 
-                return new Variable()
+                return new Variable(new RawVariable()
                 {
                     Type = NType.String,
                     Value = new StringValue() { Value = sb.ToString() },
-                };
+                });
             },
         };
 
         public static readonly NType UInt32 = new NType("uint32")
         {
-            GetNewEmptyVariableFunc = () => new Variable()
+            GetNewEmptyVariableFunc = () => new Variable(new RawVariable()
             {
                 Type = NType.UInt32,
                 Value = new NizkUInt32Value()
@@ -295,12 +295,12 @@ namespace code0k_cc.Runtime
                     Value = 0,
 
                 }
-            },
+            }),
             ParseFunc = (str) =>
             {
                 if (System.UInt32.TryParse(str, out System.UInt32 retV))
                 {
-                    return new Variable()
+                    return new Variable(new RawVariable()
                     {
                         Type = NType.UInt32,
                         Value = new NizkUInt32Value()
@@ -309,7 +309,7 @@ namespace code0k_cc.Runtime
                             Value = retV,
 
                         }
-                    };
+                    });
                 }
                 else
                 {
@@ -317,7 +317,7 @@ namespace code0k_cc.Runtime
                 }
             },
             GetStringFunc = variable => ( (NizkUInt32Value) variable.Value ).Value.ToString(CultureInfo.InvariantCulture),
-            GetNewNizkVariableFunc = () => new Variable()
+            GetNewNizkVariableFunc = () => new Variable(new RawVariable()
             {
                 Type = NType.UInt32,
                 Value = new NizkUInt32Value()
@@ -325,7 +325,7 @@ namespace code0k_cc.Runtime
                     IsConstant = false,
                     Value = 0,
                 }
-            },
+            }),
             ExplicitConvertFunc = (variable, type) =>
             {
                 if (NType.UInt32 == type)
@@ -336,7 +336,7 @@ namespace code0k_cc.Runtime
                 {
                     if (variable.Value.IsConstant)
                     {
-                        return new Variable()
+                        return new Variable(new RawVariable()
                         {
                             Type = NType.Bool,
                             Value = new NizkBoolValue()
@@ -345,7 +345,7 @@ namespace code0k_cc.Runtime
                                 Value = ( (NizkUInt32Value) variable.Value ).Value != 0,
 
                             }
-                        };
+                        });
                     }
                     else
                     {
@@ -358,12 +358,13 @@ namespace code0k_cc.Runtime
                     throw new Exception($"Can't explicit convert \"{NType.UInt32.TypeCodeName }\" to \"{type.TypeCodeName}\".");
                 }
             },
-            UnaryOperationFuncs = new Dictionary<VariableOperationType , Func<Variable, Variable>>()
+            UnaryOperationFuncs = new Dictionary<VariableOperationType, Func<Variable, Variable>>()
             {
                 {VariableOperationType.Unary_Addition, (var1) =>
                 {
                     var v1 = ((NizkUInt32Value) var1.Value);
-                    return new Variable() {
+                    return new Variable(new RawVariable()
+                    {
                         Type = NType.UInt32,
                         Value =(v1.IsConstant  ) ?
                             new NizkUInt32Value() {
@@ -373,13 +374,14 @@ namespace code0k_cc.Runtime
                             : new NizkUInt32Value() {
                                 IsConstant = false,
                             }
-                    };
+                    });
                 }},
 
                 {VariableOperationType.Unary_Subtract, (var1) =>
                 {
                     var v1 = ((NizkUInt32Value) var1.Value);
-                    return new Variable() {
+                    return new Variable(new RawVariable()
+                    {
                         Type = NType.UInt32,
                         Value =(v1.IsConstant  ) ?
                             new NizkUInt32Value() {
@@ -389,13 +391,14 @@ namespace code0k_cc.Runtime
                             : new NizkUInt32Value() {
                                 IsConstant = false,
                             }
-                    };
+                    });
                 }},
 
                 {VariableOperationType.Unary_BitwiseNot, (var1) =>
                 {
                     var v1 = ((NizkUInt32Value) var1.Value);
-                    return new Variable() {
+                    return new Variable(new RawVariable()
+                    {
                         Type = NType.UInt32,
                         Value =(v1.IsConstant  ) ?
                             new NizkUInt32Value() {
@@ -405,7 +408,7 @@ namespace code0k_cc.Runtime
                             : new NizkUInt32Value() {
                                 IsConstant = false,
                             }
-                    };
+                    });
                 }},
 
             },
@@ -418,7 +421,8 @@ namespace code0k_cc.Runtime
                     var newVar2 = var2.Assign(NType.UInt32);
                     var v1 = ((NizkUInt32Value) newVar1.Value);
                     var v2 = ((NizkUInt32Value) newVar2.Value);
-                    return new Variable() {
+                    return new Variable(new RawVariable()
+                    {
                         Type = NType.UInt32,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
                             new NizkUInt32Value() {
@@ -428,7 +432,7 @@ namespace code0k_cc.Runtime
                             : new NizkUInt32Value() {
                                 IsConstant = false,
                             }
-                    };
+                    });
                 }},
 
                 {VariableOperationType.Binary_Subtract, (var1, var2) =>
@@ -437,7 +441,8 @@ namespace code0k_cc.Runtime
                     var newVar2 = var2.Assign(NType.UInt32);
                     var v1 = ((NizkUInt32Value) newVar1.Value);
                     var v2 = ((NizkUInt32Value) newVar2.Value);
-                    return new Variable() {
+                    return new Variable(new RawVariable()
+                    {
                         Type = NType.UInt32,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
                             new NizkUInt32Value() {
@@ -447,7 +452,7 @@ namespace code0k_cc.Runtime
                             : new NizkUInt32Value() {
                                 IsConstant = false,
                             }
-                    };
+                    });
                 }},
 
                 {VariableOperationType.Binary_Multiplication, (var1, var2) =>
@@ -456,7 +461,8 @@ namespace code0k_cc.Runtime
                     var newVar2 = var2.Assign(NType.UInt32);
                     var v1 = ((NizkUInt32Value) newVar1.Value);
                     var v2 = ((NizkUInt32Value) newVar2.Value);
-                    return new Variable() {
+                    return new Variable(new RawVariable()
+                    {
                         Type = NType.UInt32,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
                             new NizkUInt32Value() {
@@ -466,7 +472,7 @@ namespace code0k_cc.Runtime
                             : new NizkUInt32Value() {
                                 IsConstant = false,
                             }
-                    };
+                    });
                 }},
 
                 {VariableOperationType.Binary_Division, (var1, var2) =>
@@ -475,7 +481,8 @@ namespace code0k_cc.Runtime
                     var newVar2 = var2.Assign(NType.UInt32);
                     var v1 = ((NizkUInt32Value) newVar1.Value);
                     var v2 = ((NizkUInt32Value) newVar2.Value);
-                    return new Variable() {
+                    return new Variable(new RawVariable()
+                    {
                         Type = NType.UInt32,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
                             new NizkUInt32Value() {
@@ -485,7 +492,7 @@ namespace code0k_cc.Runtime
                             : new NizkUInt32Value() {
                                 IsConstant = false,
                             }
-                    };
+                    });
                 }},
 
                 {VariableOperationType.Binary_Remainder, (var1, var2) =>
@@ -494,7 +501,8 @@ namespace code0k_cc.Runtime
                     var newVar2 = var2.Assign(NType.UInt32);
                     var v1 = ((NizkUInt32Value) newVar1.Value);
                     var v2 = ((NizkUInt32Value) newVar2.Value);
-                    return new Variable() {
+                    return new Variable(new RawVariable()
+                    {
                         Type = NType.UInt32,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
                             new NizkUInt32Value() {
@@ -504,7 +512,7 @@ namespace code0k_cc.Runtime
                             : new NizkUInt32Value() {
                                 IsConstant = false,
                             }
-                    };
+                    });
                 }},
 
                 {VariableOperationType.Binary_EqualTo, (var1, var2) =>
@@ -513,7 +521,8 @@ namespace code0k_cc.Runtime
                     var newVar2 = var2.Assign(NType.UInt32);
                     var v1 = ((NizkUInt32Value) newVar1.Value);
                     var v2 = ((NizkUInt32Value) newVar2.Value);
-                    return new Variable() {
+                    return new Variable(new RawVariable()
+                    {
                         Type = NType.Bool,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
                             new NizkBoolValue() {
@@ -523,7 +532,7 @@ namespace code0k_cc.Runtime
                             : new NizkBoolValue() {
                                 IsConstant = false,
                             }
-                    };
+                    });
                 }},
 
                 {VariableOperationType.Binary_LessThan, (var1, var2) =>
@@ -532,7 +541,8 @@ namespace code0k_cc.Runtime
                     var newVar2 = var2.Assign(NType.UInt32);
                     var v1 = ((NizkUInt32Value) newVar1.Value);
                     var v2 = ((NizkUInt32Value) newVar2.Value);
-                    return new Variable() {
+                    return new Variable(new RawVariable()
+                    {
                         Type = NType.Bool,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
                             new NizkBoolValue() {
@@ -542,7 +552,7 @@ namespace code0k_cc.Runtime
                             : new NizkBoolValue() {
                                 IsConstant = false,
                             }
-                    };
+                    });
                 }},
 
                 {VariableOperationType.Binary_LessEqualThan, (var1, var2) =>
@@ -551,7 +561,8 @@ namespace code0k_cc.Runtime
                     var newVar2 = var2.Assign(NType.UInt32);
                     var v1 = ((NizkUInt32Value) newVar1.Value);
                     var v2 = ((NizkUInt32Value) newVar2.Value);
-                    return new Variable() {
+                    return new Variable(new RawVariable()
+                    {
                         Type = NType.Bool,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
                             new NizkBoolValue() {
@@ -561,7 +572,7 @@ namespace code0k_cc.Runtime
                             : new NizkBoolValue() {
                                 IsConstant = false,
                             }
-                    };
+                    });
                 }},
 
                 {VariableOperationType.Binary_GreaterThan, (var1, var2) =>
@@ -570,7 +581,8 @@ namespace code0k_cc.Runtime
                     var newVar2 = var2.Assign(NType.UInt32);
                     var v1 = ((NizkUInt32Value) newVar1.Value);
                     var v2 = ((NizkUInt32Value) newVar2.Value);
-                    return new Variable() {
+                    return new Variable(new RawVariable()
+                    {
                         Type = NType.Bool,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
                             new NizkBoolValue() {
@@ -580,7 +592,7 @@ namespace code0k_cc.Runtime
                             : new NizkBoolValue() {
                                 IsConstant = false,
                             }
-                    };
+                    });
                 }},
 
                 {VariableOperationType.Binary_GreaterEqualThan, (var1, var2) =>
@@ -589,7 +601,8 @@ namespace code0k_cc.Runtime
                     var newVar2 = var2.Assign(NType.UInt32);
                     var v1 = ((NizkUInt32Value) newVar1.Value);
                     var v2 = ((NizkUInt32Value) newVar2.Value);
-                    return new Variable() {
+                    return new Variable(new RawVariable()
+                    {
                         Type = NType.Bool,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
                             new NizkBoolValue() {
@@ -599,7 +612,7 @@ namespace code0k_cc.Runtime
                             : new NizkBoolValue() {
                                 IsConstant = false,
                             }
-                    };
+                    });
                 }},
 
                 {VariableOperationType.Binary_NotEqualTo, (var1, var2) =>
@@ -608,7 +621,8 @@ namespace code0k_cc.Runtime
                     var newVar2 = var2.Assign(NType.UInt32);
                     var v1 = ((NizkUInt32Value) newVar1.Value);
                     var v2 = ((NizkUInt32Value) newVar2.Value);
-                    return new Variable() {
+                    return new Variable(new RawVariable()
+                    {
                         Type = NType.Bool,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
                             new NizkBoolValue() {
@@ -619,7 +633,7 @@ namespace code0k_cc.Runtime
                                 IsConstant = false,
 
                             }
-                    };
+                    });
                 }},
 
                 {VariableOperationType.Binary_BitwiseAnd, (var1, var2) =>
@@ -628,7 +642,8 @@ namespace code0k_cc.Runtime
                     var newVar2 = var2.Assign(NType.UInt32);
                     var v1 = ((NizkUInt32Value) newVar1.Value);
                     var v2 = ((NizkUInt32Value) newVar2.Value);
-                    return new Variable() {
+                    return new Variable(new RawVariable()
+                    {
                         Type = NType.UInt32,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
                             new NizkUInt32Value() {
@@ -638,7 +653,7 @@ namespace code0k_cc.Runtime
                             : new NizkUInt32Value() {
                                 IsConstant = false,
                             }
-                    };
+                    });
                 }},
 
                 {VariableOperationType.Binary_BitwiseOr, (var1, var2) =>
@@ -647,7 +662,8 @@ namespace code0k_cc.Runtime
                     var newVar2 = var2.Assign(NType.UInt32);
                     var v1 = ((NizkUInt32Value) newVar1.Value);
                     var v2 = ((NizkUInt32Value) newVar2.Value);
-                    return new Variable() {
+                    return new Variable(new RawVariable()
+                    {
                         Type = NType.UInt32,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
                             new NizkUInt32Value() {
@@ -657,7 +673,7 @@ namespace code0k_cc.Runtime
                             : new NizkUInt32Value() {
                                 IsConstant = false,
                             }
-                    };
+                    });
                 }},
 
                 {VariableOperationType.Binary_BitwiseXor, (var1, var2) =>
@@ -666,7 +682,8 @@ namespace code0k_cc.Runtime
                     var newVar2 = var2.Assign(NType.UInt32);
                     var v1 = ((NizkUInt32Value) newVar1.Value);
                     var v2 = ((NizkUInt32Value) newVar2.Value);
-                    return new Variable() {
+                    return new Variable(new RawVariable()
+                    {
                         Type = NType.UInt32,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
                             new NizkUInt32Value() {
@@ -676,7 +693,7 @@ namespace code0k_cc.Runtime
                             : new NizkUInt32Value() {
                                 IsConstant = false,
                             }
-                    };
+                    });
                 }},
 
                 //todo implement Bitwise Shift
@@ -723,7 +740,7 @@ namespace code0k_cc.Runtime
 
         public static readonly NType Bool = new NType("bool")
         {
-            GetNewEmptyVariableFunc = () => new Variable()
+            GetNewEmptyVariableFunc = () => new Variable(new RawVariable()
             {
                 Type = NType.Bool,
                 Value = new NizkBoolValue()
@@ -731,12 +748,12 @@ namespace code0k_cc.Runtime
                     IsConstant = true,
                     Value = false,
                 }
-            },
+            }),
             ParseFunc = (str) =>
             {
                 if (System.Boolean.TryParse(str, out System.Boolean retV))
                 {
-                    return new Variable()
+                    return new Variable(new RawVariable()
                     {
                         Type = NType.Bool,
                         Value = new NizkBoolValue()
@@ -744,7 +761,7 @@ namespace code0k_cc.Runtime
                             IsConstant = true,
                             Value = retV,
                         }
-                    };
+                    });
                 }
                 else
                 {
@@ -752,7 +769,7 @@ namespace code0k_cc.Runtime
                 }
             },
             GetStringFunc = variable => ( (NizkBoolValue) variable.Value ).Value.ToString(CultureInfo.InvariantCulture),
-            GetNewNizkVariableFunc = () => new Variable()
+            GetNewNizkVariableFunc = () => new Variable(new RawVariable()
             {
                 Type = NType.Bool,
                 Value = new NizkBoolValue()
@@ -760,7 +777,7 @@ namespace code0k_cc.Runtime
                     IsConstant = false,
                     Value = false,
                 }
-            },
+            }),
             ExplicitConvertFunc = (variable, type) =>
             {
                 if (NType.Bool == type)
@@ -771,7 +788,7 @@ namespace code0k_cc.Runtime
                 {
                     if (variable.Value.IsConstant)
                     {
-                        return new Variable()
+                        return new Variable(new RawVariable()
                         {
                             Type = NType.UInt32,
                             Value = new NizkUInt32Value()
@@ -779,7 +796,7 @@ namespace code0k_cc.Runtime
                                 IsConstant = true,
                                 Value = ( ( (NizkBoolValue) variable.Value ).Value ) ? (System.UInt32) 1 : (System.UInt32) 0,
                             }
-                        };
+                        });
                     }
                     else
                     {
@@ -797,7 +814,8 @@ namespace code0k_cc.Runtime
                 {VariableOperationType.Unary_BooleanNot, (var1) =>
                 {
                     var v1 = ((NizkBoolValue) var1.Value);
-                    return new Variable() {
+                    return new Variable(new RawVariable()
+                    {
                         Type = NType.Bool,
                         Value =(v1.IsConstant  ) ?
                             new NizkBoolValue() {
@@ -807,7 +825,7 @@ namespace code0k_cc.Runtime
                             : new NizkBoolValue() {
                                 IsConstant = false,
                             }
-                    };
+                    });
                 }},
             },
             BinaryOperationFuncs = new Dictionary<VariableOperationType, Func<Variable, Variable, Variable>>()
@@ -818,7 +836,8 @@ namespace code0k_cc.Runtime
                     var newVar2 = var2.Assign(NType.Bool);
                     var v1 = ((NizkBoolValue) newVar1.Value);
                     var v2 = ((NizkBoolValue) newVar2.Value);
-                    return new Variable() {
+                    return new Variable(new RawVariable()
+                    {
                         Type = NType.Bool,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
                             new NizkBoolValue() {
@@ -828,7 +847,7 @@ namespace code0k_cc.Runtime
                             : new NizkBoolValue() {
                                 IsConstant = false,
                             }
-                    };
+                    });
                 }},
 
                 {VariableOperationType.Binary_NotEqualTo, (var1, var2) =>
@@ -837,7 +856,8 @@ namespace code0k_cc.Runtime
                     var newVar2 = var2.Assign(NType.Bool);
                     var v1 = ((NizkBoolValue) newVar1.Value);
                     var v2 = ((NizkBoolValue) newVar2.Value);
-                    return new Variable() {
+                    return new Variable(new RawVariable()
+                    {
                         Type = NType.Bool,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
                             new NizkBoolValue() {
@@ -847,7 +867,7 @@ namespace code0k_cc.Runtime
                             : new NizkBoolValue() {
                                 IsConstant = false,
                             }
-                    };
+                    });
                 }},
 
                 {VariableOperationType.Binary_BooleanAnd, (var1, var2) =>
@@ -856,7 +876,8 @@ namespace code0k_cc.Runtime
                     var newVar2 = var2.Assign(NType.Bool);
                     var v1 = ((NizkBoolValue) newVar1.Value);
                     var v2 = ((NizkBoolValue) newVar2.Value);
-                    return new Variable() {
+                    return new Variable(new RawVariable()
+                    {
                         Type = NType.Bool,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
                             new NizkBoolValue() {
@@ -866,7 +887,7 @@ namespace code0k_cc.Runtime
                             : new NizkBoolValue() {
                                 IsConstant = false,
                             }
-                    };
+                    });
                 }},
 
                 {VariableOperationType.Binary_BooleanOr, (var1, var2) =>
@@ -875,7 +896,8 @@ namespace code0k_cc.Runtime
                     var newVar2 = var2.Assign(NType.Bool);
                     var v1 = ((NizkBoolValue) newVar1.Value);
                     var v2 = ((NizkBoolValue) newVar2.Value);
-                    return new Variable() {
+                    return new Variable(new RawVariable()
+                    {
                         Type = NType.Bool,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
                             new NizkBoolValue() {
@@ -885,7 +907,7 @@ namespace code0k_cc.Runtime
                             : new NizkBoolValue() {
                                 IsConstant = false,
                             }
-                    };
+                    });
                 }},
 
                 {VariableOperationType.Binary_BooleanXor, (var1, var2) =>
@@ -894,7 +916,8 @@ namespace code0k_cc.Runtime
                     var newVar2 = var2.Assign(NType.Bool);
                     var v1 = ((NizkBoolValue) newVar1.Value);
                     var v2 = ((NizkBoolValue) newVar2.Value);
-                    return new Variable() {
+                    return new Variable(new RawVariable()
+                    {
                         Type = NType.Bool,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
                             new NizkBoolValue() {
@@ -904,7 +927,7 @@ namespace code0k_cc.Runtime
                             : new NizkBoolValue() {
                                 IsConstant = false,
                             }
-                    };
+                    });
                 }},
 
             },
@@ -939,12 +962,12 @@ namespace code0k_cc.Runtime
 
         public static readonly NType Void = new NType("void")
         {
-            GetNewEmptyVariableFunc = () => new Variable() { Type = NType.Void, Value = null },
+            GetNewEmptyVariableFunc = () => new Variable(new RawVariable() { Type = NType.Void, Value = null }),
         };
 
         public static readonly NType Function = new NType("__Function")
         {
-            GetNewEmptyVariableFunc = () => new Variable() { Type = NType.Function, Value = new FunctionDeclarationValue() },
+            GetNewEmptyVariableFunc = () => new Variable(new RawVariable() { Type = NType.Function, Value = new FunctionDeclarationValue() }),
         };
 
         public static NType GetNType(TypeResult r)

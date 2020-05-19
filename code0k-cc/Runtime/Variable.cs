@@ -10,13 +10,22 @@ namespace code0k_cc.Runtime
 {
     class Variable : IStandalone
     {
-        public NType Type;
-        public IValueOfType Value;
+        public NType Type => this.RawVariable.Type;
+        public IValueOfType Value => this.RawVariable.Value;
+
+        public readonly RawVariable RawVariable;
+
+        public Variable(RawVariable rawVariable)
+        {
+            this.RawVariable = rawVariable;
+        }
 
         /// <summary>
         /// Get all parent connections. Note that children connections are not saved.
         /// </summary>
         public readonly List<VariableConnection> ParentConnections = new List<VariableConnection>();
+        // todo make RawVariable class with Type and Value, without ParentConnections
+        // and make Variable class of RawVariable and ParentConnections
 
         public string GetString()
         {

@@ -4,14 +4,14 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using code0k_cc.Runtime.Block;
-using code0k_cc.Runtime.ExeResult; 
+using code0k_cc.Runtime.ExeResult;
 using code0k_cc.Runtime.ValueOfType;
 
 namespace code0k_cc.Runtime.Nizk
 {
     static class NizkUtils
     {
-        public static readonly Variable BoolTrue = new Variable()
+        public static readonly Variable BoolTrue = new Variable(new RawVariable()
         {
             Type = NType.Bool,
             Value = new NizkBoolValue()
@@ -19,9 +19,9 @@ namespace code0k_cc.Runtime.Nizk
                 IsConstant = true,
                 Value = true,
             }
-        };
+        });
 
-        public static readonly Variable BoolFalse = new Variable()
+        public static readonly Variable BoolFalse = new Variable(new RawVariable()
         {
             Type = NType.Bool,
             Value = new NizkBoolValue()
@@ -29,9 +29,9 @@ namespace code0k_cc.Runtime.Nizk
                 IsConstant = true,
                 Value = false,
             }
-        };
+        });
 
-        public static readonly Variable UInt32Zero = new Variable()
+        public static readonly Variable UInt32Zero = new Variable(new RawVariable()
         {
             Type = NType.UInt32,
             Value = new NizkUInt32Value()
@@ -39,9 +39,9 @@ namespace code0k_cc.Runtime.Nizk
                 IsConstant = true,
                 Value = 0,
             }
-        };
+        });
 
-        public static readonly Variable UInt32One = new Variable()
+        public static readonly Variable UInt32One = new Variable(new RawVariable()
         {
             Type = NType.UInt32,
             Value = new NizkUInt32Value()
@@ -49,8 +49,9 @@ namespace code0k_cc.Runtime.Nizk
                 IsConstant = true,
                 Value = 1,
             }
-        };
-        public static readonly Variable UInt32NegOne = new Variable()
+        });
+
+        public static readonly Variable UInt32NegOne = new Variable(new RawVariable()
         {
             Type = NType.UInt32,
             Value = new NizkUInt32Value()
@@ -58,7 +59,7 @@ namespace code0k_cc.Runtime.Nizk
                 IsConstant = true,
                 Value = System.UInt32.MaxValue, //todo  
             }
-        };
+        });
 
         public static Variable NizkCombineFunctionResult(StatementResult result, NType resultNType)
         {
