@@ -4,8 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using code0k_cc.Runtime.Block;
-using code0k_cc.Runtime.ExeResult;
-using code0k_cc.Runtime.Operation;
+using code0k_cc.Runtime.ExeResult; 
 using code0k_cc.Runtime.ValueOfType;
 
 namespace code0k_cc.Runtime.Nizk
@@ -272,10 +271,10 @@ namespace code0k_cc.Runtime.Nizk
                 var var2 = trueVar.ExplicitConvert(NType.UInt32);
                 var var3 = falseVar.ExplicitConvert(NType.UInt32);
 
-                var var4 = NType.UInt32.BinaryOperation(var3, UInt32NegOne, BinaryOperation.Multiplication);
-                var var5 = NType.UInt32.BinaryOperation(var2, var4, BinaryOperation.Addition);
-                var var6 = NType.UInt32.BinaryOperation(var5, var1, BinaryOperation.Multiplication);
-                var var7 = NType.UInt32.BinaryOperation(var3, var6, BinaryOperation.Addition);
+                var var4 = NType.UInt32.BinaryOperation(var3, UInt32NegOne, VariableOperationType.Binary_Multiplication);
+                var var5 = NType.UInt32.BinaryOperation(var2, var4, VariableOperationType.Binary_Addition);
+                var var6 = NType.UInt32.BinaryOperation(var5, var1, VariableOperationType.Binary_Multiplication);
+                var var7 = NType.UInt32.BinaryOperation(var3, var6, VariableOperationType.Binary_Addition);
 
                 var var8 = var7.ExplicitConvert(NType.Bool);
                 return var8;
@@ -286,10 +285,10 @@ namespace code0k_cc.Runtime.Nizk
                 var var2 = trueVar;
                 var var3 = falseVar;
 
-                var var4 = NType.UInt32.BinaryOperation(var3, UInt32NegOne, BinaryOperation.Multiplication);
-                var var5 = NType.UInt32.BinaryOperation(var2, var4, BinaryOperation.Addition);
-                var var6 = NType.UInt32.BinaryOperation(var5, var1, BinaryOperation.Multiplication);
-                var var7 = NType.UInt32.BinaryOperation(var3, var6, BinaryOperation.Addition);
+                var var4 = NType.UInt32.BinaryOperation(var3, UInt32NegOne, VariableOperationType.Binary_Multiplication);
+                var var5 = NType.UInt32.BinaryOperation(var2, var4, VariableOperationType.Binary_Addition);
+                var var6 = NType.UInt32.BinaryOperation(var5, var1, VariableOperationType.Binary_Multiplication);
+                var var7 = NType.UInt32.BinaryOperation(var3, var6, VariableOperationType.Binary_Addition);
 
                 // maybe needs a mod 2^32?
                 // currently, maybe not because it is handled at other operations
