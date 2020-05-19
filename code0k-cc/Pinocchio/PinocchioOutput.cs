@@ -8,5 +8,6 @@ namespace code0k_cc.Pinocchio
     {
         public PinocchioVariableWires VariableWires;
         public readonly List<PinocchioConstraint> Constraints = new List<PinocchioConstraint>();
+        public readonly List<PinocchioWire> AnonymousWires = new List<PinocchioWire>();
     }
 }

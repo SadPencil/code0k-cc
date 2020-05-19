@@ -59,6 +59,7 @@ namespace code0k_cc.Pinocchio
 
             void AddPinocchioOutput(PinocchioOutput ret)
             {
+                ret.AnonymousWires.ForEach(AddWire);
                 AddVariableWires(ret.VariableWires);
                 ret.Constraints.ForEach(AddConstraint);
             }
@@ -114,19 +115,19 @@ namespace code0k_cc.Pinocchio
                                 variableNode.NizkAttribute == NizkVariableType.Input ||
                                 variableNode.NizkAttribute == NizkVariableType.NizkInput);
 
-                            PinocchioOutput ret;
+                            PinocchioOutput output;
 
                             // policy: checkRange is applied for nizkinput, and not applied for others
                             if (variableNode.NizkAttribute == NizkVariableType.NizkInput)
                             {
-                                ret = variableNode.RawVariable.Type.VariableNodeToPinocchio(variableNode.RawVariable, commonArg, true);
+                                output = variableNode.RawVariable.Type.VariableNodeToPinocchio(variableNode.RawVariable, commonArg, true);
                             }
                             else
                             {
-                                ret = variableNode.RawVariable.Type.VariableNodeToPinocchio(variableNode.RawVariable, commonArg, false);
+                                output = variableNode.RawVariable.Type.VariableNodeToPinocchio(variableNode.RawVariable, commonArg, false);
                             }
 
-                            AddPinocchioOutput(ret);
+                            AddPinocchioOutput(output);
                         }
                         else
                         {
@@ -142,7 +143,7 @@ namespace code0k_cc.Pinocchio
                         foreach (var prevNode in operationNode.PrevNodes)
                         {
                             var varNode = (VariableNode) prevNode;
-                            Debug.Assert(rawVarToWires.ContainsKey(varNode.RawVariable)); 
+                            Debug.Assert(rawVarToWires.ContainsKey(varNode.RawVariable));
 
                             inVars.Add(rawVarToWires[varNode.RawVariable]);
                         }
@@ -154,14 +155,14 @@ namespace code0k_cc.Pinocchio
                         foreach (var outNode in operationNode.NextNodes)
                         {
                             var outVarNode = (VariableNode) outNode;
-                            var outputs = inVars[0].RawVariable.Type.OperationNodeToPinocchio(
+                            PinocchioOutput output = inVars[0].RawVariable.Type.OperationNodeToPinocchio(
                                 operationNode.ConnectionType,
                                 inVars,
                                 outVarNode.RawVariable,
                                 commonArg
                             );
 
-                            outputs.ForEach(AddPinocchioOutput);
+                            AddPinocchioOutput(output);
                         }
                         break;
                     default:

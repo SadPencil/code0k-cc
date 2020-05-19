@@ -8,6 +8,21 @@ namespace code0k_cc.Pinocchio
     class PinocchioVariableWires
     {
         public RawVariable RawVariable;
+
         public readonly List<PinocchioWire> Wires = new List<PinocchioWire>();
+
+        public PinocchioVariableWires(RawVariable rawVariable)
+        {
+            this.RawVariable = rawVariable;
+        }
+        public PinocchioVariableWires(RawVariable rawVariable, PinocchioWire singleWire) : this(rawVariable)
+        {
+            this.Wires.Add(singleWire);
+        }
+
+        public PinocchioVariableWires(RawVariable rawVariable, List<PinocchioWire> wires) : this(rawVariable)
+        {
+            wires.ForEach(this.Wires.Add);
+        }
     }
 }
