@@ -12,56 +12,16 @@ namespace code0k_cc.Runtime.Nizk
 {
     static class NizkUtils
     {
-        public static readonly Variable BoolTrue = new Variable(new RawVariable()
-        {
-            Type = NType.Bool,
-            Value = new NizkBoolValue()
-            {
-                IsConstant = true,
-                Value = true,
-            }
-        });
+        public static readonly Variable BoolTrue = NType.Bool.GetCommonConstantValue(VariableCommonConstant.One);
 
-        public static readonly Variable BoolFalse = new Variable(new RawVariable()
-        {
-            Type = NType.Bool,
-            Value = new NizkBoolValue()
-            {
-                IsConstant = true,
-                Value = false,
-            }
-        });
+        public static readonly Variable BoolFalse = NType.Bool.GetCommonConstantValue(VariableCommonConstant.Zero);
 
-        public static readonly Variable UInt32Zero = new Variable(new RawVariable()
-        {
-            Type = NType.UInt32,
-            Value = new NizkUInt32Value()
-            {
-                IsConstant = true,
-                Value = 0,
-            }
-        });
+        public static readonly Variable UInt32Zero = NType.UInt32.GetCommonConstantValue(VariableCommonConstant.Zero);
 
-        public static readonly Variable UInt32One = new Variable(new RawVariable()
-        {
-            Type = NType.UInt32,
-            Value = new NizkUInt32Value()
-            {
-                IsConstant = true,
-                Value = 1,
-            }
-        });
+        public static readonly Variable UInt32One = NType.UInt32.GetCommonConstantValue(VariableCommonConstant.One);
 
-        public static readonly Variable UInt32NegOne = new Variable(new RawVariable()
-        {
-            Type = NType.UInt32,
-            Value = new NizkUInt32Value()
-            {
-                IsConstant = true,
-                Value = System.UInt32.MaxValue, //todo  
-            }
-        });
-
+        public static readonly Variable UInt32MinusOne = NType.UInt32.GetCommonConstantValue(VariableCommonConstant.MinusOne);
+        
         public static Variable NizkCombineFunctionResult(StatementResult result, NType resultNType)
         {
             switch (result)
@@ -273,7 +233,7 @@ namespace code0k_cc.Runtime.Nizk
                 var var2 = trueVar.ExplicitConvert(NType.UInt32);
                 var var3 = falseVar.ExplicitConvert(NType.UInt32);
 
-                var var4 = NType.UInt32.BinaryOperation(var3, UInt32NegOne, VariableOperationType.Binary_Multiplication);
+                var var4 = NType.UInt32.BinaryOperation(var3, UInt32MinusOne, VariableOperationType.Binary_Multiplication);
                 var var5 = NType.UInt32.BinaryOperation(var2, var4, VariableOperationType.Binary_Addition);
                 var var6 = NType.UInt32.BinaryOperation(var5, var1, VariableOperationType.Binary_Multiplication);
                 var var7 = NType.UInt32.BinaryOperation(var3, var6, VariableOperationType.Binary_Addition);
@@ -287,7 +247,7 @@ namespace code0k_cc.Runtime.Nizk
                 var var2 = trueVar;
                 var var3 = falseVar;
 
-                var var4 = NType.UInt32.BinaryOperation(var3, UInt32NegOne, VariableOperationType.Binary_Multiplication);
+                var var4 = NType.UInt32.BinaryOperation(var3, UInt32MinusOne, VariableOperationType.Binary_Multiplication);
                 var var5 = NType.UInt32.BinaryOperation(var2, var4, VariableOperationType.Binary_Addition);
                 var var6 = NType.UInt32.BinaryOperation(var5, var1, VariableOperationType.Binary_Multiplication);
                 var var7 = NType.UInt32.BinaryOperation(var3, var6, VariableOperationType.Binary_Addition);

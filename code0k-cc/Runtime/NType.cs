@@ -472,6 +472,25 @@ namespace code0k_cc.Runtime
                     }
 
                 }
+                else if (type == NType.Field)
+                {
+                    if (variable.Value.IsConstant)
+                    {
+                        return new Variable(new RawVariable()
+                        {
+                            Type = NType.Field,
+                            Value = new NizkFieldValue()
+                            {
+                                IsConstant = true,
+                                Value = new BigInteger(( (NizkUInt32Value) variable.Value ).Value),
+                            }
+                        });
+                    }
+                    else
+                    {
+                        return NType.Field.GetNewNizkVariableFunc();
+                    }
+                }
                 else
                 {
                     throw new Exception($"Can't explicit convert \"{NType.UInt32.TypeCodeName }\" to \"{type.TypeCodeName}\".");
@@ -936,15 +955,19 @@ namespace code0k_cc.Runtime
                 {
                     if (variable.Value.IsConstant)
                     {
-                        return new Variable(new RawVariable()
+                        return NType.UInt32.GetCommonConstantValue(( (NizkBoolValue) variable.Value ).Value ? VariableCommonConstant.One : VariableCommonConstant.Zero);
+
+                    }
+                    else if (type == NType.Field)
+                    {
+                        if (variable.Value.IsConstant)
                         {
-                            Type = NType.UInt32,
-                            Value = new NizkUInt32Value()
-                            {
-                                IsConstant = true,
-                                Value = ( ( (NizkBoolValue) variable.Value ).Value ) ? (System.UInt32) 1 : (System.UInt32) 0,
-                            }
-                        });
+                            return NType.Field.GetCommonConstantValue(( (NizkBoolValue) variable.Value ).Value ? VariableCommonConstant.One : VariableCommonConstant.Zero);
+                        }
+                        else
+                        {
+                            return NType.Field.GetNewNizkVariableFunc();
+                        }
                     }
                     else
                     {
@@ -1113,7 +1136,7 @@ namespace code0k_cc.Runtime
             CommonConstantValueDictionary = new Dictionary<VariableCommonConstant, RawVariable>()
             {
                 {VariableCommonConstant.Zero,  new RawVariable() { Type = NType.Void, Value = null }}
-            }, 
+            },
         };
 
         public static readonly NType Function = new NType("__Function")
@@ -1121,7 +1144,7 @@ namespace code0k_cc.Runtime
             CommonConstantValueDictionary = new Dictionary<VariableCommonConstant, RawVariable>()
             {
                 {VariableCommonConstant.Zero,  new RawVariable() { Type = NType.Function, Value = new FunctionDeclarationValue() }}
-            }, 
+            },
         };
 
         public static NType GetNType(TypeResult r)
