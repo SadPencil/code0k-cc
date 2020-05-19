@@ -478,7 +478,7 @@ namespace code0k_cc.Parse
                     switch (node)
                     {
                         case VariableNode nnode:
-                            Console.WriteLine(nnode.Variable.Type.TypeCodeName);
+                            Console.WriteLine(nnode.RawVariable.Type.TypeCodeName);
                             break;
                         case VariableOperationNode nnode:
                             Console.WriteLine(nnode.ConnectionType.ToString());

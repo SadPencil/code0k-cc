@@ -19,21 +19,21 @@ namespace code0k_cc.Runtime.VariableMap
 
         public static VariableMap GetMapFromVariableConnection(ICollection<VariableRef> inputVariables, ICollection<VariableRef> nizkVariables, ICollection<VariableRef> outputVariables)
         {
-            var varToVarRefs = new Dictionary<Variable, VariableRef>();
+            var varToVarRefs = new Dictionary<RawVariable, VariableRef>();
             foreach (var inputVariable in inputVariables)
             {
-                varToVarRefs.Add(inputVariable.Variable, inputVariable);
+                varToVarRefs.Add(inputVariable.Variable.RawVariable, inputVariable);
             }
             foreach (var nizkVariable in nizkVariables)
             {
-                varToVarRefs.Add(nizkVariable.Variable, nizkVariable);
+                varToVarRefs.Add(nizkVariable.Variable.RawVariable, nizkVariable);
             }
             foreach (var outputVariable in outputVariables)
             {
-                varToVarRefs.Add(outputVariable.Variable, outputVariable);
+                varToVarRefs.Add(outputVariable.Variable.RawVariable, outputVariable);
             }
 
-            var varToNode = new Dictionary<Variable, VariableNode>();
+            var varToNode = new Dictionary<RawVariable, VariableNode>();
 
             var conToNode = new Dictionary<VariableConnection, VariableOperationNode>();
 
@@ -42,31 +42,34 @@ namespace code0k_cc.Runtime.VariableMap
 
             VariableNode AddVariableNode(Variable itemVariable)
             {
-                if (varToNode.ContainsKey(itemVariable))
+                if (varToNode.ContainsKey(itemVariable.RawVariable))
                 {
-                    return varToNode[itemVariable];
+                    return varToNode[itemVariable.RawVariable];
                 }
 
-                var varNode = new VariableNode(itemVariable);
-                if (varToVarRefs.ContainsKey(itemVariable))
+                VariableNode varNode;
+                if (varToVarRefs.ContainsKey(itemVariable.RawVariable))
                 {
-                    var varRef = varToVarRefs[itemVariable];
+                    var varRef = varToVarRefs[itemVariable.RawVariable];
                     switch (varRef.NizkAttribute)
                     {
                         case NizkVariableType.Input:
                         case NizkVariableType.NizkInput:
                         case NizkVariableType.Output:
-                            varNode.NizkAttribute = varRef.NizkAttribute;
-                            varNode.VarName = varRef.VarName;
+                            varNode = new VariableNode(varRef);
                             break;
-                            
+
                         case NizkVariableType.Intermediate:
                         default:
                             throw new Exception("Assert failed!");
                     }
                 }
+                else
+                {
+                    varNode = new VariableNode(itemVariable);
+                }
 
-                varToNode.Add(itemVariable, varNode);
+                varToNode.Add(itemVariable.RawVariable, varNode);
                 mapAllNodes.Add(varNode);
 
                 if (0 == ( itemVariable.ParentConnections?.Count ?? 0 ))
@@ -129,14 +132,14 @@ namespace code0k_cc.Runtime.VariableMap
 
                 if (mapNode is VariableNode varNode)
                 {
-                    if (varToVarRefs.ContainsKey(varNode.Variable))
+                    if (varToVarRefs.ContainsKey(varNode.RawVariable))
                     {
-                        var varRef = varToVarRefs[varNode.Variable];
+                        var varRef = varToVarRefs[varNode.RawVariable];
                         switch (varRef.NizkAttribute)
                         {
                             case NizkVariableType.Input:
                             case NizkVariableType.NizkInput:
-                                Debug.Assert(!varNode.Variable.Value.IsConstant);
+                                Debug.Assert(!varNode.RawVariable.Value.IsConstant);
                                 break;
 
                             case NizkVariableType.Output:
@@ -149,9 +152,9 @@ namespace code0k_cc.Runtime.VariableMap
                     }
                     else
                     {
-                        Debug.Assert(varNode.Variable.Value.IsConstant);
+                        Debug.Assert(varNode.RawVariable.Value.IsConstant);
                     }
-                    
+
                 }
                 else
                 {

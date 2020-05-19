@@ -79,7 +79,7 @@ namespace code0k_cc.Pinocchio
                         {
                             Debug.Assert(
                                 ( variableNode.NizkAttribute == NizkVariableType.Intermediate &&
-                                 variableNode.Variable.Value.IsConstant ) ||
+                                 variableNode.RawVariable.Value.IsConstant ) ||
                                 variableNode.NizkAttribute == NizkVariableType.Input ||
                                 variableNode.NizkAttribute == NizkVariableType.NizkInput);
 
@@ -88,11 +88,11 @@ namespace code0k_cc.Pinocchio
                             // policy: checkRange is applied for nizkinput, and not applied for others
                             if (variableNode.NizkAttribute == NizkVariableType.NizkInput)
                             {
-                                ret = variableNode.Variable.ToPinocchioWires(commonArg, true);
+                                ret = variableNode.RawVariable.ToPinocchioWires(commonArg, true);
                             }
                             else
                             {
-                                ret = variableNode.Variable.ToPinocchioWires(commonArg, false);
+                                ret = variableNode.RawVariable.ToPinocchioWires(commonArg, false);
                             }
 
                             ret.Wires.ForEach(AddWire);
@@ -104,7 +104,7 @@ namespace code0k_cc.Pinocchio
                         {
                             Debug.Assert(variableNode.NizkAttribute == NizkVariableType.Intermediate ||
                                          variableNode.NizkAttribute == NizkVariableType.Output);
-                            Debug.Assert(!variableNode.Variable.Value.IsConstant);
+                            Debug.Assert(!variableNode.RawVariable.Value.IsConstant);
                         }
 
                         break;

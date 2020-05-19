@@ -8,12 +8,20 @@ namespace code0k_cc.Runtime.VariableMap
 {
     class VariableNode : IVariableMapNode
     {
-        public Variable Variable;
+        public RawVariable RawVariable;
         public NizkVariableType NizkAttribute { get; set; } = NizkVariableType.Intermediate;
         public string VarName { get; set; }
-        public VariableNode(Variable variable)
+
+        public VariableNode(RawVariable rawVariable)
         {
-            this.Variable = variable;
+            this.RawVariable = rawVariable;
+        }
+        public VariableNode(Variable variable) : this(variable.RawVariable) { }
+
+        public VariableNode(VariableRef variableRef) : this(variableRef.Variable)
+        {
+            this.VarName = variableRef.VarName;
+            this.NizkAttribute = variableRef.NizkAttribute;
         }
     }
 }
