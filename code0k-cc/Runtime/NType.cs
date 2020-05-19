@@ -369,7 +369,7 @@ namespace code0k_cc.Runtime
                     throw new Exception($"Can't parse \"{str}\" as \"{NType.Field.TypeCodeName}\".");
                 }
             },
-            GetStringFunc = variable => ( (NizkUInt32Value) variable.Value ).Value.ToString(CultureInfo.InvariantCulture),
+            GetStringFunc = variable => ( (NizkFieldValue) variable.Value ).Value.ToString(CultureInfo.InvariantCulture),
             GetNewNizkVariableFunc = () => new Variable(new RawVariable()
             {
                 Type = NType.Field,
@@ -379,8 +379,109 @@ namespace code0k_cc.Runtime
                     Value = BigInteger.Zero,
                 }
             }),
+            ExplicitConvertFunc = (variable, type) =>
+            {
+                var selfType = NType.Field;
+                if (type == selfType)
+                {
+                    return variable;
+                }
+                if (!variable.Value.IsConstant)
+                {
+                    return selfType.GetNewNizkVariable();
+                }
+
+                if (type == NType.Field)
+                {
+                    throw CommonException.AssertFailedException();
+                }
+                else if (type == NType.UInt32)
+                {
+                    return new Variable(new RawVariable()
+                    {
+                        Type = NType.UInt32,
+                        Value = new NizkUInt32Value()
+                        {
+                            IsConstant = true,
+                            Value = System.UInt32.Parse(( ( (NizkFieldValue) variable.Value ).Value % ( new BigInteger(System.UInt32.MaxValue) + 1 ) ).ToString()),
+                        }
+                    });
+                }
+                else if (type == NType.Bool)
+                {
+                    return NType.Bool.GetCommonConstantValue(( (NizkUInt32Value) variable.Value ).Value % 2 == 0 ? VariableCommonConstant.One : VariableCommonConstant.Zero);
+                }
+                else
+                {
+                    throw new Exception($"Can't explicit convert \"{selfType.TypeCodeName }\" to \"{type.TypeCodeName}\".");
+                }
+            },
+
+            BinaryOperationFuncs = new Dictionary<VariableOperationType, Func<Variable, Variable, Variable>>()
+            {
+                {VariableOperationType.Binary_Addition, (var1, var2) =>
+                {
+                    var newVar1 = var1;
+                    var newVar2 = var2.Assign(NType.Field);
+                    var v1 = ((NizkFieldValue) newVar1.Value);
+                    var v2 = ((NizkFieldValue) newVar2.Value);
+                    return new Variable(new RawVariable()
+                    {
+                        Type = NType.Field,
+                        Value =(v1.IsConstant && v2.IsConstant ) ?
+                            new NizkFieldValue() {
+                                IsConstant = true,
+                                Value = (v1.Value + v2.Value) % My.Config.ModulusPrimeField_Prime,
+                            }
+                            : new NizkFieldValue() {
+                                IsConstant = false,
+                            }
+                    });
+                }},
+
+                {VariableOperationType.Binary_Subtract, (var1, var2) =>
+                {
+                    var newVar1 = var1;
+                    var newVar2 = var2.Assign(NType.Field);
+                    var v1 = ((NizkFieldValue) newVar1.Value);
+                    var v2 = ((NizkFieldValue) newVar2.Value);
+                    return new Variable(new RawVariable()
+                    {
+                        Type = NType.Field,
+                        Value =(v1.IsConstant && v2.IsConstant ) ?
+                            new NizkFieldValue() {
+                                IsConstant = true,
+                                Value = (My.Config.ModulusPrimeField_Prime + v1.Value - v2.Value) % My.Config.ModulusPrimeField_Prime,
+                            }
+                            : new NizkFieldValue() {
+                                IsConstant = false,
+                            }
+                    });
+                }},
+
+                {VariableOperationType.Binary_Multiplication, (var1, var2) =>
+                {
+                    var newVar1 = var1;
+                    var newVar2 = var2.Assign(NType.Field);
+                    var v1 = ((NizkFieldValue) newVar1.Value);
+                    var v2 = ((NizkFieldValue) newVar2.Value);
+                    return new Variable(new RawVariable()
+                    {
+                        Type = NType.Field,
+                        Value =(v1.IsConstant && v2.IsConstant ) ?
+                            new NizkFieldValue() {
+                                IsConstant = true,
+                                Value = ( v1.Value * v2.Value) % My.Config.ModulusPrimeField_Prime,
+                            }
+                            : new NizkFieldValue() {
+                                IsConstant = false,
+                            }
+                    });
+                }},
+            },
 
         };
+
         //todo handle overflow
         public static readonly NType UInt32 = new NType("uint32")
         {
@@ -448,53 +549,41 @@ namespace code0k_cc.Runtime
             }),
             ExplicitConvertFunc = (variable, type) =>
             {
-                if (NType.UInt32 == type)
+                var selfType = NType.UInt32;
+                if (type == selfType)
                 {
                     return variable;
                 }
+                if (!variable.Value.IsConstant)
+                {
+                    return selfType.GetNewNizkVariable();
+                }
+
+                if (type == NType.Field)
+                {
+                    return new Variable(new RawVariable()
+                    {
+                        Type = NType.Field,
+                        Value = new NizkFieldValue()
+                        {
+                            IsConstant = true,
+                            Value = new BigInteger(( (NizkUInt32Value) variable.Value ).Value),
+                        }
+                    });
+                }
+                else if (type == NType.UInt32)
+                {
+                    throw CommonException.AssertFailedException();
+                }
                 else if (type == NType.Bool)
                 {
-                    if (variable.Value.IsConstant)
-                    {
-                        return new Variable(new RawVariable()
-                        {
-                            Type = NType.Bool,
-                            Value = new NizkBoolValue()
-                            {
-                                IsConstant = true,
-                                Value = ( (NizkUInt32Value) variable.Value ).Value != 0,
-                            }
-                        });
-                    }
-                    else
-                    {
-                        return NType.Bool.GetNewNizkVariableFunc();
-                    }
-
-                }
-                else if (type == NType.Field)
-                {
-                    if (variable.Value.IsConstant)
-                    {
-                        return new Variable(new RawVariable()
-                        {
-                            Type = NType.Field,
-                            Value = new NizkFieldValue()
-                            {
-                                IsConstant = true,
-                                Value = new BigInteger(( (NizkUInt32Value) variable.Value ).Value),
-                            }
-                        });
-                    }
-                    else
-                    {
-                        return NType.Field.GetNewNizkVariableFunc();
-                    }
+                    return NType.Bool.GetCommonConstantValue(( (NizkUInt32Value) variable.Value ).Value == 0 ? VariableCommonConstant.Zero : VariableCommonConstant.One);
                 }
                 else
                 {
-                    throw new Exception($"Can't explicit convert \"{NType.UInt32.TypeCodeName }\" to \"{type.TypeCodeName}\".");
+                    throw new Exception($"Can't explicit convert \"{selfType.TypeCodeName }\" to \"{type.TypeCodeName}\".");
                 }
+
             },
             UnaryOperationFuncs = new Dictionary<VariableOperationType, Func<Variable, Variable>>()
             {
@@ -947,37 +1036,31 @@ namespace code0k_cc.Runtime
             }),
             ExplicitConvertFunc = (variable, type) =>
             {
-                if (NType.Bool == type)
+                var selfType = NType.Bool;
+                if (type == selfType)
                 {
                     return variable;
                 }
+                if (!variable.Value.IsConstant)
+                {
+                    return selfType.GetNewNizkVariable();
+                }
+
+                if (type == NType.Field)
+                {
+                    return NType.Field.GetCommonConstantValue(( (NizkBoolValue) variable.Value ).Value ? VariableCommonConstant.One : VariableCommonConstant.Zero);
+                }
                 else if (type == NType.UInt32)
                 {
-                    if (variable.Value.IsConstant)
-                    {
-                        return NType.UInt32.GetCommonConstantValue(( (NizkBoolValue) variable.Value ).Value ? VariableCommonConstant.One : VariableCommonConstant.Zero);
-
-                    }
-                    else if (type == NType.Field)
-                    {
-                        if (variable.Value.IsConstant)
-                        {
-                            return NType.Field.GetCommonConstantValue(( (NizkBoolValue) variable.Value ).Value ? VariableCommonConstant.One : VariableCommonConstant.Zero);
-                        }
-                        else
-                        {
-                            return NType.Field.GetNewNizkVariableFunc();
-                        }
-                    }
-                    else
-                    {
-                        return NType.UInt32.GetNewNizkVariableFunc();
-                    }
-
+                    return NType.UInt32.GetCommonConstantValue(( (NizkBoolValue) variable.Value ).Value ? VariableCommonConstant.One : VariableCommonConstant.Zero);
+                }
+                else if (type == NType.Bool)
+                {
+                    throw CommonException.AssertFailedException();
                 }
                 else
                 {
-                    throw new Exception($"Can't explicit convert \"{NType.Bool.TypeCodeName }\" to \"{type.TypeCodeName}\".");
+                    throw new Exception($"Can't explicit convert \"{selfType.TypeCodeName }\" to \"{type.TypeCodeName}\".");
                 }
             },
             UnaryOperationFuncs = new Dictionary<VariableOperationType, Func<Variable, Variable>>()

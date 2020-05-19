@@ -1575,14 +1575,14 @@ namespace code0k_cc.Parse
                 {
                     return new ExeResult()
                     {
-                        ExpressionResult = new ExpressionResult() { Variable = NizkUtils.BoolTrue }
+                        ExpressionResult = new ExpressionResult() { Variable = NType.Bool.GetCommonConstantValue(VariableCommonConstant.One) }
                     };
                 }
                 else if (instance.Children[0].ParseUnit == TokenUnits[TokenType.False])
                 {
                     return new ExeResult()
                     {
-                        ExpressionResult = new ExpressionResult() { Variable = NizkUtils.BoolFalse }
+                        ExpressionResult = new ExpressionResult() { Variable = NType.Bool.GetCommonConstantValue(VariableCommonConstant.Zero) }
                     };
                 }
                 else if (instance.Children[0].ParseUnit == BracketExpression)

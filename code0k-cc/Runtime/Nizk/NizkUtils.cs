@@ -12,16 +12,16 @@ namespace code0k_cc.Runtime.Nizk
 {
     static class NizkUtils
     {
-        public static readonly Variable BoolTrue = NType.Bool.GetCommonConstantValue(VariableCommonConstant.One);
+        private static readonly Variable BoolTrue = NType.Bool.GetCommonConstantValue(VariableCommonConstant.One);
 
-        public static readonly Variable BoolFalse = NType.Bool.GetCommonConstantValue(VariableCommonConstant.Zero);
+        private static readonly Variable BoolFalse = NType.Bool.GetCommonConstantValue(VariableCommonConstant.Zero);
 
-        public static readonly Variable UInt32Zero = NType.UInt32.GetCommonConstantValue(VariableCommonConstant.Zero);
+        private static readonly Variable FieldZero = NType.UInt32.GetCommonConstantValue(VariableCommonConstant.Zero);
 
-        public static readonly Variable UInt32One = NType.UInt32.GetCommonConstantValue(VariableCommonConstant.One);
+        private static readonly Variable FieldOne = NType.UInt32.GetCommonConstantValue(VariableCommonConstant.One);
 
-        public static readonly Variable UInt32MinusOne = NType.UInt32.GetCommonConstantValue(VariableCommonConstant.MinusOne);
-        
+        private static readonly Variable FieldMinusOne = NType.Field.GetCommonConstantValue(VariableCommonConstant.MinusOne);
+
         public static Variable NizkCombineFunctionResult(StatementResult result, NType resultNType)
         {
             switch (result)
@@ -229,32 +229,31 @@ namespace code0k_cc.Runtime.Nizk
         {
             if (trueVar.Type == NType.Bool)
             {
-                var var1 = condition.ExplicitConvert(NType.UInt32);
-                var var2 = trueVar.ExplicitConvert(NType.UInt32);
-                var var3 = falseVar.ExplicitConvert(NType.UInt32);
+                var var1 = condition.ExplicitConvert(NType.Field);
+                var var2 = trueVar.ExplicitConvert(NType.Field);
+                var var3 = falseVar.ExplicitConvert(NType.Field);
 
-                var var4 = NType.UInt32.BinaryOperation(var3, UInt32MinusOne, VariableOperationType.Binary_Multiplication);
-                var var5 = NType.UInt32.BinaryOperation(var2, var4, VariableOperationType.Binary_Addition);
-                var var6 = NType.UInt32.BinaryOperation(var5, var1, VariableOperationType.Binary_Multiplication);
-                var var7 = NType.UInt32.BinaryOperation(var3, var6, VariableOperationType.Binary_Addition);
+                var var4 = NType.Field.BinaryOperation(var3, FieldMinusOne, VariableOperationType.Binary_Multiplication);
+                var var5 = NType.Field.BinaryOperation(var2, var4, VariableOperationType.Binary_Addition);
+                var var6 = NType.Field.BinaryOperation(var5, var1, VariableOperationType.Binary_Multiplication);
+                var var7 = NType.Field.BinaryOperation(var3, var6, VariableOperationType.Binary_Addition);
 
                 var var8 = var7.ExplicitConvert(NType.Bool);
                 return var8;
             }
             else if (trueVar.Type == NType.UInt32)
             {
-                var var1 = condition.ExplicitConvert(NType.UInt32);
-                var var2 = trueVar;
-                var var3 = falseVar;
+                var var1 = condition.ExplicitConvert(NType.Field);
+                var var2 = trueVar.ExplicitConvert(NType.Field);
+                var var3 = falseVar.ExplicitConvert(NType.Field);
 
-                var var4 = NType.UInt32.BinaryOperation(var3, UInt32MinusOne, VariableOperationType.Binary_Multiplication);
-                var var5 = NType.UInt32.BinaryOperation(var2, var4, VariableOperationType.Binary_Addition);
-                var var6 = NType.UInt32.BinaryOperation(var5, var1, VariableOperationType.Binary_Multiplication);
-                var var7 = NType.UInt32.BinaryOperation(var3, var6, VariableOperationType.Binary_Addition);
+                var var4 = NType.Field.BinaryOperation(var3, FieldMinusOne, VariableOperationType.Binary_Multiplication);
+                var var5 = NType.Field.BinaryOperation(var2, var4, VariableOperationType.Binary_Addition);
+                var var6 = NType.Field.BinaryOperation(var5, var1, VariableOperationType.Binary_Multiplication);
+                var var7 = NType.Field.BinaryOperation(var3, var6, VariableOperationType.Binary_Addition);
 
-                // maybe needs a mod 2^32?
-                // currently, maybe not because it is handled at other operations
-                return var7;
+                var var8 = var7.ExplicitConvert(NType.UInt32);
+                return var8;
             }
             else
             {
