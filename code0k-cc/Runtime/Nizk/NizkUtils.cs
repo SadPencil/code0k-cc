@@ -91,7 +91,7 @@ namespace code0k_cc.Runtime.Nizk
                             }
 
                         default:
-                            throw new Exception("Assert failed!");
+                            throw CommonException.AssertFailedException();
                     }
 
                 case StatementResultTwoCase ret:
@@ -100,7 +100,7 @@ namespace code0k_cc.Runtime.Nizk
                     return NizkConditionVariable(ret.Condition, trueVar, falseVar);
 
                 default:
-                    throw new Exception("Assert failed!");
+                    throw CommonException.AssertFailedException();
             }
 
 
@@ -161,7 +161,7 @@ namespace code0k_cc.Runtime.Nizk
                                     return ret;
 
                                 default:
-                                    throw new Exception("Assert failed!");
+                                    throw CommonException.AssertFailedException();
                             }
 
                         }
@@ -181,7 +181,7 @@ namespace code0k_cc.Runtime.Nizk
                     }
 
                 default:
-                    throw new Exception("Assert failed!");
+                    throw CommonException.AssertFailedException();
             }
 
         }

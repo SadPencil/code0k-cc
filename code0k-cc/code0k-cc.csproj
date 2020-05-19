@@ -6,8 +6,4 @@
     <RootNamespace>code0k_cc</RootNamespace>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Folder Include="Exception\" />
-  </ItemGroup>
-
 </Project>

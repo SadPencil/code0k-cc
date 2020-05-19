@@ -9,6 +9,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
+using code0k_cc.CustomException;
 using code0k_cc.Lex;
 using code0k_cc.Pinocchio;
 using code0k_cc.Runtime.ExeResult;
@@ -186,7 +187,7 @@ namespace code0k_cc.Runtime
         /// </summary>
         private IReadOnlyDictionary<VariableOperationType, Func<Variable, Variable, Variable>> BinaryOperationFuncs { get; set; }
 
-        // pinocchio staffs
+        // BEGIN pinocchio staffs
         public PinocchioOutput VariableNodeToPinocchio(VariableNode variableNode, PinocchioCommonArg commonArg, bool checkRange)
         {
             Debug.Assert(variableNode.RawVariable.Type == this);
@@ -195,7 +196,14 @@ namespace code0k_cc.Runtime
 
         private Func<VariableNode, PinocchioCommonArg, bool, PinocchioOutput> VariableNodeToPinocchioFunc { get; set; }
 
-
+        public List<PinocchioOutput> OperationNodeToPinocchio(OperationNode operationNode, PinocchioCommonArg commonArg)
+        {
+            // currently, assume there is at least one in-variable
+            Debug.Assert(( (VariableNode) operationNode.PrevNodes[0] ).RawVariable.Type == this);
+            return this.OperationNodeToPinocchio(operationNode, commonArg);
+        }
+        private Func<OperationNode, PinocchioCommonArg, List<PinocchioOutput>> OperationNodeToPinocchioFunc { get; set; }
+        // END pinocchio staffs
 
         private NType(string TypeCodeName)
         {
@@ -229,7 +237,8 @@ namespace code0k_cc.Runtime
             this.GetStringFunc = variable => throw new Exception($"Type \"{this.TypeCodeName}\" doesn't support String().");
             this.ParseFunc = s => throw new Exception($"Type \"{this.TypeCodeName}\" doesn't support Parse().");
             this.GetNewNizkVariableFunc = () => throw new Exception($"Type \"{this.TypeCodeName}\" is not nizk-compatible.");
-            this.VariableNodeToPinocchioFunc = (variable, arg, checkRange) => throw new Exception($"Type \"{this.TypeCodeName}\" is not nizk-compatible.");
+            this.VariableNodeToPinocchioFunc = (variableNode, arg, checkRange) => throw new Exception($"Type \"{this.TypeCodeName}\" is not nizk-compatible.");
+            this.OperationNodeToPinocchioFunc = (operationNode, arg) => throw new Exception($"Type \"{this.TypeCodeName}\" is not nizk-compatible.");
         }
 
         public static readonly NType String = new NType("string")
@@ -275,7 +284,7 @@ namespace code0k_cc.Runtime
                             _ = sb.Append(ch);
                             continue;
                         default:
-                            throw new Exception("Assert failed!");
+                            throw CommonException.AssertFailedException();
                     }
                 }
 
@@ -738,7 +747,23 @@ namespace code0k_cc.Runtime
                 }
 
                 return ret;
-            }
+            },
+
+            OperationNodeToPinocchioFunc = (operationNode, commonArg) =>
+            {
+                //todo
+                if (operationNode.ConnectionType == VariableOperationType.Unary_Addition)
+                {
+                    //todo
+                }
+                else
+                {
+                    throw CommonException.AssertFailedException();
+                }
+
+            },
+
+
         };
 
         public static readonly NType Bool = new NType("bool")

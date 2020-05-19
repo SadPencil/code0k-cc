@@ -126,7 +126,7 @@ namespace code0k_cc.Parse
                     }
                     else
                     {
-                        throw new Exception("Assert failed!");
+                        throw CommonException.AssertFailedException();
                     }
                 }
             }
@@ -176,7 +176,7 @@ namespace code0k_cc.Parse
                     }
                     else
                     {
-                        throw new Exception("Assert failed!");
+                        throw CommonException.AssertFailedException();
                     }
                 }
                 else
@@ -252,7 +252,7 @@ namespace code0k_cc.Parse
                     }
                     else
                     {
-                        throw new Exception("Assert failed!");
+                        throw CommonException.AssertFailedException();
                     }
                 }
                 else
@@ -279,7 +279,7 @@ namespace code0k_cc.Parse
             }
             else
             {
-                throw new Exception("Assert failed!");
+                throw CommonException.AssertFailedException();
             }
         }
 
@@ -728,7 +728,7 @@ namespace code0k_cc.Parse
                                     return nextStmtInstance.Execute(arg);
                                 }
                             default:
-                                throw new Exception("Assert failed!");
+                                throw CommonException.AssertFailedException();
                         }
                     case StatementResultTwoCase stmtRet:
                         if (nextStmtInstance == null)
@@ -788,12 +788,12 @@ namespace code0k_cc.Parse
 
                                                 break;
                                             default:
-                                                throw new Exception("Assert failed!");
+                                                throw CommonException.AssertFailedException();
 
                                         }
                                         break;
                                     default:
-                                        throw new Exception("Assert failed!");
+                                        throw CommonException.AssertFailedException();
                                 }
 
                             }
@@ -804,7 +804,7 @@ namespace code0k_cc.Parse
                             return new ExeResult() { StatementResult = stmtRetOptimized };
                         }
                     default:
-                        throw new Exception("Assert failed!");
+                        throw CommonException.AssertFailedException();
 
                 }
             };
@@ -1281,13 +1281,13 @@ namespace code0k_cc.Parse
 
                                         break;
                                     default:
-                                        throw new Exception("Assert failed!");
+                                        throw CommonException.AssertFailedException();
                                 }
 
                                 break;
 
                             default:
-                                throw new Exception("Assert failed!");
+                                throw CommonException.AssertFailedException();
                         }
 
 
@@ -1326,12 +1326,12 @@ namespace code0k_cc.Parse
                                 }
                                 else
                                 {
-                                    throw new Exception("Assert failed!");
+                                    throw CommonException.AssertFailedException();
                                 }
 
                                 break;
                             default:
-                                throw new Exception("Assert failed!");
+                                throw CommonException.AssertFailedException();
                         }
                     }
                 }
@@ -1413,7 +1413,7 @@ namespace code0k_cc.Parse
                 }
                 else
                 {
-                    throw new Exception("Assert failed!");
+                    throw CommonException.AssertFailedException();
                 }
 
                 NType type = NType.GetNType(instance.Children[1].Execute(arg).TypeUnitResult);
@@ -1590,7 +1590,7 @@ namespace code0k_cc.Parse
                 }
                 else
                 {
-                    throw new Exception("Assert failed!");
+                    throw CommonException.AssertFailedException();
                 }
             };
 
@@ -1663,7 +1663,7 @@ namespace code0k_cc.Parse
                     }
                     else
                     {
-                        throw new Exception("Assert failed!");
+                        throw CommonException.AssertFailedException();
                     }
 
                     exp = newExp;
@@ -1786,7 +1786,7 @@ namespace code0k_cc.Parse
                 }
                 else
                 {
-                    throw new Exception("Assert failed!");
+                    throw CommonException.AssertFailedException();
                 }
 
                 return new ExeResult() { ExpressionResult = new ExpressionResult() { Variable = retVar } };
@@ -1854,7 +1854,7 @@ namespace code0k_cc.Parse
                         }
                         else
                         {
-                            throw new Exception("Assert failed!");
+                            throw CommonException.AssertFailedException();
                         }
 
                         h5ins = h5ins.Children[2];
@@ -1891,7 +1891,7 @@ namespace code0k_cc.Parse
                         }
                         else
                         {
-                            throw new Exception("Assert failed!");
+                            throw CommonException.AssertFailedException();
                         }
 
                         h5ins = h5ins.Children[2];
@@ -1948,7 +1948,7 @@ namespace code0k_cc.Parse
             //            }
             //            else
             //            {
-            //                throw new Exception("Assert failed!");
+            //                throw CommonException.AssertFailedException();
             //            }
 
             //            h5ins = h5ins.Children[2];
@@ -2005,7 +2005,7 @@ namespace code0k_cc.Parse
                         }
                         else
                         {
-                            throw new Exception("Assert failed!");
+                            throw CommonException.AssertFailedException();
                         }
 
                         h5ins = h5ins.Children[2];
@@ -2041,7 +2041,7 @@ namespace code0k_cc.Parse
                         }
                         else
                         {
-                            throw new Exception("Assert failed!");
+                            throw CommonException.AssertFailedException();
                         }
 
                         h5ins = h5ins.Children[2];
@@ -2073,7 +2073,7 @@ namespace code0k_cc.Parse
                         }
                         else
                         {
-                            throw new Exception("Assert failed!");
+                            throw CommonException.AssertFailedException();
                         }
 
                         h5ins = h5ins.Children[2];
@@ -2105,7 +2105,7 @@ namespace code0k_cc.Parse
                         }
                         else
                         {
-                            throw new Exception("Assert failed!");
+                            throw CommonException.AssertFailedException();
                         }
 
                         h5ins = h5ins.Children[2];
@@ -2137,7 +2137,7 @@ namespace code0k_cc.Parse
                         }
                         else
                         {
-                            throw new Exception("Assert failed!");
+                            throw CommonException.AssertFailedException();
                         }
 
                         h5ins = h5ins.Children[2];
@@ -2169,7 +2169,7 @@ namespace code0k_cc.Parse
                         }
                         else
                         {
-                            throw new Exception("Assert failed!");
+                            throw CommonException.AssertFailedException();
                         }
 
                         h5ins = h5ins.Children[2];
@@ -2201,7 +2201,7 @@ namespace code0k_cc.Parse
                         }
                         else
                         {
-                            throw new Exception("Assert failed!");
+                            throw CommonException.AssertFailedException();
                         }
 
                         h5ins = h5ins.Children[2];
@@ -2233,7 +2233,7 @@ namespace code0k_cc.Parse
                         }
                         else
                         {
-                            throw new Exception("Assert failed!");
+                            throw CommonException.AssertFailedException();
                         }
 
                         h5ins = h5ins.Children[2];
@@ -2268,7 +2268,7 @@ namespace code0k_cc.Parse
                 }
                 else
                 {
-                    throw new Exception("Assert failed!");
+                    throw CommonException.AssertFailedException();
                 }
 
                 return new ExeResult() { ExpressionResult = new ExpressionResult() { Variable = leftVarRefRef.VariableRef.Variable } };
@@ -2288,7 +2288,7 @@ namespace code0k_cc.Parse
             // level-18 (corresponding 17): not used
             if (OPERATOR_PRECEDENCE_LEVEL != 18)
             {
-                throw new Exception("Assert failed!");
+                throw CommonException.AssertFailedException();
             }
 
             return MainProgram;

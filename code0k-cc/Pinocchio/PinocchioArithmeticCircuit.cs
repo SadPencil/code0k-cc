@@ -123,7 +123,7 @@ namespace code0k_cc.Pinocchio
                             }
                             else
                             {
-                                throw new Exception("Assert failed!");
+                                throw CommonException.AssertFailedException();
                             }
                         }
                         // todo: produce new out wire & constraints,
@@ -134,7 +134,7 @@ namespace code0k_cc.Pinocchio
                         break;
 
                     default:
-                        throw new Exception("Assert failed!");
+                        throw CommonException.AssertFailedException();
                 }
             }
 

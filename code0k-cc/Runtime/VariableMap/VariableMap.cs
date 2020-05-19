@@ -61,7 +61,7 @@ namespace code0k_cc.Runtime.VariableMap
 
                         case NizkVariableType.Intermediate:
                         default:
-                            throw new Exception("Assert failed!");
+                            throw CommonException.AssertFailedException();
                     }
                 }
                 else
@@ -147,7 +147,7 @@ namespace code0k_cc.Runtime.VariableMap
 
                             case NizkVariableType.Intermediate:
                             default:
-                                throw new Exception("Assert failed!");
+                                throw CommonException.AssertFailedException();
                         }
                     }
                     else
@@ -158,7 +158,7 @@ namespace code0k_cc.Runtime.VariableMap
                 }
                 else
                 {
-                    throw new Exception("Assert failed!");
+                    throw CommonException.AssertFailedException();
                 }
 
             }

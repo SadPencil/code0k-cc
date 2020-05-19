@@ -136,7 +136,7 @@ namespace code0k_cc.Lex
                             }
                             break;
                         default:
-                            throw new Exception("Assert failed!");
+                            throw CommonException.AssertFailedException();
                     }
 
                 }
@@ -177,7 +177,7 @@ namespace code0k_cc.Lex
                                     state = LexState.Punctuation;
                                     break;
                                 default:
-                                    throw new Exception("Assert failed!");
+                                    throw CommonException.AssertFailedException();
                             }
                         }
                         _ = sb.Append(nextChar);
@@ -205,7 +205,7 @@ namespace code0k_cc.Lex
                         yield return GetEOL(row, column);
                         yield break;
                     default:
-                        throw new Exception("Assert failed!");
+                        throw CommonException.AssertFailedException();
                 }
 
             }

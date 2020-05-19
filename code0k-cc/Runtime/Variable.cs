@@ -8,7 +8,7 @@ using code0k_cc.Runtime.VariableMap;
 
 namespace code0k_cc.Runtime
 {
-    class Variable : IStandalone
+    class Variable
     {
         public NType Type => this.RawVariable.Type;
         public IValueOfType Value => this.RawVariable.Value;
