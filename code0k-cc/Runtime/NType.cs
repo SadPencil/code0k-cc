@@ -481,8 +481,7 @@ namespace code0k_cc.Runtime
             },
 
         };
-
-        //todo handle overflow
+         
         public static readonly NType UInt32 = new NType("uint32")
         {
             CommonConstantValueDictionary = new Dictionary<VariableCommonConstant, RawVariable>()
@@ -596,7 +595,7 @@ namespace code0k_cc.Runtime
                         Value =(v1.IsConstant  ) ?
                             new NizkUInt32Value() {
                                 IsConstant = true,
-                                Value = + v1.Value ,
+                                Value = v1.Value ,
                             }
                             : new NizkUInt32Value() {
                                 IsConstant = false,
@@ -613,7 +612,7 @@ namespace code0k_cc.Runtime
                         Value =(v1.IsConstant  ) ?
                             new NizkUInt32Value() {
                                 IsConstant = true,
-                                Value = ((UInt32)0) - v1.Value ,
+                                Value = Convert.ToUInt32((((UInt64)System.UInt32.MaxValue+1) + 0 - v1.Value) %  ((UInt64)System.UInt32.MaxValue+1) )  ,
                             }
                             : new NizkUInt32Value() {
                                 IsConstant = false,
@@ -654,7 +653,7 @@ namespace code0k_cc.Runtime
                         Value =(v1.IsConstant && v2.IsConstant ) ?
                             new NizkUInt32Value() {
                                 IsConstant = true,
-                                Value = v1.Value+v2.Value,
+                                Value =Convert.ToUInt32( ( (UInt64)v1.Value +v2.Value)%  ((UInt64)System.UInt32.MaxValue+1)) ,
                             }
                             : new NizkUInt32Value() {
                                 IsConstant = false,
@@ -673,8 +672,8 @@ namespace code0k_cc.Runtime
                         Type = NType.UInt32,
                         Value =(v1.IsConstant && v2.IsConstant ) ?
                             new NizkUInt32Value() {
-                                IsConstant = true,
-                                Value = v1.Value-v2.Value,
+                                IsConstant = true,  
+                                Value = Convert.ToUInt32((((UInt64)System.UInt32.MaxValue+1) +  v1.Value - v2.Value) %  ((UInt64)System.UInt32.MaxValue+1) )  ,
                             }
                             : new NizkUInt32Value() {
                                 IsConstant = false,
@@ -694,7 +693,7 @@ namespace code0k_cc.Runtime
                         Value =(v1.IsConstant && v2.IsConstant ) ?
                             new NizkUInt32Value() {
                                 IsConstant = true,
-                                Value = v1.Value*v2.Value,
+                                Value =Convert.ToUInt32( ( (UInt64)v1.Value * v2.Value)%  ((UInt64)System.UInt32.MaxValue+1)) ,
                             }
                             : new NizkUInt32Value() {
                                 IsConstant = false,
@@ -754,7 +753,7 @@ namespace code0k_cc.Runtime
                         Value =(v1.IsConstant && v2.IsConstant ) ?
                             new NizkBoolValue() {
                                 IsConstant = true,
-                                Value = v1.Value==v2.Value,
+                                Value = v1.Value==v2.Value,/
                             }
                             : new NizkBoolValue() {
                                 IsConstant = false,
