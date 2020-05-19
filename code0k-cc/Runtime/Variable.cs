@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using code0k_cc.Pinocchio;
 using code0k_cc.Standalone;
 using code0k_cc.Runtime.ValueOfType;
 using code0k_cc.Runtime.VariableMap;
@@ -30,6 +31,12 @@ namespace code0k_cc.Runtime
         public Variable ExplicitConvert(NType leftType)
         {
             return this.Type.ExplicitConvert(this, leftType);
+        }
+
+        public (List<PinocchioWire> Wires, List<PinocchioConstraint> Constraints) ToPinocchioWires(
+            PinocchioCommonArg commonArg, bool checkRange)
+        {
+            return this.Type.ToPinocchioWires(this, commonArg, checkRange);
         }
 
     }

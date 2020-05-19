@@ -11,5 +11,10 @@ namespace code0k_cc.Runtime
         public UnaryOperation UnaryOperation;
         public BinaryOperation BinaryOperation;
         public SpecialOperation SpecialOperation;
+
+
+
+        //todo
+
     }
 }

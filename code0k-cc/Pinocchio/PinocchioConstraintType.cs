@@ -25,14 +25,16 @@ namespace code0k_cc.Pinocchio
 
         public (List<PinocchioWire> Wires, List<PinocchioConstraint> Constraints)
             Convert(List<(VariableNode inVariableNode, List<PinocchioWire> inPinocchioWires)> inList,
-            List<VariableNode> outVariableNodes)
+            List<VariableNode> outVariableNodes,
+            PinocchioCommonArg commonArg)
         {
-            return this.ConvertFunc(inList, outVariableNodes);
+            return this.ConvertFunc(inList, outVariableNodes, commonArg);
         }
 
         private Func<
             List<(VariableNode inVariableNode, List<PinocchioWire> inPinocchioWires)>,
             List<VariableNode>,
+            PinocchioCommonArg,
             (List<PinocchioWire> Wires, List<PinocchioConstraint> Constraints)
         > ConvertFunc;
 

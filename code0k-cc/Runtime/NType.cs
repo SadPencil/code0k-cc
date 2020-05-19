@@ -186,10 +186,10 @@ namespace code0k_cc.Runtime
         /// </summary>
         private IReadOnlyDictionary<BinaryOperation, Func<Variable, Variable, Variable>> BinaryOperationFuncs { get; set; }
 
-        public (List<PinocchioWire> Wires, List<PinocchioConstraint> Constraints) ToPinocchioWires(Variable variable, PinocchioCommonArg arg, bool checkRange)
+        public (List<PinocchioWire> Wires, List<PinocchioConstraint> Constraints) ToPinocchioWires(Variable variable, PinocchioCommonArg commonArg, bool checkRange)
         {
             Debug.Assert(variable.Type == this);
-            return this.ToPinocchioWiresFunc(variable, arg, checkRange);
+            return this.ToPinocchioWiresFunc(variable, commonArg, checkRange);
         }
 
         private Func<Variable, PinocchioCommonArg, bool, (List<PinocchioWire> Wires, List<PinocchioConstraint> Constraints)> ToPinocchioWiresFunc { get; set; }
@@ -682,7 +682,7 @@ namespace code0k_cc.Runtime
                 //todo implement Bitwise Shift
             },
 
-            ToPinocchioWiresFunc = (variable, arg, checkRange) =>
+            ToPinocchioWiresFunc = (variable, commonArg, checkRange) =>
             {
                 var ret = (Wires: new List<PinocchioWire>(), Constraints: new List<PinocchioConstraint>());
 
@@ -813,7 +813,7 @@ namespace code0k_cc.Runtime
             BinaryOperationFuncs = new Dictionary<BinaryOperation, Func<Variable, Variable, Variable>>()
             {
                 {Operation.BinaryOperation.EqualTo, (var1, var2) =>
-                {                    
+                {
                     var newVar1 = var1;
                     var newVar2 = var2.Assign(NType.Bool);
                     var v1 = ((NizkBoolValue) newVar1.Value);
@@ -909,7 +909,7 @@ namespace code0k_cc.Runtime
 
             },
 
-            ToPinocchioWiresFunc = (variable, arg, checkRange) =>
+            ToPinocchioWiresFunc = (variable, commonArg, checkRange) =>
             {
                 var ret = (Wires: new List<PinocchioWire>(), Constraints: new List<PinocchioConstraint>());
 
