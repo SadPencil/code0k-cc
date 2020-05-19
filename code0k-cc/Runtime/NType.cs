@@ -753,7 +753,7 @@ namespace code0k_cc.Runtime
                         Value =(v1.IsConstant && v2.IsConstant ) ?
                             new NizkBoolValue() {
                                 IsConstant = true,
-                                Value = v1.Value==v2.Value,/
+                                Value = v1.Value==v2.Value,
                             }
                             : new NizkBoolValue() {
                                 IsConstant = false,
