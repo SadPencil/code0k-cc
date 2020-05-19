@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Numerics;
 using System.Text;
+using code0k_cc.Config;
 using code0k_cc.CustomException;
 using code0k_cc.Runtime.Nizk;
 using code0k_cc.Runtime.VariableMap;
@@ -63,6 +64,10 @@ namespace code0k_cc.Pinocchio
                 AddWire(ZeroWire);
                 commonArg.ZeroWire = ZeroWire;
 
+                var MinusOneWire = new PinocchioWire(null);
+                AddWire(MinusOneWire);
+                commonArg.MinusOneWire = MinusOneWire;
+
                 var ZeroConstWire = new PinocchioWire(BigInteger.Zero);
                 AddWire(ZeroConstWire);
 
@@ -71,6 +76,15 @@ namespace code0k_cc.Pinocchio
                 mulZeroConstraint.InWires.Add(OneWire);
                 mulZeroConstraint.InWires.Add(ZeroConstWire);
                 mulZeroConstraint.OutWires.Add(ZeroWire);
+
+                var MinusOneConstWire = new PinocchioWire(My.Config.ModulusPrimeField_Prime - 1);
+                AddWire(MinusOneConstWire);
+
+                var mulMinusOneContraint = new PinocchioConstraint(PinocchioConstraintType.Mul);
+                AddConstraint(mulMinusOneContraint);
+                mulMinusOneContraint.InWires.Add(OneWire);
+                mulMinusOneContraint.InWires.Add(MinusOneConstWire);
+                mulMinusOneContraint.OutWires.Add(MinusOneWire);
             }
 
             foreach (var node in this.VariableMap.TopologicalSort())
