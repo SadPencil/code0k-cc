@@ -6,6 +6,7 @@ using System.Numerics;
 using System.Text;
 using code0k_cc.Config;
 using code0k_cc.CustomException;
+using code0k_cc.Runtime;
 using code0k_cc.Runtime.Nizk;
 using code0k_cc.Runtime.VariableMap;
 using code0k_cc.Standalone;
@@ -22,8 +23,6 @@ namespace code0k_cc.Pinocchio
 
         public void OutputCircuit(TextWriter outputWriter)
         {
-            var variableNodeToWires = new Dictionary<VariableNode, List<PinocchioWire>>();
-
             var wireList = new List<PinocchioWire>();
             var wireToID = new Dictionary<PinocchioWire, int>();
 
@@ -47,11 +46,23 @@ namespace code0k_cc.Pinocchio
                 conList.Add(con);
             }
 
-            void AddWireConstraint(PinocchioOutput ret)
+            var rawVarToWires = new Dictionary<RawVariable, PinocchioVariableWires>();
+
+            void AddVariableWires(PinocchioVariableWires variableWires)
             {
-                ret.VariableWires.Wires.ForEach(AddWire);
+                if (rawVarToWires.ContainsKey(variableWires.RawVariable)) return;
+
+                rawVarToWires.Add(variableWires.RawVariable, variableWires);
+
+                variableWires.Wires.ForEach(AddWire);
+            }
+
+            void AddPinocchioOutput(PinocchioOutput ret)
+            {
+                AddVariableWires(ret.VariableWires);
                 ret.Constraints.ForEach(AddConstraint);
             }
+
 
             var commonArg = new PinocchioCommonArg();
 
@@ -80,11 +91,11 @@ namespace code0k_cc.Pinocchio
                 var MinusOneConstWire = new PinocchioWire(My.Config.ModulusPrimeField_Prime - 1);
                 AddWire(MinusOneConstWire);
 
-                var mulMinusOneContraint = new PinocchioConstraint(PinocchioConstraintType.Mul);
-                AddConstraint(mulMinusOneContraint);
-                mulMinusOneContraint.InWires.Add(OneWire);
-                mulMinusOneContraint.InWires.Add(MinusOneConstWire);
-                mulMinusOneContraint.OutWires.Add(MinusOneWire);
+                var mulMinusOneConstraint = new PinocchioConstraint(PinocchioConstraintType.Mul);
+                AddConstraint(mulMinusOneConstraint);
+                mulMinusOneConstraint.InWires.Add(OneWire);
+                mulMinusOneConstraint.InWires.Add(MinusOneConstWire);
+                mulMinusOneConstraint.OutWires.Add(MinusOneWire);
             }
 
             foreach (var node in this.VariableMap.TopologicalSort())
@@ -96,11 +107,10 @@ namespace code0k_cc.Pinocchio
                     case VariableNode variableNode:
                         // a variable node is either an input/nizk/constant node, which is NOT produced by constraints
                         // or a non-constant intermediate/output node, which has already been produced by constraints
-                        if (!variableNodeToWires.ContainsKey(variableNode))
+                        if (!rawVarToWires.ContainsKey(variableNode.RawVariable))
                         {
                             Debug.Assert(
-                                ( variableNode.NizkAttribute == NizkVariableType.Intermediate &&
-                                 variableNode.RawVariable.Value.IsConstant ) ||
+                                ( variableNode.NizkAttribute == NizkVariableType.Intermediate && variableNode.RawVariable.Value.IsConstant ) ||
                                 variableNode.NizkAttribute == NizkVariableType.Input ||
                                 variableNode.NizkAttribute == NizkVariableType.NizkInput);
 
@@ -109,16 +119,14 @@ namespace code0k_cc.Pinocchio
                             // policy: checkRange is applied for nizkinput, and not applied for others
                             if (variableNode.NizkAttribute == NizkVariableType.NizkInput)
                             {
-                                ret = variableNode.RawVariable.Type.VariableNodeToPinocchio(variableNode, commonArg, true);
+                                ret = variableNode.RawVariable.Type.VariableNodeToPinocchio(variableNode.RawVariable, commonArg, true);
                             }
                             else
                             {
-                                ret = variableNode.RawVariable.Type.VariableNodeToPinocchio(variableNode, commonArg, false);
+                                ret = variableNode.RawVariable.Type.VariableNodeToPinocchio(variableNode.RawVariable, commonArg, false);
                             }
 
-                            AddWireConstraint(ret);
-
-                            variableNodeToWires.Add(variableNode, ret.VariableWires.Wires);
+                            AddPinocchioOutput(ret);
                         }
                         else
                         {
@@ -130,24 +138,32 @@ namespace code0k_cc.Pinocchio
                         break;
                     case OperationNode operationNode:
                         // get all in-variable
+                        List<PinocchioVariableWires> inVars = new List<PinocchioVariableWires>();
                         foreach (var prevNode in operationNode.PrevNodes)
                         {
-                            if (prevNode is VariableNode varNode)
-                            {
-                                Debug.Assert(variableNodeToWires.ContainsKey(varNode));
-                            }
-                            else
-                            {
-                                throw CommonException.AssertFailedException();
-                            }
+                            var varNode = (VariableNode) prevNode;
+                            Debug.Assert(rawVarToWires.ContainsKey(varNode.RawVariable)); 
+
+                            inVars.Add(rawVarToWires[varNode.RawVariable]);
                         }
-                        // todo: produce new out wire & constraints,
-                        // make connection between each out variable and the corresponding List<wire>
-                        // and save them to the board by ret.Wires.ForEach(AddWire); ret.Constraints.ForEach(AddConstraint);
 
-                        throw new NotImplementedException();
-                        break;
+                        // currently, assume at least one inVar
+                        Debug.Assert(inVars.Count >= 1);
 
+                        // for every outputVar, produce new PinocchioOutput according to the operation
+                        foreach (var outNode in operationNode.NextNodes)
+                        {
+                            var outVarNode = (VariableNode) outNode;
+                            var outputs = inVars[0].RawVariable.Type.OperationNodeToPinocchio(
+                                operationNode.ConnectionType,
+                                inVars,
+                                outVarNode.RawVariable,
+                                commonArg
+                            );
+
+                            outputs.ForEach(AddPinocchioOutput);
+                        }
+                        
                     default:
                         throw CommonException.AssertFailedException();
                 }
