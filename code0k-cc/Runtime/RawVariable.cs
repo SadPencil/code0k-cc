@@ -10,7 +10,8 @@ namespace code0k_cc.Runtime
     {
         public NType Type;
         public IValueOfType Value;
-            
+
+        //todo: [MaxPossibleValue]
         public RawVariable() { }
 
     }

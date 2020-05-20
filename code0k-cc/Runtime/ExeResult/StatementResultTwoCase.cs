@@ -6,7 +6,7 @@ namespace code0k_cc.Runtime.ExeResult
 {
     class StatementResultTwoCase : StatementResult
     {
-        //todo make these fields readonly by adding a `StatementResultRef` type
+        //todo make these fields readonly by adding a `StatementResultRef` class
         public Variable Condition;
         public StatementResult TrueCase;
         public StatementResult FalseCase;

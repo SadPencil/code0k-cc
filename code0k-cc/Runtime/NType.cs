@@ -651,7 +651,7 @@ namespace code0k_cc.Runtime
                                     ret.Constraints.Add(splitCon);
                                     
                                     splitCon.InWires.Add(inVars[0].Wires[0]);
-                                    //todo: design "Variable.MaxPossibleValue" and minimize the number of bits here
+                                    //todo: [MaxPossibleValue] design "Variable.MaxPossibleValue" and minimize the number of bits here
                                     foreach (var i in Enumerable.Range(0, My.Config.ModulusPrimeField_Prime_Bit))
                                     {
                                         var boolWire = new PinocchioWire(null);

@@ -1380,23 +1380,6 @@ namespace code0k_cc.Parse
             };
             GlobalNizkDefinitionStatement.Execute = (instance, arg) =>
             {
-                //// note that these variable are so special that they are stored at the ROOT block and the ROOT overlay
-                //// todo maybe a nicer way? maybe just define at current block and let "MainProgram" handle it?
-                //BasicBlock rootBlock = arg.Block.Block;
-                //while (rootBlock.ParentBlock != null)
-                //{
-                //    rootBlock = rootBlock.ParentBlock;
-                //}
-
-                //Overlay overlay = arg.Block.Overlay;
-                //if (overlay.ParentOverlay != null)
-                //{
-                //    throw new Exception("Assert failed. A nizk variable must be defined at the root overlay.");
-                //}
-
-                //OverlayBlock rootOverlayBlock = new OverlayBlock(overlay, rootBlock);
-
-
                 var varName = instance.Children[2].Token.Value;
 
                 NizkVariableType nizkType;

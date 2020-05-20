@@ -13,6 +13,8 @@ namespace code0k_cc.Runtime
         public NType Type => this.RawVariable.Type;
         public IValueOfType Value => this.RawVariable.Value;
 
+        //todo: [MaxPossibleValue]
+
         public readonly RawVariable RawVariable;
 
         public Variable(RawVariable rawVariable)
@@ -24,9 +26,6 @@ namespace code0k_cc.Runtime
         /// Get all parent connections. Note that children connections are not saved.
         /// </summary>
         public readonly List<VariableConnection> ParentConnections = new List<VariableConnection>();
-        // todo make RawVariable class with Type and Value, without ParentConnections
-        // and make Variable class of RawVariable and ParentConnections
-
         public string GetString()
         {
             return this.Type.GetString(this);
