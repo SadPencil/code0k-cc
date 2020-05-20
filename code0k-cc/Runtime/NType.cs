@@ -610,6 +610,8 @@ namespace code0k_cc.Runtime
                         Debug.Assert(inVars[0].Wires.Count == 1);
                         if (operationType == VariableOperationType.TypeCast_NoCheckRange || operationType == VariableOperationType.TypeCast_Trim)
                         {
+                            Debug.Assert(outputVariable.Type == NType.Field || outputVariable.Type == NType.UInt32 || outputVariable.Type == NType.Bool);
+
                             PinocchioOutput ret;
                             PinocchioWire outputWire;
                             {
@@ -702,9 +704,6 @@ namespace code0k_cc.Runtime
                             operationType == VariableOperationType.Binary_Multiplication ||
                             operationType == VariableOperationType.Binary_Subtract)
                         {
-                            Debug.Assert(inVars[0].Wires.Count == 1);
-                            Debug.Assert(inVars[1].Wires.Count == 1);
-
                             PinocchioOutput ret;
                             PinocchioWire outputWire;
                             {
@@ -1351,7 +1350,102 @@ namespace code0k_cc.Runtime
 
             OperationNodeToPinocchioFunc = (operationType, inVars, outputVariable, commonArg) =>
             {
-                //todo 
+                switch (operationType.Type)
+                {
+                    case VariableOperationTypeType.TypeCast:
+                        Debug.Assert(inVars.Count == 1);
+                        Debug.Assert(inVars[0].Wires.Count == 1);
+                        if (operationType == VariableOperationType.TypeCast_NoCheckRange || operationType == VariableOperationType.TypeCast_Trim)
+                        {
+                            Debug.Assert(outputVariable.Type == NType.Field || outputVariable.Type == NType.UInt32 || outputVariable.Type == NType.Bool);
+
+                            PinocchioOutput ret;
+                            PinocchioWire outputWire;
+                            {
+                                var outVarWires = outputVariable.Type.VariableNodeToPinocchio(outputVariable, commonArg, false);
+                                Debug.Assert(outVarWires.VariableWires.Wires.Count == 1);
+                                outputWire = outVarWires.VariableWires.Wires[0];
+
+                                ret = new PinocchioOutput() { VariableWires = outVarWires.VariableWires };
+                                outVarWires.Constraints.ForEach(ret.Constraints.Add);
+                            }
+                            if (operationType == VariableOperationType.TypeCast_NoCheckRange ||
+                            operationType == VariableOperationType.TypeCast_Trim && outputVariable.Type == NType.Field)
+                            {
+                                var con = new PinocchioConstraint(PinocchioConstraintType.Mul);
+                                ret.Constraints.Add(con);
+
+                                con.InWires.Add(inVars[0].Wires[0]);
+                                con.InWires.Add(commonArg.OneWire);
+                                con.OutWires.Add(outputWire);
+
+                                return ret;
+                            }
+                            else if (operationType == VariableOperationType.TypeCast_Trim)
+                            {
+                                if (outputVariable.Type == NType.Bool)
+                                {
+                                    var con = new PinocchioConstraint(PinocchioConstraintType.ZeroP);
+                                    ret.Constraints.Add(con);
+
+                                    con.InWires.Add(inVars[0].Wires[0]);
+                                    con.OutWires.Add(outputWire);
+
+                                    return ret;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                throw CommonException.AssertFailedException();
+                            }
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    case VariableOperationTypeType.Unary:
+                        Debug.Assert(inVars.Count == 1);
+                        Debug.Assert(inVars[0].Wires.Count == 1);
+                        //todo
+                        throw new NotImplementedException();
+                        break;
+                    case VariableOperationTypeType.Binary:
+                        Debug.Assert(inVars.Count == 2);
+                        Debug.Assert(inVars[0].Wires.Count == 1);
+                        Debug.Assert(inVars[1].Wires.Count == 1);
+                        //todo
+                        throw new NotImplementedException();
+                        if (operationType == VariableOperationType.Binary_Addition ||
+                            operationType == VariableOperationType.Binary_Multiplication ||
+                            operationType == VariableOperationType.Binary_Subtract)
+                        {
+                            PinocchioOutput ret;
+                            PinocchioWire outputWire;
+                            {
+                                var outVarWires = outputVariable.Type.VariableNodeToPinocchio(outputVariable, commonArg, false);
+                                Debug.Assert(outVarWires.VariableWires.Wires.Count == 1);
+                                outputWire = outVarWires.VariableWires.Wires[0];
+
+                                ret = new PinocchioOutput() { VariableWires = outVarWires.VariableWires };
+                                outVarWires.Constraints.ForEach(ret.Constraints.Add);
+                            }
+                            //todo
+
+                            return ret;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    default:
+                        throw CommonException.AssertFailedException();
+                }
+                throw new Exception($"Type \"{NType.Field}\" doesn't support \"{operationType.ToString()}\" operation.");
+
 
             },
 
@@ -1594,6 +1688,85 @@ namespace code0k_cc.Runtime
 
             OperationNodeToPinocchioFunc = (operationType, inVars, outputVariable, commonArg) =>
             {
+                switch (operationType.Type)
+                {
+                    case VariableOperationTypeType.TypeCast:
+                        Debug.Assert(inVars.Count == 1);
+                        Debug.Assert(inVars[0].Wires.Count == 1);
+                        if (operationType == VariableOperationType.TypeCast_NoCheckRange || operationType == VariableOperationType.TypeCast_Trim)
+                        {
+                            Debug.Assert(outputVariable.Type == NType.Field|| outputVariable.Type == NType.UInt32|| outputVariable.Type == NType.Bool);
+
+                            PinocchioOutput ret;
+                            PinocchioWire outputWire;
+                            {
+                                var outVarWires = outputVariable.Type.VariableNodeToPinocchio(outputVariable, commonArg, false);
+                                Debug.Assert(outVarWires.VariableWires.Wires.Count == 1);
+                                outputWire = outVarWires.VariableWires.Wires[0];
+
+                                ret = new PinocchioOutput() { VariableWires = outVarWires.VariableWires };
+                                outVarWires.Constraints.ForEach(ret.Constraints.Add);
+                            }
+                            if (operationType == VariableOperationType.TypeCast_NoCheckRange ||
+                            operationType == VariableOperationType.TypeCast_Trim && outputVariable.Type == NType.Field ||
+                            operationType == VariableOperationType.TypeCast_Trim && outputVariable.Type == NType.UInt32)
+                            {
+                                var con = new PinocchioConstraint(PinocchioConstraintType.Mul);
+                                ret.Constraints.Add(con);
+
+                                con.InWires.Add(inVars[0].Wires[0]);
+                                con.InWires.Add(commonArg.OneWire);
+                                con.OutWires.Add(outputWire);
+
+                                return ret;
+                            }
+                            else
+                            {
+                                throw CommonException.AssertFailedException();
+                            }
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    case VariableOperationTypeType.Unary:
+                        Debug.Assert(inVars.Count == 1);
+                        Debug.Assert(inVars[0].Wires.Count == 1);
+                        //todo
+                        throw new NotImplementedException();
+                        break;
+                    case VariableOperationTypeType.Binary:
+                        //todo
+                        throw new NotImplementedException();
+                        Debug.Assert(inVars.Count == 2);
+                        Debug.Assert(inVars[0].Wires.Count == 1);
+                        Debug.Assert(inVars[1].Wires.Count == 1);
+                        if (operationType == VariableOperationType.Binary_Addition ||
+                            operationType == VariableOperationType.Binary_Multiplication ||
+                            operationType == VariableOperationType.Binary_Subtract)
+                        {
+                            PinocchioOutput ret;
+                            PinocchioWire outputWire;
+                            {
+                                var outVarWires = outputVariable.Type.VariableNodeToPinocchio(outputVariable, commonArg, false);
+                                Debug.Assert(outVarWires.VariableWires.Wires.Count == 1);
+                                outputWire = outVarWires.VariableWires.Wires[0];
+
+                                ret = new PinocchioOutput() { VariableWires = outVarWires.VariableWires };
+                                outVarWires.Constraints.ForEach(ret.Constraints.Add);
+                            }
+                            //todo
+
+                            return ret;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    default:
+                        throw CommonException.AssertFailedException();
+                }
+                throw new Exception($"Type \"{NType.Field}\" doesn't support \"{operationType.ToString()}\" operation.");
 
             },
         };
