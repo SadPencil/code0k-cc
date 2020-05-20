@@ -242,7 +242,7 @@ namespace code0k_cc.Runtime
         {
             // currently, assume there is at least one in-variable
             Debug.Assert(inVars[0].RawVariable.Type == this);
-            return this.OperationNodeToPinocchio(operationType, inVars, outputRawVariable, commonArg);
+            return this.OperationNodeToPinocchioFunc(operationType, inVars, outputRawVariable, commonArg);
         }
         private Func<VariableOperationType, List<PinocchioVariableWires>, RawVariable, PinocchioCommonArg, PinocchioOutput> OperationNodeToPinocchioFunc { get; set; }
         // END pinocchio staffs
