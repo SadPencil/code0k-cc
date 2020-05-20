@@ -41,6 +41,10 @@ namespace code0k_cc.Runtime
         {
             return this.Type.ExplicitConvert(this, leftType);
         }
-         
+        public Variable InternalConvert(NType leftType)
+        {
+            return this.Type.InternalConvert(this, leftType);
+        }
+
     }
 }

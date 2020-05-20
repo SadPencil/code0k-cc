@@ -227,32 +227,22 @@ namespace code0k_cc.Runtime.Nizk
 
         public static Variable NizkConditionVariable(Variable condition, Variable trueVar, Variable falseVar)
         {
-            if (trueVar.Type == NType.Bool)
+            //todo: move this function to NType
+            Debug.Assert(condition.Type == NType.Bool);
+            Debug.Assert(trueVar.Type == falseVar.Type);
+
+            if (trueVar.Type == NType.Bool || trueVar.Type == NType.UInt32)
             {
-                var var1 = condition.ExplicitConvert(NType.Field);
-                var var2 = trueVar.ExplicitConvert(NType.Field);
-                var var3 = falseVar.ExplicitConvert(NType.Field);
+                var var1 = condition.InternalConvert(NType.Field);
+                var var2 = trueVar.InternalConvert(NType.Field);
+                var var3 = falseVar.InternalConvert(NType.Field);
 
                 var var4 = NType.Field.BinaryOperation(var3, FieldMinusOne, VariableOperationType.Binary_Multiplication);
                 var var5 = NType.Field.BinaryOperation(var2, var4, VariableOperationType.Binary_Addition);
                 var var6 = NType.Field.BinaryOperation(var5, var1, VariableOperationType.Binary_Multiplication);
                 var var7 = NType.Field.BinaryOperation(var3, var6, VariableOperationType.Binary_Addition);
 
-                var var8 = var7.ExplicitConvert(NType.Bool);
-                return var8;
-            }
-            else if (trueVar.Type == NType.UInt32)
-            {
-                var var1 = condition.ExplicitConvert(NType.Field);
-                var var2 = trueVar.ExplicitConvert(NType.Field);
-                var var3 = falseVar.ExplicitConvert(NType.Field);
-
-                var var4 = NType.Field.BinaryOperation(var3, FieldMinusOne, VariableOperationType.Binary_Multiplication);
-                var var5 = NType.Field.BinaryOperation(var2, var4, VariableOperationType.Binary_Addition);
-                var var6 = NType.Field.BinaryOperation(var5, var1, VariableOperationType.Binary_Multiplication);
-                var var7 = NType.Field.BinaryOperation(var3, var6, VariableOperationType.Binary_Addition);
-
-                var var8 = var7.ExplicitConvert(NType.UInt32);
+                var var8 = var7.InternalConvert(trueVar.Type);
                 return var8;
             }
             else
