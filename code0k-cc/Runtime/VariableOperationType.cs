@@ -21,7 +21,8 @@ namespace code0k_cc.Runtime
             return this.OperationCodeName;
         }
 
-        public static readonly VariableOperationType TypeCast = new VariableOperationType("TypeCast", VariableOperationTypeType.TypeCast);
+        public static readonly VariableOperationType TypeCast_Trim = new VariableOperationType("TypeCast_Trim", VariableOperationTypeType.TypeCast);
+        public static readonly VariableOperationType TypeCast_NoCheckRange = new VariableOperationType("TypeCast_NoCheckRange", VariableOperationTypeType.TypeCast);
 
         public static readonly VariableOperationType Unary_Addition = new VariableOperationType("Unary_Addition", VariableOperationTypeType.Unary);
         public static readonly VariableOperationType Unary_Subtract = new VariableOperationType("Unary_Subtract", VariableOperationTypeType.Unary);

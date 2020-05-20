@@ -102,7 +102,7 @@ namespace code0k_cc.Runtime
             }
 
             // add connection
-            var newCon = new VariableConnection() { OperationType = VariableOperationType.TypeCast };
+            var newCon = new VariableConnection() { OperationType = VariableOperationType.TypeCast_Trim };
             newCon.InVariables.Add(variable);
             newCon.OutVariables.Add(retVariable);
 
@@ -121,7 +121,27 @@ namespace code0k_cc.Runtime
             }
 
             // add connection
-            var newCon = new VariableConnection() { OperationType = VariableOperationType.TypeCast };
+            var newCon = new VariableConnection() { OperationType = VariableOperationType.TypeCast_NoCheckRange };
+            newCon.InVariables.Add(variable);
+            newCon.OutVariables.Add(retVariable);
+
+            retVariable.ParentConnections.Add(newCon);
+
+            return retVariable;
+        }
+
+
+        public Variable InternalConvert(Variable variable, NType targetType)
+        {
+            Debug.Assert(variable.Type == this);
+            var retVariable = this.InternalConvertFunc(variable, targetType);
+            if (Object.ReferenceEquals(retVariable, variable))
+            {
+                return retVariable;
+            }
+
+            // add connection
+            var newCon = new VariableConnection() { OperationType = VariableOperationType.TypeCast_NoCheckRange };
             newCon.InVariables.Add(variable);
             newCon.OutVariables.Add(retVariable);
 
@@ -131,14 +151,26 @@ namespace code0k_cc.Runtime
         }
 
         /// <summary>
-        /// RightVal, TargetType, TargetVal
+        /// SelfVal, TargetType, TargetVal<br/>
+        /// Implicit convert happens when a smaller type is assign to a larger type.<br/>
+        /// Never allow implicit converting a larger type to a smaller type! 
         /// </summary>
         private Func<Variable, NType, Variable> ImplicitConvertFunc;
 
         /// <summary>
-        /// RightVal, TargetType, TargetVal
+        /// SelfVal, TargetType, TargetVal<br/>
+        /// Explicit convert happens when a smaller type is assign to a larger type, or vice versa.<br/>
+        /// When a larger type is assign to a smaller type, TypeCast_Trim happens. 
         /// </summary>
         private Func<Variable, NType, Variable> ExplicitConvertFunc;
+
+        /// <summary>
+        /// SelfVal, TargetType, TargetVal<br/>
+        /// Internal convert happens when a smaller type is assign to a larger type, or vice versa.<br/>
+        /// When a larger type is assign to a smaller type, trim does NOT happens.<br/>
+        /// Only use it when you are sure that the larger type's value is INDEED smaller than the maximum value of the smaller type. 
+        /// </summary>
+        private Func<Variable, NType, Variable> InternalConvertFunc;
 
         public Variable UnaryOperation(Variable variable, VariableOperationType op)
         {
@@ -228,7 +260,7 @@ namespace code0k_cc.Runtime
                 }
                 else
                 {
-                    throw new Exception($"Can't implicit convert \"{this.TypeCodeName }\" to \"{type.TypeCodeName}\".");
+                    throw new Exception($"Can't do implicit convert from \"{this.TypeCodeName }\" to \"{type.TypeCodeName}\".");
                 }
             };
 
@@ -240,7 +272,19 @@ namespace code0k_cc.Runtime
                 }
                 else
                 {
-                    throw new Exception($"Can't explicit convert \"{this.TypeCodeName }\" to \"{type.TypeCodeName}\".");
+                    throw new Exception($"Can't do explicit convert from \"{this.TypeCodeName }\" to \"{type.TypeCodeName}\".");
+                }
+            };
+
+            this.InternalConvertFunc = (variable, type) =>
+            {
+                if (variable.Type == type)
+                {
+                    return variable;
+                }
+                else
+                {
+                    throw new Exception($"Can't do internal convert from \"{this.TypeCodeName }\" to \"{type.TypeCodeName}\".");
                 }
             };
 
@@ -379,6 +423,63 @@ namespace code0k_cc.Runtime
                     Value = BigInteger.Zero,
                 }
             }),
+
+            InternalConvertFunc = (variable, type) =>
+            {
+                var selfType = NType.Field;
+                if (type == selfType)
+                {
+                    return variable;
+                }
+
+                var allowedType = new List<NType>() { NType.UInt32, NType.Bool, };
+                if (!allowedType.Contains(type))
+                {
+                    throw new Exception($"Can't do internal convert from \"{selfType.TypeCodeName }\" to \"{type.TypeCodeName}\".");
+                }
+
+                if (!variable.Value.IsConstant)
+                {
+                    return selfType.GetNewNizkVariable();
+                }
+
+                if (type == NType.UInt32)
+                {
+                    if (( (NizkFieldValue) variable.Value ).Value <= new BigInteger(System.UInt32.MaxValue))
+                    {
+                        return new Variable(new RawVariable()
+                        {
+                            Type = NType.UInt32,
+                            Value = new NizkUInt32Value()
+                            {
+                                IsConstant = true,
+                                Value = System.UInt32.Parse(( ( (NizkFieldValue) variable.Value ).Value ).ToString()),
+                            }
+                        });
+                    }
+                    else
+                    {
+                        throw new Exception($"Overflow detected while doing internal convert from \"{selfType.TypeCodeName }\" to \"{type.TypeCodeName}\".");
+                    }
+
+                }
+                else if (type == NType.Bool)
+                {
+                    if (( (NizkFieldValue) variable.Value ).Value <= BigInteger.One)
+                    {
+                        return NType.Bool.GetCommonConstantValue(( (NizkFieldValue) variable.Value ).Value == BigInteger.One ? VariableCommonConstant.One : VariableCommonConstant.Zero);
+                    }
+                    else
+                    {
+                        throw new Exception($"Overflow detected while doing internal convert from \"{selfType.TypeCodeName }\" to \"{type.TypeCodeName}\".");
+                    }
+                }
+                else
+                {
+                    throw CommonException.AssertFailedException();
+                }
+            },
+            // Implicit Convert: not supported
             ExplicitConvertFunc = (variable, type) =>
             {
                 var selfType = NType.Field;
@@ -386,16 +487,19 @@ namespace code0k_cc.Runtime
                 {
                     return variable;
                 }
+
+                var allowedType = new List<NType>() { NType.UInt32, NType.Bool, };
+                if (!allowedType.Contains(type))
+                {
+                    throw new Exception($"Can't explicit convert \"{selfType.TypeCodeName }\" to \"{type.TypeCodeName}\".");
+                }
+
                 if (!variable.Value.IsConstant)
                 {
                     return selfType.GetNewNizkVariable();
                 }
 
-                if (type == NType.Field)
-                {
-                    throw CommonException.AssertFailedException();
-                }
-                else if (type == NType.UInt32)
+                if (type == NType.UInt32)
                 {
                     return new Variable(new RawVariable()
                     {
@@ -413,7 +517,7 @@ namespace code0k_cc.Runtime
                 }
                 else
                 {
-                    throw new Exception($"Can't explicit convert \"{selfType.TypeCodeName }\" to \"{type.TypeCodeName}\".");
+                    throw CommonException.AssertFailedException();
                 }
             },
 
@@ -663,13 +767,20 @@ namespace code0k_cc.Runtime
                     Value = 0,
                 }
             }),
-            ExplicitConvertFunc = (variable, type) =>
+            InternalConvertFunc = (variable, type) =>
             {
                 var selfType = NType.UInt32;
                 if (type == selfType)
                 {
                     return variable;
                 }
+
+                var allowedType = new List<NType>() { NType.Field, NType.Bool, };
+                if (!allowedType.Contains(type))
+                {
+                    throw new Exception($"Can't do internal convert from \"{selfType.TypeCodeName }\" to \"{type.TypeCodeName}\".");
+                }
+
                 if (!variable.Value.IsConstant)
                 {
                     return selfType.GetNewNizkVariable();
@@ -687,9 +798,89 @@ namespace code0k_cc.Runtime
                         }
                     });
                 }
-                else if (type == NType.UInt32)
+                else if (type == NType.Bool)
+                {
+                    if (( (NizkUInt32Value) variable.Value ).Value <= 1)
+                    {
+                        return NType.Bool.GetCommonConstantValue(( (NizkUInt32Value) variable.Value ).Value == 1 ? VariableCommonConstant.One : VariableCommonConstant.Zero);
+                    }
+                    else
+                    {
+                        throw new Exception($"Overflow detected while doing internal convert from \"{selfType.TypeCodeName }\" to \"{type.TypeCodeName}\".");
+                    }
+                }
+                else
                 {
                     throw CommonException.AssertFailedException();
+                }
+            },
+            ImplicitConvertFunc = (variable, type) =>
+            {
+                var selfType = NType.UInt32;
+                if (type == selfType)
+                {
+                    return variable;
+                }
+
+                var allowedType = new List<NType>() { NType.Field };
+                if (!allowedType.Contains(type))
+                {
+                    throw new Exception($"Can't do implicit convert from \"{selfType.TypeCodeName }\" to \"{type.TypeCodeName}\".");
+                }
+
+                if (!variable.Value.IsConstant)
+                {
+                    return selfType.GetNewNizkVariable();
+                }
+
+                if (type == NType.Field)
+                {
+                    return new Variable(new RawVariable()
+                    {
+                        Type = NType.Field,
+                        Value = new NizkFieldValue()
+                        {
+                            IsConstant = true,
+                            Value = new BigInteger(( (NizkUInt32Value) variable.Value ).Value),
+                        }
+                    });
+                }
+                else
+                {
+                    throw CommonException.AssertFailedException();
+                }
+
+            },
+            ExplicitConvertFunc = (variable, type) =>
+            {
+                var selfType = NType.UInt32;
+                if (type == selfType)
+                {
+                    return variable;
+                }
+
+                var allowedType = new List<NType>() { NType.Field, NType.Bool, };
+                if (!allowedType.Contains(type))
+                {
+                    throw new Exception($"Can't do explicit convert from \"{selfType.TypeCodeName }\" to \"{type.TypeCodeName}\".");
+                }
+
+                if (!variable.Value.IsConstant)
+                {
+                    return selfType.GetNewNizkVariable();
+                }
+
+                if (type == NType.Field)
+                {
+                    return new Variable(new RawVariable()
+                    {
+                        Type = NType.Field,
+                        Value = new NizkFieldValue()
+                        {
+                            IsConstant = true,
+                            Value = new BigInteger(( (NizkUInt32Value) variable.Value ).Value),
+                        }
+                    });
                 }
                 else if (type == NType.Bool)
                 {
@@ -697,9 +888,8 @@ namespace code0k_cc.Runtime
                 }
                 else
                 {
-                    throw new Exception($"Can't explicit convert \"{selfType.TypeCodeName }\" to \"{type.TypeCodeName}\".");
+                    throw CommonException.AssertFailedException();
                 }
-
             },
             UnaryOperationFuncs = new Dictionary<VariableOperationType, Func<Variable, Variable>>()
             {
@@ -1155,7 +1345,8 @@ namespace code0k_cc.Runtime
                     Value = false,
                 }
             }),
-            ExplicitConvertFunc = (variable, type) =>
+            InternalConvertFunc = (variable, type) => NType.Bool.ImplicitConvertFunc(variable, type),
+            ImplicitConvertFunc = (variable, type) =>
             {
                 var selfType = NType.Bool;
                 if (type == selfType)
@@ -1166,7 +1357,6 @@ namespace code0k_cc.Runtime
                 {
                     return selfType.GetNewNizkVariable();
                 }
-
                 if (type == NType.Field)
                 {
                     return NType.Field.GetCommonConstantValue(( (NizkBoolValue) variable.Value ).Value ? VariableCommonConstant.One : VariableCommonConstant.Zero);
@@ -1181,9 +1371,10 @@ namespace code0k_cc.Runtime
                 }
                 else
                 {
-                    throw new Exception($"Can't explicit convert \"{selfType.TypeCodeName }\" to \"{type.TypeCodeName}\".");
+                    throw new Exception($"Can't convert \"{selfType.TypeCodeName }\" to \"{type.TypeCodeName}\".");
                 }
             },
+            ExplicitConvertFunc = (variable, type) => NType.Bool.ImplicitConvertFunc(variable, type),
             UnaryOperationFuncs = new Dictionary<VariableOperationType, Func<Variable, Variable>>()
             {
                 {VariableOperationType.Unary_BooleanNot, (var1) =>
