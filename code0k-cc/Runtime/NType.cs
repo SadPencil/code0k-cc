@@ -1596,20 +1596,22 @@ namespace code0k_cc.Runtime
                                     if (operationType == VariableOperationType.Binary_BitwiseAnd)
                                     {
                                         con = new PinocchioConstraint(PinocchioConstraintType.Mul);
+                                        ret.Constraints.Add(con);
                                     }
                                     else if (operationType == VariableOperationType.Binary_BitwiseOr)
                                     {
                                         con = new PinocchioConstraint(PinocchioConstraintType.Or);
+                                        ret.Constraints.Add(con);
                                     }
                                     else if (operationType == VariableOperationType.Binary_BitwiseXor)
                                     {
                                         con = new PinocchioConstraint(PinocchioConstraintType.Xor);
+                                        ret.Constraints.Add(con);
                                     }
                                     else
                                     {
                                         throw CommonException.AssertFailedException();
-                                    }
-                                    ret.Constraints.Add(con);
+                                    } 
 
                                     con.InWires.Add(bitWires[0][i]);
                                     con.InWires.Add(bitWires[1][i]);
@@ -1796,6 +1798,8 @@ namespace code0k_cc.Runtime
                                     ret.AnonymousWires.Add(notEqualToResultBitWire);
 
                                     var con = new PinocchioConstraint(PinocchioConstraintType.ZeroP);
+                                    ret.Constraints.Add(con);
+
                                     con.InWires.Add(subtractResultWire);
                                     con.OutWires.Add(notEqualToResultBitWire);
                                 }
@@ -1803,23 +1807,41 @@ namespace code0k_cc.Runtime
                                 if (operationType == VariableOperationType.Binary_NotEqualTo)
                                 {
                                     var con = new PinocchioConstraint(PinocchioConstraintType.Mul);
+                                    ret.Constraints.Add(con);
+
                                     con.InWires.Add(notEqualToResultBitWire);
                                     con.InWires.Add(commonArg.OneWire);
                                     con.OutWires.Add(outputWire);
 
                                     return ret;
                                 }
-                                else if (operationType == VariableOperationType.Binary_EqualTo)
+
+
+                                PinocchioWire equalToResultBitWire = new PinocchioWire(null);
+                                ret.AnonymousWires.Add(equalToResultBitWire);
+
                                 {
                                     var con = new PinocchioConstraint(PinocchioConstraintType.Xor);
+                                    ret.Constraints.Add(con);
+
                                     con.InWires.Add(notEqualToResultBitWire);
+                                    con.InWires.Add(commonArg.OneWire);
+                                    con.OutWires.Add(equalToResultBitWire);
+                                }
+
+                                if (operationType == VariableOperationType.Binary_EqualTo)
+                                {
+                                    var con = new PinocchioConstraint(PinocchioConstraintType.Mul);
+                                    ret.Constraints.Add(con);
+
+                                    con.InWires.Add(equalToResultBitWire);
                                     con.InWires.Add(commonArg.OneWire);
                                     con.OutWires.Add(outputWire);
 
                                     return ret;
                                 }
 
-                                PinocchioWire greaterThanResultBitWire;
+                                PinocchioWire greaterEqualThanResultBitWire;
                                 {
                                     var splitCon = new PinocchioConstraint(PinocchioConstraintType.Split);
                                     ret.Constraints.Add(splitCon);
@@ -1840,34 +1862,82 @@ namespace code0k_cc.Runtime
                                         splitCon.OutWires.Add(boolWire);
                                     }
 
-                                    greaterThanResultBitWire = bitWires[32];
+                                    greaterEqualThanResultBitWire = bitWires[32];
                                 }
 
                                 if (operationType == VariableOperationType.Binary_GreaterEqualThan)
                                 {
                                     var con = new PinocchioConstraint(PinocchioConstraintType.Mul);
-                                    con.InWires.Add(greaterThanResultBitWire);
+                                    ret.Constraints.Add(con);
+
+                                    con.InWires.Add(greaterEqualThanResultBitWire);
                                     con.InWires.Add(commonArg.OneWire);
                                     con.OutWires.Add(outputWire);
 
                                     return ret;
                                 }
-                                else if (operationType == VariableOperationType.Binary_LessThan)
+
+
+
+                                PinocchioWire lessThanResultBitWire = new PinocchioWire(null);
+                                ret.AnonymousWires.Add(lessThanResultBitWire);
+
                                 {
                                     var con = new PinocchioConstraint(PinocchioConstraintType.Xor);
-                                    con.InWires.Add(greaterThanResultBitWire);
+                                    ret.Constraints.Add(con);
+
+                                    con.InWires.Add(greaterEqualThanResultBitWire);
+                                    con.InWires.Add(commonArg.OneWire);
+                                    con.OutWires.Add(lessThanResultBitWire);
+                                }
+
+
+                                if (operationType == VariableOperationType.Binary_LessThan)
+                                {
+                                    var con = new PinocchioConstraint(PinocchioConstraintType.Mul);
+                                    ret.Constraints.Add(con);
+
+                                    con.InWires.Add(lessThanResultBitWire);
                                     con.InWires.Add(commonArg.OneWire);
                                     con.OutWires.Add(outputWire);
 
                                     return ret;
                                 }
-                                else if (operationType == VariableOperationType.Binary_LessEqualThan)
+
+
+                                PinocchioWire lessEqualThanResultBitWire = new PinocchioWire(null);
+                                ret.AnonymousWires.Add(lessEqualThanResultBitWire);
+
                                 {
-                                    //todo
+                                    var con = new PinocchioConstraint(PinocchioConstraintType.Or);
+                                    ret.Constraints.Add(con);
+
+                                    con.InWires.Add(lessThanResultBitWire);
+                                    con.InWires.Add(equalToResultBitWire);
+                                    con.OutWires.Add(lessEqualThanResultBitWire);
+                                }
+
+                                if (operationType == VariableOperationType.Binary_LessEqualThan)
+                                {
+                                    var con = new PinocchioConstraint(PinocchioConstraintType.Mul);
+                                    ret.Constraints.Add(con);
+
+                                    con.InWires.Add(lessEqualThanResultBitWire);
+                                    con.InWires.Add(commonArg.OneWire);
+                                    con.OutWires.Add(outputWire);
+
+                                    return ret;
                                 }
                                 else if (operationType == VariableOperationType.Binary_GreaterThan)
                                 {
-                                    //todo
+                                    var con = new PinocchioConstraint(PinocchioConstraintType.Xor);
+                                    ret.Constraints.Add(con);
+
+                                    con.InWires.Add(lessEqualThanResultBitWire);
+                                    con.InWires.Add(commonArg.OneWire);
+                                    con.OutWires.Add(outputWire);
+
+                                    return ret;
                                 }
                                 else
                                 {
