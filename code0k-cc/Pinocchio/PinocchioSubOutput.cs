@@ -5,7 +5,7 @@ using code0k_cc.Pinocchio.Constraint;
 
 namespace code0k_cc.Pinocchio
 {
-    class PinocchioOutput
+    class PinocchioSubOutput
     {
         public PinocchioVariableWires VariableWires;
         // note that these constraints are ordered.

@@ -49,7 +49,13 @@ namespace code0k_cc
                 mainProgram = Parser.Parse(tokenList);
             }
 
-            using (var fs = System.IO.File.Open(path + ".out", FileMode.Create, FileAccess.Write))
+            string outPath = path + ".out";
+            if (File.Exists(outPath))
+            {
+                File.Delete(outPath);
+            }
+
+            using (var fs = System.IO.File.Open(outPath, FileMode.CreateNew, FileAccess.Write))
             {
                 using (var outputWriter = new StreamWriter(fs, new UTF8Encoding(false), -1, false))
                 {

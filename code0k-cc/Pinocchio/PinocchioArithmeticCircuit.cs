@@ -39,6 +39,20 @@ namespace code0k_cc.Pinocchio
 
             void AddConstraint(IPinocchioConstraint con)
             {
+
+#if DEBUG
+                if (con is ConstWireConstraint con1)
+                    conList.ForEach(con =>
+                    {
+                        if (con is ConstWireConstraint con2)
+                        {
+                            if (con1.ConstVariableWires?.RawVariable != null && con1.ConstVariableWires?.RawVariable == con2.ConstVariableWires?.RawVariable)
+                                throw new Exception("error!");
+                        }
+                    });
+#endif
+
+
                 conList.Add(con);
             }
 
@@ -53,7 +67,7 @@ namespace code0k_cc.Pinocchio
                 variableWires.Wires.ForEach(AddWire);
             }
 
-            void AddPinocchioOutput(PinocchioOutput ret)
+            void AddPinocchioSubOutput(PinocchioSubOutput ret)
             {
                 ret.AnonymousWires.ForEach(AddWire);
                 AddVariableWires(ret.VariableWires);
@@ -139,25 +153,31 @@ namespace code0k_cc.Pinocchio
                 }
             }
 
-            var outputVariables = new HashSet<RawVariable>();
+            var outputVariableWiresDict = new Dictionary<RawVariable, (PinocchioTypeWires TypeWires, string VarName)>();
+
+            void AddOutputVariableWires(PinocchioVariableWires variableWires, string varName)
+            {
+                if (!outputVariableWiresDict.ContainsKey(variableWires.RawVariable))
+                {
+                    outputVariableWiresDict.Add(variableWires.RawVariable, (TypeWires: new PinocchioTypeWires(variableWires), VarName: varName));
+                }
+                else
+                {
+                    Debug.Assert(varName == outputVariableWiresDict[variableWires.RawVariable].VarName);
+                    Debug.Assert(variableWires.Wires.SequenceEqual(outputVariableWiresDict[variableWires.RawVariable].TypeWires.Wires));
+                }
+            }
 
             foreach (var node in this.VariableMap.TopologicalSort())
             {
 
                 switch (node)
                 {
-                    //todo mul outputnode by 1?
                     case VariableNode variableNode:
                         // a variable node is either an input/nizk/constant node, which is NOT produced by constraints
                         // or a non-constant intermediate/output node, which has already been produced by constraints
 
-                        if (variableNode.NizkAttribute == NizkVariableType.Output)
-                        {
-                            if (!outputVariables.Contains(variableNode.RawVariable))
-                            {
-                                _ = outputVariables.Add(variableNode.RawVariable);
-                            }
-                        }
+                        PinocchioVariableWires outputVarWires = null;
 
                         if (!rawVarToWires.ContainsKey(variableNode.RawVariable))
                         {
@@ -166,17 +186,43 @@ namespace code0k_cc.Pinocchio
                                 variableNode.NizkAttribute == NizkVariableType.Input ||
                                 variableNode.NizkAttribute == NizkVariableType.NizkInput);
 
-                            PinocchioOutput output;
                             if (variableNode.RawVariable.Value.IsConstant)
                             {
-                                output = variableNode.RawVariable.Type.VariableNodeToPinocchio(variableNode.RawVariable, commonArg, false);
-                                var comment = new CommentConstraint();
-                                AddConstraint(comment);
-                                comment.Comment = $"The following {output.VariableWires.Wires.Count.ToString(CultureInfo.InvariantCulture)} wire(s) is a constant value.";
+                                var output = variableNode.RawVariable.Type.VariableNodeToPinocchio(variableNode.RawVariable, commonArg, false);
+                                AddPinocchioSubOutput(output);
 
-                                var con = new ConstWireConstraint();
-                                AddConstraint(con);
-                                con.ConstVariableWires = output.VariableWires;
+                                {
+                                    var comment = new CommentConstraint();
+                                    AddConstraint(comment);
+                                    comment.Comment = $"The following {output.VariableWires.Wires.Count.ToString(CultureInfo.InvariantCulture)} wires are of a constant value.";
+
+                                    var con = new ConstWireConstraint();
+                                    AddConstraint(con);
+                                    con.ConstVariableWires = output.VariableWires;
+                                }
+
+                                // if the output variable is also constant, mul by one as new outputs
+                                if (variableNode.NizkAttribute == NizkVariableType.Output)
+                                {
+                                    List<PinocchioWire> outputWires = new List<PinocchioWire>();
+                                    foreach (var wire in output.VariableWires.Wires)
+                                    {
+                                        var newWire = new PinocchioWire();
+                                        AddWire(newWire);
+
+                                        var newCon = new BasicPinocchioConstraint(BasicPinocchioConstraintType.Mul);
+                                        AddConstraint(newCon);
+
+                                        newCon.InWires.Add(wire);
+                                        newCon.InWires.Add(commonArg.OneWire);
+                                        newCon.OutWires.Add(newWire);
+
+                                        outputWires.Add(newWire);
+                                    }
+
+                                    outputVarWires = new PinocchioVariableWires(variableNode.RawVariable, outputWires);
+                                }
+
                             }
                             else
                             {
@@ -185,11 +231,12 @@ namespace code0k_cc.Pinocchio
                                     // policy: checkRange is applied for nizkinput, and not applied for others
                                     case NizkVariableType.NizkInput:
                                         {
-                                            output = variableNode.RawVariable.Type.VariableNodeToPinocchio(variableNode.RawVariable, commonArg, true);
+                                            var output = variableNode.RawVariable.Type.VariableNodeToPinocchio(variableNode.RawVariable, commonArg, true);
+                                            AddPinocchioSubOutput(output);
 
                                             var comment = new CommentConstraint();
                                             AddConstraint(comment);
-                                            comment.Comment = $"The following {output.VariableWires.Wires.Count.ToString(CultureInfo.InvariantCulture)} wire(s) are nizk-input wire of variable \"{variableNode.VarName}\".";
+                                            comment.Comment = $"The following {output.VariableWires.Wires.Count.ToString(CultureInfo.InvariantCulture)} wires are nizk-input wires of variable \"{variableNode.VarName}\".";
 
                                             var con = new UserPrivateInputConstraint();
                                             AddConstraint(con);
@@ -198,11 +245,12 @@ namespace code0k_cc.Pinocchio
                                         }
                                     case NizkVariableType.Input:
                                         {
-                                            output = variableNode.RawVariable.Type.VariableNodeToPinocchio(variableNode.RawVariable, commonArg, false);
+                                            var output = variableNode.RawVariable.Type.VariableNodeToPinocchio(variableNode.RawVariable, commonArg, false);
+                                            AddPinocchioSubOutput(output);
 
                                             var comment = new CommentConstraint();
                                             AddConstraint(comment);
-                                            comment.Comment = $"The following {output.VariableWires.Wires.Count.ToString(CultureInfo.InvariantCulture)} wire(s) are input wire of variable \"{variableNode.VarName}\".";
+                                            comment.Comment = $"The following {output.VariableWires.Wires.Count.ToString(CultureInfo.InvariantCulture)} wires are input wires of variable \"{variableNode.VarName}\".";
 
                                             var con = new UserInputConstraint();
                                             AddConstraint(con);
@@ -214,7 +262,6 @@ namespace code0k_cc.Pinocchio
                                 }
                             }
 
-                            AddPinocchioOutput(output);
                         }
                         else
                         {
@@ -223,6 +270,16 @@ namespace code0k_cc.Pinocchio
                             Debug.Assert(!variableNode.RawVariable.Value.IsConstant);
 
 
+                            if (variableNode.NizkAttribute == NizkVariableType.Output)
+                            {
+                                outputVarWires = rawVarToWires[variableNode.RawVariable];
+                            }
+
+                        }
+
+                        if (outputVarWires != null)
+                        {
+                            AddOutputVariableWires(outputVarWires, variableNode.VarName);
                         }
 
                         break;
@@ -244,14 +301,14 @@ namespace code0k_cc.Pinocchio
                         foreach (var outNode in operationNode.NextNodes)
                         {
                             var outVarNode = (VariableNode) outNode;
-                            PinocchioOutput output = inVars[0].RawVariable.Type.OperationNodeToPinocchio(
+                            PinocchioSubOutput output = inVars[0].RawVariable.Type.OperationNodeToPinocchio(
                                 operationNode.ConnectionType,
                                 inVars,
                                 outVarNode.RawVariable,
                                 commonArg
                             );
 
-                            AddPinocchioOutput(output);
+                            AddPinocchioSubOutput(output);
                         }
                         break;
                     default:
@@ -262,6 +319,18 @@ namespace code0k_cc.Pinocchio
             // todo: optimize redundancy wire & constraints            
             // note: even if all the output of some constraints are not used, it is NOT considered useless
             // example here: input 1; split in 1 <1> out 32 <2,3,4,...,33>; this constraint ensure that "input 1" is smaller than 2^32, and must not be deleted while optimizing
+
+            // todo: declare the output wires at the end
+            foreach (var (rawVariable, (typeWires, varName)) in outputVariableWiresDict)
+            {
+                var comment = new CommentConstraint();
+                AddConstraint(comment);
+                comment.Comment = $"The following {typeWires.Wires.Count.ToString(CultureInfo.InvariantCulture)} wires are output wires of variable \"{varName}\".";
+
+                var con = new OutputConstraint();
+                AddConstraint(con);
+                con.TypeWires = typeWires;
+            }
 
             // write these wire & constraints
             foreach (var constraint in conList)
@@ -305,13 +374,16 @@ namespace code0k_cc.Pinocchio
 
                         break;
                     case UserInputConstraint userInputConstraint:
-                        userInputConstraint.TypeWires.Wires.ForEach(wire => outputWriter.WriteLine("input " + wireToID[wire]));
+                        userInputConstraint.TypeWires.Wires.ForEach(wire => outputWriter.WriteLine("input " + wireToID[wire] + " //userinput"));
                         break;
                     case UserPrivateInputConstraint userPrivateInputConstraint:
-                        userPrivateInputConstraint.TypeWires.Wires.ForEach(wire => outputWriter.WriteLine("nizkinput " + wireToID[wire]));
+                        userPrivateInputConstraint.TypeWires.Wires.ForEach(wire => outputWriter.WriteLine("nizkinput " + wireToID[wire] + " //userinput"));
+                        break;
+                    case OutputConstraint outputConstraint:
+                        outputConstraint.TypeWires.Wires.ForEach(wire => outputWriter.WriteLine("output " + wireToID[wire] + " //output"));
                         break;
                     case ConstWireConstraint constWireConstraint:
-                        constWireConstraint.ConstVariableWires.Wires.ForEach(wire => outputWriter.WriteLine("input " + wireToID[wire]));
+                        constWireConstraint.ConstVariableWires.Wires.ForEach(wire => outputWriter.WriteLine("input " + wireToID[wire] + " //const"));
                         break;
                     case CommentConstraint commentConstraint:
                         outputWriter.WriteLine("//" + commentConstraint.Comment);
@@ -324,8 +396,6 @@ namespace code0k_cc.Pinocchio
                         throw CommonException.AssertFailedException();
                 }
             }
-
-            // todo: write the output wires at the end
 
         }
 
