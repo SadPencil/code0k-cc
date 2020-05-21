@@ -397,7 +397,7 @@ namespace code0k_cc.Runtime
                         Value = new NizkFieldValue()
                         {
                             IsConstant = true,
-                            Value = BigInteger.MinusOne,
+                            Value = My.Config.ModulusPrimeField_Prime,
                         }
                     };
                 }
@@ -602,7 +602,7 @@ namespace code0k_cc.Runtime
 
                 var retWire = new PinocchioWire();
                 ret.VariableWires = new PinocchioVariableWires(rawVariable, retWire);
-                
+
                 return ret;
             },
             OperationNodeToPinocchioFunc = (operationType, inVars, outputVariable, commonArg) =>
