@@ -6,7 +6,7 @@ using code0k_cc.Runtime;
 using code0k_cc.Runtime.VariableMap;
 using code0k_cc.Standalone;
 
-namespace code0k_cc.Pinocchio
+namespace code0k_cc.Pinocchio.Constraint
 {
     enum BasicPinocchioConstraintType
     {

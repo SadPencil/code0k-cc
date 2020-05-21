@@ -13,6 +13,7 @@ using code0k_cc.Config;
 using code0k_cc.CustomException;
 using code0k_cc.Lex;
 using code0k_cc.Pinocchio;
+using code0k_cc.Pinocchio.Constraint;
 using code0k_cc.Runtime.ExeResult;
 using code0k_cc.Runtime.Nizk;
 using code0k_cc.Runtime.ValueOfType;

@@ -8,7 +8,7 @@ using System.Numerics;
 using System.Text;
 using code0k_cc.Config;
 using code0k_cc.CustomException;
-using code0k_cc.Pinocchio.Constraint;
+using code0k_cc.Pinocchio.Constraint; 
 using code0k_cc.Runtime;
 using code0k_cc.Runtime.Nizk;
 using code0k_cc.Runtime.VariableMap;

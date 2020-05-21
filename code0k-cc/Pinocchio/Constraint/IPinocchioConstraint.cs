@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace code0k_cc.Pinocchio
+namespace code0k_cc.Pinocchio.Constraint
 {
     interface IPinocchioConstraint
     {

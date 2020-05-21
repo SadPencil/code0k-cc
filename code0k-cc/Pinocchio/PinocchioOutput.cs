@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using code0k_cc.Pinocchio.Constraint;
 
 namespace code0k_cc.Pinocchio
 {
