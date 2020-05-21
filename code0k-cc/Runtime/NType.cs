@@ -35,19 +35,12 @@ namespace code0k_cc.Runtime
 
         public Variable GetCommonConstantValue(VariableCommonConstant commonConstant)
         {
-            if (this.CommonConstantValueDictionary.ContainsKey(commonConstant))
-            {
-                var rawVariable = this.CommonConstantValueDictionary[commonConstant];
-                Debug.Assert(rawVariable.Type == this);
-                return new Variable(rawVariable);
-            }
-            else
-            {
-                throw new Exception($"Type \"{ this.TypeCodeName}\" doesn't provide a constant for \"{commonConstant}\".");
-            }
+            var rawVariable = this.GetCommonConstantValueFunc(commonConstant);
+            Debug.Assert(rawVariable.Type == this);
+            return new Variable(rawVariable);
         }
 
-        private IReadOnlyDictionary<VariableCommonConstant, RawVariable> CommonConstantValueDictionary { get; set; }
+        private Func<VariableCommonConstant, RawVariable> GetCommonConstantValueFunc { get; set; }
 
         public Variable GetNewNizkVariable()
         {
@@ -296,21 +289,27 @@ namespace code0k_cc.Runtime
             this.VariableNodeToPinocchioFunc = (rawVariable, commonArg, checkRange) => throw new Exception($"Type \"{this.TypeCodeName}\" is not nizk-compatible.");
             this.OperationNodeToPinocchioFunc = (operationType, inVars, outputVariable, commonArg) => throw new Exception($"Type \"{this.TypeCodeName}\" is not nizk-compatible.");
 
-            this.CommonConstantValueDictionary = new Dictionary<VariableCommonConstant, RawVariable>();
+            this.GetCommonConstantValueFunc = commonConstant => throw new Exception($"Type \"{ this.TypeCodeName}\" doesn't provide a constant for \"{commonConstant}\".");
             this.UnaryOperationFuncs = new Dictionary<VariableOperationType, Func<Variable, Variable>>();
             this.BinaryOperationFuncs = new Dictionary<VariableOperationType, Func<Variable, Variable, Variable>>();
         }
 
         public static readonly NType String = new NType("string")
         {
-            CommonConstantValueDictionary = new Dictionary<VariableCommonConstant, RawVariable>()
+            GetCommonConstantValueFunc = commonConstant =>
             {
-                {VariableCommonConstant.Zero, new RawVariable()
+                if (commonConstant == VariableCommonConstant.Zero)
+                {
+                    return new RawVariable()
                     {
                         Type = NType.String,
                         Value = new StringValue(),
-                    }
-                },
+                    };
+                }
+                else
+                {
+                    throw new Exception($"Type \"{ NType.String}\" doesn't provide a constant for \"{commonConstant}\".");
+                }
             },
             GetStringFunc = variable => ( (StringValue) ( variable.Value ) ).Value,
             ParseFunc = str =>
@@ -362,10 +361,11 @@ namespace code0k_cc.Runtime
 
         public static readonly NType Field = new NType("field")
         {
-
-            CommonConstantValueDictionary = new Dictionary<VariableCommonConstant, RawVariable>()
+            GetCommonConstantValueFunc = commonConstant =>
             {
-                {VariableCommonConstant.Zero, new RawVariable()
+                if (commonConstant == VariableCommonConstant.Zero)
+                {
+                    return new RawVariable()
                     {
                         Type = NType.Field,
                         Value = new NizkFieldValue()
@@ -373,9 +373,11 @@ namespace code0k_cc.Runtime
                             IsConstant = true,
                             Value = BigInteger.Zero,
                         }
-                    }
-                },
-                {VariableCommonConstant.One, new RawVariable()
+                    };
+                }
+                else if (commonConstant == VariableCommonConstant.One)
+                {
+                    return new RawVariable()
                     {
                         Type = NType.Field,
                         Value = new NizkFieldValue()
@@ -383,18 +385,24 @@ namespace code0k_cc.Runtime
                             IsConstant = true,
                             Value = BigInteger.One,
                         }
-                    }
-                },
-                {VariableCommonConstant.MinusOne, new RawVariable()
+                    };
+                }
+                else if (commonConstant == VariableCommonConstant.MinusOne)
+                {
+                    return new RawVariable()
                     {
                         Type = NType.Field,
                         Value = new NizkFieldValue()
                         {
                             IsConstant = true,
-                            Value = My.Config.ModulusPrimeField_Prime - 1,
+                            Value = BigInteger.MinusOne,
                         }
-                    }
-                },
+                    };
+                }
+                else
+                {
+                    throw new Exception($"Type \"{ NType.Field}\" doesn't provide a constant for \"{commonConstant}\".");
+                }
             },
             ParseFunc = (str) =>
             {
@@ -778,9 +786,11 @@ namespace code0k_cc.Runtime
 
         public static readonly NType UInt32 = new NType("uint32")
         {
-            CommonConstantValueDictionary = new Dictionary<VariableCommonConstant, RawVariable>()
+            GetCommonConstantValueFunc = commonConstant =>
             {
-                {VariableCommonConstant.Zero, new RawVariable()
+                if (commonConstant == VariableCommonConstant.Zero)
+                {
+                    return new RawVariable()
                     {
                         Type = NType.UInt32,
                         Value = new NizkUInt32Value()
@@ -788,9 +798,11 @@ namespace code0k_cc.Runtime
                             IsConstant = true,
                             Value = 0,
                         }
-                    }
-                },
-                {VariableCommonConstant.One, new RawVariable()
+                    };
+                }
+                else if (commonConstant == VariableCommonConstant.One)
+                {
+                    return new RawVariable()
                     {
                         Type = NType.UInt32,
                         Value = new NizkUInt32Value()
@@ -798,9 +810,11 @@ namespace code0k_cc.Runtime
                             IsConstant = true,
                             Value = 1,
                         }
-                    }
-                },
-                {VariableCommonConstant.MinusOne, new RawVariable()
+                    };
+                }
+                else if (commonConstant == VariableCommonConstant.MinusOne)
+                {
+                    return new RawVariable()
                     {
                         Type = NType.UInt32,
                         Value = new NizkUInt32Value()
@@ -808,8 +822,12 @@ namespace code0k_cc.Runtime
                             IsConstant = true,
                             Value = System.UInt32.MaxValue,
                         }
-                    }
-                },
+                    };
+                }
+                else
+                {
+                    throw new Exception($"Type \"{ NType.UInt32}\" doesn't provide a constant for \"{commonConstant}\".");
+                }
             },
             ParseFunc = (str) =>
             {
@@ -1446,7 +1464,7 @@ namespace code0k_cc.Runtime
                                 // currently, assume the variable has already been trimmed every time an operation is done
                                 // optimization can be done by implementing [MaxPossibleValue] 
 
-                                var pow2_32 = commonArg.PowerOfTwoWires[32]; 
+                                var pow2_32 = commonArg.PowerOfTwoWires[32];
 
                                 var negWire = new PinocchioWire();
                                 ret.AnonymousWires.Add(negWire);
@@ -1971,27 +1989,36 @@ namespace code0k_cc.Runtime
 
         public static readonly NType Bool = new NType("bool")
         {
-
-            CommonConstantValueDictionary = new Dictionary<VariableCommonConstant, RawVariable>()
+            GetCommonConstantValueFunc = commonConstant =>
             {
-                {VariableCommonConstant.One, new RawVariable()
+                if (commonConstant == VariableCommonConstant.Zero)
                 {
-                    Type = NType.Bool,
-                    Value = new NizkBoolValue()
+                    return new RawVariable()
                     {
-                        IsConstant = true,
-                        Value = true,
-                    }
-                }},
-                {VariableCommonConstant.Zero, new RawVariable()
+                        Type = NType.Bool,
+                        Value = new NizkBoolValue()
+                        {
+                            IsConstant = true,
+                            Value = true,
+                        }
+                    };
+                }
+                else if (commonConstant == VariableCommonConstant.One)
                 {
-                    Type = NType.Bool,
-                    Value = new NizkBoolValue()
+                    return new RawVariable()
                     {
-                        IsConstant = true,
-                        Value = false,
-                    }
-                }},
+                        Type = NType.Bool,
+                        Value = new NizkBoolValue()
+                        {
+                            IsConstant = true,
+                            Value = false,
+                        }
+                    };
+                }
+                else
+                {
+                    throw new Exception($"Type \"{ NType.Bool}\" doesn't provide a constant for \"{commonConstant}\".");
+                }
             },
             ParseFunc = (str) =>
             {
@@ -2181,7 +2208,7 @@ namespace code0k_cc.Runtime
 
                 var retWire = new PinocchioWire();
                 ret.VariableWires = new PinocchioVariableWires(rawVariable, retWire);
-                 
+
                 if (rawVariable.Value.IsConstant)
                 {
                     var con = new ConstWireConstraint();
@@ -2375,17 +2402,39 @@ namespace code0k_cc.Runtime
 
         public static readonly NType Void = new NType("void")
         {
-            CommonConstantValueDictionary = new Dictionary<VariableCommonConstant, RawVariable>()
+            GetCommonConstantValueFunc = commonConstant =>
             {
-                {VariableCommonConstant.Zero,  new RawVariable() { Type = NType.Void, Value = null }}
+                if (commonConstant == VariableCommonConstant.Zero)
+                {
+                    return new RawVariable()
+                    {
+                        Type = NType.Void,
+                        Value = null
+                    };
+                }
+                else
+                {
+                    throw new Exception($"Type \"{ NType.Void}\" doesn't provide a constant for \"{commonConstant}\".");
+                }
             },
         };
 
         public static readonly NType Function = new NType("__Function")
         {
-            CommonConstantValueDictionary = new Dictionary<VariableCommonConstant, RawVariable>()
+            GetCommonConstantValueFunc = commonConstant =>
             {
-                {VariableCommonConstant.Zero,  new RawVariable() { Type = NType.Function, Value = new FunctionDeclarationValue() }}
+                if (commonConstant == VariableCommonConstant.Zero)
+                {
+                    return new RawVariable()
+                    {
+                        Type = NType.Function,
+                        Value = new FunctionDeclarationValue()
+                    };
+                }
+                else
+                {
+                    throw new Exception($"Type \"{ NType.Function}\" doesn't provide a constant for \"{commonConstant}\".");
+                }
             },
         };
 
