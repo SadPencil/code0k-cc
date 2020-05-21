@@ -12,25 +12,38 @@ namespace code0k_cc
 {
     class Program
     {
+        private static void ShowHelp()
+        {
+            Process cur = Process.GetCurrentProcess();
+            Console.WriteLine("Usage: ");
+            Console.WriteLine($"\t{ ( cur.ProcessName.Contains('\"') ? ("\"" + cur.ProcessName + "\"") : cur.ProcessName )} <input-file>");
+        }
         static void Main(string[] args)
         {
-            Debug.WriteLine(null);
+            if (args.Length == 0)
+            {
+                ShowHelp();
+                return;
+            }
+
+            var path = args[0];
+            Debug.WriteLine(path);
+
             ParseUnitInstance mainProgram;
-            var path = @"input.txt";
-            using (var fs = File.OpenRead(path))
+            using (var fs = System.IO.File.Open(path, FileMode.Open, FileAccess.Read))
             {
                 var tokens = Lex.Lex.Analyze(fs);
                 var tokenList = tokens.ToList();
-                //test
-                foreach (var token in tokenList)
-                {
-                    Console.WriteLine(token.ToString());
-                }
-                
-                mainProgram = Parser.Parse(tokenList);
-            } 
+                ////test
+                //foreach (var token in tokenList)
+                //{
+                //    Console.WriteLine(token.ToString());
+                //}
 
-            using (var fs = File.OpenWrite("output.txt"))
+                mainProgram = Parser.Parse(tokenList);
+            }
+
+            using (var fs = System.IO.File.Open(path + ".out", FileMode.CreateNew, FileAccess.Write))
             {
                 using (var outputWriter = new StreamWriter(fs, new UTF8Encoding(false), -1, false))
                 {

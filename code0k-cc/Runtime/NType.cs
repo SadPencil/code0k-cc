@@ -2465,6 +2465,7 @@ namespace code0k_cc.Runtime
             yield return NType.UInt32;
             yield return NType.Bool;
             yield return NType.String;
+            yield return NType.Field;
             yield return NType.Function;
 
             yield break;
