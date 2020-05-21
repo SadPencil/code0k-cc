@@ -1994,7 +1994,7 @@ namespace code0k_cc.Runtime
                         Value = new NizkBoolValue()
                         {
                             IsConstant = true,
-                            Value = true,
+                            Value = false,
                         }
                     };
                 }
@@ -2006,7 +2006,7 @@ namespace code0k_cc.Runtime
                         Value = new NizkBoolValue()
                         {
                             IsConstant = true,
-                            Value = false,
+                            Value = true,
                         }
                     };
                 }
