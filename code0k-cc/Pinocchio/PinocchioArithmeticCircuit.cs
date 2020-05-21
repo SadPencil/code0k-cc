@@ -39,20 +39,6 @@ namespace code0k_cc.Pinocchio
 
             void AddConstraint(IPinocchioConstraint con)
             {
-
-#if DEBUG
-                if (con is ConstWireConstraint con1)
-                    conList.ForEach(con =>
-                    {
-                        if (con is ConstWireConstraint con2)
-                        {
-                            if (con1.ConstVariableWires?.RawVariable != null && con1.ConstVariableWires?.RawVariable == con2.ConstVariableWires?.RawVariable)
-                                throw new Exception("error!");
-                        }
-                    });
-#endif
-
-
                 conList.Add(con);
             }
 
