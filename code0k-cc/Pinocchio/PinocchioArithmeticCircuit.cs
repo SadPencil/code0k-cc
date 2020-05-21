@@ -27,14 +27,12 @@ namespace code0k_cc.Pinocchio
 
         public void OutputCircuit(TextWriter outputWriter)
         {
-            var wireList = new List<PinocchioWire>();
             var wireToID = new Dictionary<PinocchioWire, int>();
 
             void AddWire(PinocchioWire wire)
             {
                 if (wireToID.ContainsKey(wire)) { return; }
-                wireToID.Add(wire, wireList.Count);
-                wireList.Add(wire);
+                wireToID.Add(wire, wireToID.Keys.Count);
             }
 
             var conList = new List<IPinocchioConstraint>();
@@ -123,7 +121,7 @@ namespace code0k_cc.Pinocchio
                 {
                     commonArg.PowerOfTwoWires[i] = new PinocchioWire();
                     AddWire(commonArg.PowerOfTwoWires[i]);
-                    
+
                     powerOfTwoBaseVariable = NType.Field.BinaryOperation(
                         powerOfTwoBaseVariable,
                         powerOfTwoBaseVariable,
@@ -141,6 +139,8 @@ namespace code0k_cc.Pinocchio
                 }
             }
 
+            var outputVariables = new HashSet<RawVariable>();
+
             foreach (var node in this.VariableMap.TopologicalSort())
             {
 
@@ -150,6 +150,15 @@ namespace code0k_cc.Pinocchio
                     case VariableNode variableNode:
                         // a variable node is either an input/nizk/constant node, which is NOT produced by constraints
                         // or a non-constant intermediate/output node, which has already been produced by constraints
+
+                        if (variableNode.NizkAttribute == NizkVariableType.Output)
+                        {
+                            if (!outputVariables.Contains(variableNode.RawVariable))
+                            {
+                                _ = outputVariables.Add(variableNode.RawVariable);
+                            }
+                        }
+
                         if (!rawVarToWires.ContainsKey(variableNode.RawVariable))
                         {
                             Debug.Assert(
@@ -161,6 +170,10 @@ namespace code0k_cc.Pinocchio
                             if (variableNode.RawVariable.Value.IsConstant)
                             {
                                 output = variableNode.RawVariable.Type.VariableNodeToPinocchio(variableNode.RawVariable, commonArg, false);
+                                var comment = new CommentConstraint();
+                                AddConstraint(comment);
+                                comment.Comment = $"The following {output.VariableWires.Wires.Count.ToString(CultureInfo.InvariantCulture)} wire(s) is a constant value.";
+
                                 var con = new ConstWireConstraint();
                                 AddConstraint(con);
                                 con.ConstVariableWires = output.VariableWires;
