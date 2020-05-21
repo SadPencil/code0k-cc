@@ -18,7 +18,7 @@ namespace code0k_cc.Pinocchio
 {
     class PinocchioArithmeticCircuit : IStandalone
     {
-        private VariableMap VariableMap;
+        private readonly VariableMap VariableMap;
         public PinocchioArithmeticCircuit(VariableMap variableMap)
         {
             this.VariableMap = variableMap;
@@ -230,22 +230,22 @@ namespace code0k_cc.Pinocchio
                                 throw CommonException.AssertFailedException();
                         }
 
-                        sb.Append(" in ");
-                        sb.Append(basicPinocchioConstraint.InWires.Count.ToString(CultureInfo.InvariantCulture));
-                        sb.Append(" <");
+                       _= sb.Append(" in ");
+                        _ = sb.Append(basicPinocchioConstraint.InWires.Count.ToString(CultureInfo.InvariantCulture));
+                        _ = sb.Append(" <");
                         foreach (var wire in basicPinocchioConstraint.InWires)
                         {
-                            sb.Append(" " + wireToID[wire].ToString(CultureInfo.InvariantCulture));
+                            _ = sb.Append(" " + wireToID[wire].ToString(CultureInfo.InvariantCulture));
                         }
 
-                        sb.Append(" > out ");
-                        sb.Append(basicPinocchioConstraint.OutWires.Count.ToString(CultureInfo.InvariantCulture));
-                        sb.Append(" <");
+                        _ = sb.Append(" > out ");
+                        _ = sb.Append(basicPinocchioConstraint.OutWires.Count.ToString(CultureInfo.InvariantCulture));
+                        _ = sb.Append(" <");
                         foreach (var wire in basicPinocchioConstraint.OutWires)
                         {
-                            sb.Append(" " + wireToID[wire].ToString(CultureInfo.InvariantCulture));
+                            _ = sb.Append(" " + wireToID[wire].ToString(CultureInfo.InvariantCulture));
                         }
-                        sb.Append(" >");
+                        _ = sb.Append(" >");
 
                         outputWriter.WriteLine(sb.ToString());
 

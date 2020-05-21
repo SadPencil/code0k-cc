@@ -26,12 +26,9 @@ namespace code0k_cc
                 {
                     Console.WriteLine(token.ToString());
                 }
-
-
+                
                 mainProgram = Parser.Parse(tokenList);
-            }
-            //   var ret = Parser.Parse(tokens);
-            test(mainProgram, 0);
+            } 
 
             using (var fs = File.OpenWrite("output.txt"))
             {
@@ -53,20 +50,20 @@ namespace code0k_cc
             }
         }
 
-        static void test(ParseUnitInstance p, int tab)
-        {
-            for (int i = 0; i < tab; ++i)
-                Console.Write(" ");
-            if (p == null) { Console.WriteLine("NULL"); }
-            else
-            {
-                Console.WriteLine(p.ParseUnit.Name);
-                if (p.Children != null)
-                    foreach (var pp in p.Children)
-                    {
-                        test(pp, tab + 1);
-                    }
-            }
-        }
+        //static void test(ParseUnitInstance p, int tab)
+        //{
+        //    for (int i = 0; i < tab; ++i)
+        //        Console.Write(" ");
+        //    if (p == null) { Console.WriteLine("NULL"); }
+        //    else
+        //    {
+        //        Console.WriteLine(p.ParseUnit.Name);
+        //        if (p.Children != null)
+        //            foreach (var pp in p.Children)
+        //            {
+        //                test(pp, tab + 1);
+        //            }
+        //    }
+        //}
     }
 }
