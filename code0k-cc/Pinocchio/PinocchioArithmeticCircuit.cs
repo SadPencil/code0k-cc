@@ -194,7 +194,7 @@ namespace code0k_cc.Pinocchio
                                 {
                                     var comment = new CommentConstraint();
                                     AddConstraint(comment);
-                                    comment.Comment = $"The following {output.VariableWires.Wires.Count.ToString(CultureInfo.InvariantCulture)} wires are of a constant value.";
+                                    comment.Comment = $"The following {output.VariableWires.Wires.Count.ToString(CultureInfo.InvariantCulture)} wires are of a constant value {variableNode.RawVariable.Type.GetString(variableNode.RawVariable)}.";
 
                                     var con = new ConstWireConstraint();
                                     AddConstraint(con);

@@ -133,11 +133,7 @@ namespace code0k_cc.Runtime.VariableMap
 
                 if (mapNode is VariableNode varNode)
                 {
-                    if (varNode.RawVariable.Value.IsConstant)
-                    {
-                        // okay
-                    }
-                    else
+                    if (!varNode.RawVariable.Value.IsConstant)
                     {
                         // is special var: has varRef
                         if (varToVarRefs.ContainsKey(varNode.RawVariable))
@@ -152,16 +148,19 @@ namespace code0k_cc.Runtime.VariableMap
                                     break;
 
                                 case NizkVariableType.Output:
-                                    throw new Exception($"Runtime error: output variable \"{varRef.VarName}\" has not been assigned.");
+                                    throw new Exception(
+                                        $"Runtime error: output variable \"{varRef.VarName}\" has not been assigned.");
 
                                 case NizkVariableType.Intermediate:
                                 default:
                                     throw CommonException.AssertFailedException();
                             }
                         }
-
                     }
-
+                    else
+                    {
+                        // okay
+                    }
                 }
                 else
                 {
@@ -195,7 +194,7 @@ namespace code0k_cc.Runtime.VariableMap
                 Debug.Assert(remainingNodes.Where(node => nodePrevsDict[node].Count == 0).Intersect(remainingOrphanNodes).Count() == remainingOrphanNodes.Count);
 
                 //find orphan node
-                if (remainingOrphanNodes.Count <= 0)
+                if (remainingOrphanNodes.Count == 0)
                 {
                     //assert there are no ring
                     if (remainingNodes.Count == 0)

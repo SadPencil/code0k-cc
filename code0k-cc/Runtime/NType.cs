@@ -65,16 +65,16 @@ namespace code0k_cc.Runtime
         /// </summary>
         private Func<string, Variable> ParseFunc;
 
-        public string GetString(Variable variable)
+        public string GetString(RawVariable rawVariable)
         {
-            Debug.Assert(variable.Type == this);
-            return this.GetStringFunc(variable);
+            Debug.Assert(rawVariable.Type == this);
+            return this.GetStringFunc(rawVariable);
         }
 
         /// <summary>
         /// Method to get a string from a value. Throw exceptions.
         /// </summary>
-        private Func<Variable, string> GetStringFunc;
+        private Func<RawVariable, string> GetStringFunc;
 
         /// <summary>
         /// Generics Type Lists. Can be null.

@@ -28,7 +28,7 @@ namespace code0k_cc.Runtime
         public readonly List<VariableConnection> ParentConnections = new List<VariableConnection>();
         public string GetString()
         {
-            return this.Type.GetString(this);
+            return this.Type.GetString(this.RawVariable);
         }
 
         public Variable Assign(NType leftType)
