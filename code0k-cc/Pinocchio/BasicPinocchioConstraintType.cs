@@ -8,7 +8,7 @@ using code0k_cc.Standalone;
 
 namespace code0k_cc.Pinocchio
 {
-    enum PinocchioConstraintType
+    enum BasicPinocchioConstraintType
     {
         Mul,
         Add,

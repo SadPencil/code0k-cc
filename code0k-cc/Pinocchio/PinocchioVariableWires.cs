@@ -6,11 +6,8 @@ using code0k_cc.Runtime;
 namespace code0k_cc.Pinocchio
 {
     class PinocchioVariableWires
-    {
-        /// <summary>
-        /// Can be null. Being null means that it's anonymous wires.
-        /// </summary>
-        public RawVariable RawVariable;
+    { 
+        public readonly RawVariable RawVariable;
 
         public readonly List<PinocchioWire> Wires = new List<PinocchioWire>();
 
@@ -18,6 +15,7 @@ namespace code0k_cc.Pinocchio
         {
             this.RawVariable = rawVariable;
         }
+
         public PinocchioVariableWires(RawVariable rawVariable, PinocchioWire singleWire) : this(rawVariable)
         {
             this.Wires.Add(singleWire);

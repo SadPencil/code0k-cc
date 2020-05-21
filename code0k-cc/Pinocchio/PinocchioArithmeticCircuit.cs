@@ -39,9 +39,9 @@ namespace code0k_cc.Pinocchio
                 wireList.Add(wire);
             }
 
-            var conList = new List<PinocchioConstraint>();
+            var conList = new List<IPinocchioConstraint>();
 
-            void AddConstraint(PinocchioConstraint con)
+            void AddConstraint(IPinocchioConstraint con)
             {
                 conList.Add(con);
             }
@@ -83,7 +83,7 @@ namespace code0k_cc.Pinocchio
                 var ZeroConstWire = new PinocchioWire(BigInteger.Zero);
                 AddWire(ZeroConstWire);
 
-                var mulZeroConstraint = new PinocchioConstraint(PinocchioConstraintType.Mul);
+                var mulZeroConstraint = new BasicPinocchioConstraint(BasicPinocchioConstraintType.Mul);
                 AddConstraint(mulZeroConstraint);
                 mulZeroConstraint.InWires.Add(OneWire);
                 mulZeroConstraint.InWires.Add(ZeroConstWire);
@@ -92,7 +92,7 @@ namespace code0k_cc.Pinocchio
                 var MinusOneConstWire = new PinocchioWire(My.Config.ModulusPrimeField_Prime - 1);
                 AddWire(MinusOneConstWire);
 
-                var mulMinusOneConstraint = new PinocchioConstraint(PinocchioConstraintType.Mul);
+                var mulMinusOneConstraint = new BasicPinocchioConstraint(BasicPinocchioConstraintType.Mul);
                 AddConstraint(mulMinusOneConstraint);
                 mulMinusOneConstraint.InWires.Add(OneWire);
                 mulMinusOneConstraint.InWires.Add(MinusOneConstWire);
