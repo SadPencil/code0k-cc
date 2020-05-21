@@ -661,7 +661,7 @@ namespace code0k_cc.Runtime
                                         var boolWire = new PinocchioWire();
                                         ret.AnonymousWires.Add(boolWire);
 
-                                        //todo: [boolWire01] 
+                                        // [boolWire01] 
 
                                         splitCon.OutWires.Add(boolWire);
                                     }
@@ -675,7 +675,7 @@ namespace code0k_cc.Runtime
                                         var boolWire = new PinocchioWire();
                                         ret.AnonymousWires.Add(boolWire);
 
-                                        //todo: [boolWire01] 
+                                        // [boolWire01] 
 
                                         packCon.InWires.Add(boolWire);
                                     }
@@ -1345,8 +1345,8 @@ namespace code0k_cc.Runtime
                             ret.AnonymousWires.Add(boolWire);
 
                             //make sure boolWire is 0 or 1 (i.e. checkRange)
-                            //todo: [boolWire01] are "boolWire is 0 or 1" to be ensured here, or at Pinocchio Interface / Jsnark Interface?
-                            //currently, assume this is ensured at Pinocchio Interface, so the following codes are commented.
+                            // [boolWire01] are "boolWire is 0 or 1" to be ensured here, or at Pinocchio Interface / Jsnark Interface?
+                            // according to the source code of JsnarkInterface, it is ensured at Jsnark Interface, so the following codes are commented.
                             //{
                             //    var boolCon = new PinocchioConstraint(PinocchioConstraintType.ZeroP);
                             //    ret.Constraints.Add(boolCon);
@@ -1498,7 +1498,7 @@ namespace code0k_cc.Runtime
 
                                     bitWires.Add(boolWire);
 
-                                    //todo: [boolWire01] 
+                                    // [boolWire01] 
 
                                     splitCon.OutWires.Add(boolWire);
                                 }
@@ -1508,7 +1508,7 @@ namespace code0k_cc.Runtime
 
                                 for (int i = 0; i < 32; i++)
                                 {
-                                    //todo: [boolWire01] 
+                                    // [boolWire01] 
 
                                     var xorCon = new BasicPinocchioConstraint(BasicPinocchioConstraintType.Xor);
                                     ret.Constraints.Add(xorCon);
@@ -1593,7 +1593,7 @@ namespace code0k_cc.Runtime
 
                                             bitWires[i].Add(boolWire);
 
-                                            //todo: [boolWire01] 
+                                            // [boolWire01] 
 
                                             splitCon.OutWires.Add(boolWire);
                                         }
@@ -1605,7 +1605,7 @@ namespace code0k_cc.Runtime
 
                                 for (int i = 0; i < 32; i++)
                                 {
-                                    //todo: [boolWire01] 
+                                    // [boolWire01] 
                                     BasicPinocchioConstraint con;
                                     if (operationType == VariableOperationType.Binary_BitwiseAnd)
                                     {
@@ -1736,7 +1736,7 @@ namespace code0k_cc.Runtime
 
                                     bitWires.Add(boolWire);
 
-                                    //todo: [boolWire01] 
+                                    // [boolWire01] 
 
                                     splitCon.OutWires.Add(boolWire);
                                 }
@@ -1746,7 +1746,7 @@ namespace code0k_cc.Runtime
 
                                 for (int i = 0; i < 32; i++)
                                 {
-                                    //todo: [boolWire01]  
+                                    // [boolWire01]  
                                     packCon.InWires.Add(bitWires[i]);
                                 }
 
@@ -1869,7 +1869,7 @@ namespace code0k_cc.Runtime
 
                                         bitWires.Add(boolWire);
 
-                                        //todo: [boolWire01] 
+                                        // [boolWire01] 
 
                                         splitCon.OutWires.Add(boolWire);
                                     }
@@ -1959,7 +1959,7 @@ namespace code0k_cc.Runtime
                             else if (operationType == VariableOperationType.Binary_Division ||
                                      operationType == VariableOperationType.Binary_Remainder)
                             {
-                                //todo
+                                //todo Implement Division and Remainder
                                 throw new NotImplementedException();
                             }
                             else

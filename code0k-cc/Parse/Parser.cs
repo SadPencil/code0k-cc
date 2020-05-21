@@ -458,7 +458,7 @@ namespace code0k_cc.Parse
                 // execute function
                 var expRet = FunctionCallFunc(arg, mainFuncDec, new List<Variable>()).ExpressionResult;
                  
-                // todo: save nizk variables
+                // save nizk variables
                 Dictionary<NizkVariableType, List<VariableRef>> nizkVars = new Dictionary<NizkVariableType, List<VariableRef>>()
                 {
                     { NizkVariableType.Input, new List<VariableRef>() },
