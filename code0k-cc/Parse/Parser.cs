@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using code0k_cc.Config;
 using code0k_cc.CustomException;
 using code0k_cc.Lex;
 using code0k_cc.Runtime;
@@ -40,28 +41,31 @@ namespace code0k_cc.Parse
 
         private static ParseResult Parse(in ParseUnit unit, in IReadOnlyList<Token> tokenList, in int pos, in int depth)
         {
-
+            if (depth > My.Config.ParserMaxDepth)
             {
-                //debug
-                if (depth > 1000)
-                {
-                    throw new Exception("stop");
-                }
-                Console.Write("\t" + depth);
-                for (int kkk = 0; kkk < depth; ++kkk)
-                {
-                    Console.Write(" ");
-                }
-
-                Console.Write(unit.Name);
-
-                Console.Write("\t");
-                Console.Write(tokenList.ElementAtOrDefault(pos)?.Value);
-                Console.Write(" [");
-                Console.Write(pos);
-                Console.Write("]");
-                Console.WriteLine();
+                throw new Exception("Maximum depth reached while parsing.");
             }
+            //{
+            //    //debug
+            //    if (depth > 1000)
+            //    {
+            //        throw new Exception("stop");
+            //    }
+            //    Console.Write("\t" + depth);
+            //    for (int kkk = 0; kkk < depth; ++kkk)
+            //    {
+            //        Console.Write(" ");
+            //    }
+
+            //    Console.Write(unit.Name);
+
+            //    Console.Write("\t");
+            //    Console.Write(tokenList.ElementAtOrDefault(pos)?.Value);
+            //    Console.Write(" [");
+            //    Console.Write(pos);
+            //    Console.Write("]");
+            //    Console.WriteLine();
+            //}
 
             Debug.Assert(tokenList.Last().TokenType == TokenType.EOL);
             var token = tokenList[pos];
