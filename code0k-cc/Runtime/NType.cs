@@ -1320,10 +1320,10 @@ namespace code0k_cc.Runtime
 
                     if (checkRange)
                     {
-                        var packCon = new PinocchioConstraint(PinocchioConstraintType.Split);
-                        ret.Constraints.Add(packCon);
+                        var splitCon = new PinocchioConstraint(PinocchioConstraintType.Split);
+                        ret.Constraints.Add(splitCon);
 
-                        packCon.InWires.Add(newWire);
+                        splitCon.InWires.Add(newWire);
                         foreach (var i in Enumerable.Range(0, 32))
                         {
                             var boolWire = new PinocchioWire(null);
@@ -1340,7 +1340,7 @@ namespace code0k_cc.Runtime
                             //    boolCon.OutWires.Add(boolWire);
                             //}
 
-                            packCon.OutWires.Add(boolWire);
+                            splitCon.OutWires.Add(boolWire);
                         }
                     }
                 }
@@ -1410,18 +1410,137 @@ namespace code0k_cc.Runtime
                     case VariableOperationTypeType.Unary:
                         Debug.Assert(inVars.Count == 1);
                         Debug.Assert(inVars[0].Wires.Count == 1);
-                        //todo
-                        throw new NotImplementedException();
-                        break;
+                        if (operationType == VariableOperationType.Unary_Addition ||
+                            operationType == VariableOperationType.Unary_Subtract ||
+                            operationType == VariableOperationType.Unary_BitwiseNot)
+                        {
+                            Debug.Assert(outputVariable.Type == NType.UInt32);
+
+                            PinocchioOutput ret;
+                            PinocchioWire outputWire;
+                            {
+                                var outVarWires = outputVariable.Type.VariableNodeToPinocchio(outputVariable, commonArg, false);
+                                Debug.Assert(outVarWires.VariableWires.Wires.Count == 1);
+                                outputWire = outVarWires.VariableWires.Wires[0];
+
+                                ret = new PinocchioOutput() { VariableWires = outVarWires.VariableWires };
+                                outVarWires.Constraints.ForEach(ret.Constraints.Add);
+                            }
+
+                            if (operationType == VariableOperationType.Unary_Addition)
+                            {
+                                var con = new PinocchioConstraint(PinocchioConstraintType.Mul);
+                                ret.Constraints.Add(con);
+
+                                con.InWires.Add(inVars[0].Wires[0]);
+                                con.InWires.Add(commonArg.OneWire);
+                                con.OutWires.Add(outputWire);
+
+                                return ret;
+                            }
+                            else if (operationType == VariableOperationType.Unary_Subtract)
+                            {
+                                // todo [LazyTrim]
+                                // currently, assume the variable has already been trimmed every time an operation is done
+                                // optimization can be done by implementing [MaxPossibleValue] 
+
+                                var pow2_32 = new PinocchioWire(new BigInteger(System.UInt32.MaxValue) + 1);
+                                ret.AnonymousWires.Add(pow2_32);
+
+                                var negWire = new PinocchioWire(null);
+                                ret.AnonymousWires.Add(negWire);
+
+                                var con1 = new PinocchioConstraint(PinocchioConstraintType.Mul);
+                                ret.Constraints.Add(con1);
+
+                                con1.InWires.Add(inVars[0].Wires[0]);
+                                con1.InWires.Add(commonArg.MinusOneWire);
+                                con1.OutWires.Add(negWire);
+
+                                var con = new PinocchioConstraint(PinocchioConstraintType.Add);
+                                ret.Constraints.Add(con);
+
+                                con.InWires.Add(pow2_32);
+                                con.InWires.Add(negWire);
+                                con.OutWires.Add(outputWire);
+
+                                return ret;
+                            }
+                            else if (operationType == VariableOperationType.Unary_BitwiseNot)
+                            {
+                                var splitCon = new PinocchioConstraint(PinocchioConstraintType.Split);
+                                ret.Constraints.Add(splitCon);
+
+                                splitCon.InWires.Add(inVars[0].Wires[0]);
+
+                                var bitWires = new List<PinocchioWire>();
+                                // todo [LazyTrim]
+                                // currently, assume the variable has already been trimmed every time an operation is done
+                                // optimization can be done by implementing [MaxPossibleValue]  
+                                foreach (var i in Enumerable.Range(0, 32))
+                                {
+                                    var boolWire = new PinocchioWire(null);
+                                    ret.AnonymousWires.Add(boolWire);
+
+                                    bitWires.Add(boolWire);
+
+                                    //todo: [boolWire01] 
+
+                                    splitCon.OutWires.Add(boolWire);
+                                }
+
+                                var packCon = new PinocchioConstraint(PinocchioConstraintType.Pack);
+                                ret.Constraints.Add(packCon);
+
+                                for (int i = 0; i < 32; i++)
+                                {
+                                    //todo: [boolWire01] 
+
+                                    var xorCon = new PinocchioConstraint(PinocchioConstraintType.Xor);
+                                    ret.Constraints.Add(xorCon);
+
+                                    xorCon.InWires.Add(bitWires[i]);
+                                    xorCon.InWires.Add(commonArg.OneWire);
+
+                                    var newBitWire = new PinocchioWire(null);
+                                    ret.AnonymousWires.Add(newBitWire);
+
+                                    xorCon.OutWires.Add(newBitWire);
+
+                                    packCon.InWires.Add(newBitWire);
+                                }
+
+                                packCon.OutWires.Add(outputWire);
+
+                                return ret;
+                            }
+                            else
+                            {
+                                throw CommonException.AssertFailedException();
+                            }
+                        }
+                        else
+                        {
+                            break;
+                        }
                     case VariableOperationTypeType.Binary:
                         Debug.Assert(inVars.Count == 2);
                         Debug.Assert(inVars[0].Wires.Count == 1);
                         Debug.Assert(inVars[1].Wires.Count == 1);
-                        //todo
-                        throw new NotImplementedException();
                         if (operationType == VariableOperationType.Binary_Addition ||
+                            operationType == VariableOperationType.Binary_Subtract ||
                             operationType == VariableOperationType.Binary_Multiplication ||
-                            operationType == VariableOperationType.Binary_Subtract)
+                            operationType == VariableOperationType.Binary_Division ||
+                            operationType == VariableOperationType.Binary_Remainder ||
+                            operationType == VariableOperationType.Binary_EqualTo ||
+                            operationType == VariableOperationType.Binary_LessThan ||
+                            operationType == VariableOperationType.Binary_LessEqualThan ||
+                            operationType == VariableOperationType.Binary_GreaterThan ||
+                            operationType == VariableOperationType.Binary_GreaterEqualThan ||
+                            operationType == VariableOperationType.Binary_NotEqualTo ||
+                            operationType == VariableOperationType.Binary_BitwiseAnd ||
+                            operationType == VariableOperationType.Binary_BitwiseOr ||
+                            operationType == VariableOperationType.Binary_BitwiseXor)
                         {
                             PinocchioOutput ret;
                             PinocchioWire outputWire;
@@ -1433,9 +1552,337 @@ namespace code0k_cc.Runtime
                                 ret = new PinocchioOutput() { VariableWires = outVarWires.VariableWires };
                                 outVarWires.Constraints.ForEach(ret.Constraints.Add);
                             }
-                            //todo
 
-                            return ret;
+                            if (operationType == VariableOperationType.Binary_BitwiseAnd ||
+                                operationType == VariableOperationType.Binary_BitwiseOr ||
+                                operationType == VariableOperationType.Binary_BitwiseXor)
+                            {
+
+                                var bitWires = new List<PinocchioWire>[2];
+                                {
+                                    for (int i = 0; i <= 1; ++i)
+                                    {
+                                        bitWires[i] = new List<PinocchioWire>();
+
+                                        var splitCon = new PinocchioConstraint(PinocchioConstraintType.Split);
+                                        ret.Constraints.Add(splitCon);
+
+                                        splitCon.InWires.Add(inVars[i].Wires[0]);
+
+                                        // todo [LazyTrim]
+                                        // currently, assume the variable has already been trimmed every time an operation is done
+                                        // optimization can be done by implementing [MaxPossibleValue]  
+                                        foreach (var j in Enumerable.Range(0, 32))
+                                        {
+                                            var boolWire = new PinocchioWire(null);
+                                            ret.AnonymousWires.Add(boolWire);
+
+                                            bitWires[i].Add(boolWire);
+
+                                            //todo: [boolWire01] 
+
+                                            splitCon.OutWires.Add(boolWire);
+                                        }
+                                    }
+                                }
+
+                                var packCon = new PinocchioConstraint(PinocchioConstraintType.Pack);
+                                ret.Constraints.Add(packCon);
+
+                                for (int i = 0; i < 32; i++)
+                                {
+                                    //todo: [boolWire01] 
+                                    PinocchioConstraint con;
+                                    if (operationType == VariableOperationType.Binary_BitwiseAnd)
+                                    {
+                                        con = new PinocchioConstraint(PinocchioConstraintType.Mul);
+                                    }
+                                    else if (operationType == VariableOperationType.Binary_BitwiseOr)
+                                    {
+                                        con = new PinocchioConstraint(PinocchioConstraintType.Or);
+                                    }
+                                    else if (operationType == VariableOperationType.Binary_BitwiseXor)
+                                    {
+                                        con = new PinocchioConstraint(PinocchioConstraintType.Xor);
+                                    }
+                                    else
+                                    {
+                                        throw CommonException.AssertFailedException();
+                                    }
+                                    ret.Constraints.Add(con);
+
+                                    con.InWires.Add(bitWires[0][i]);
+                                    con.InWires.Add(bitWires[1][i]);
+
+                                    var newBitWire = new PinocchioWire(null);
+                                    ret.AnonymousWires.Add(newBitWire);
+
+                                    con.OutWires.Add(newBitWire);
+
+                                    packCon.InWires.Add(newBitWire);
+                                }
+
+                                packCon.OutWires.Add(outputWire);
+
+                                return ret;
+                            }
+                            else if (operationType == VariableOperationType.Binary_Addition ||
+                                     operationType == VariableOperationType.Binary_Subtract ||
+                                     operationType == VariableOperationType.Binary_Multiplication)
+                            {
+                                // todo [LazyTrim]
+                                // currently, assume the variable has already been trimmed every time an operation is done
+                                // optimization can be done by implementing [MaxPossibleValue] 
+
+                                var wireToBeTrimmed = new PinocchioWire(null);
+                                ret.AnonymousWires.Add(wireToBeTrimmed);
+
+                                int wireToBeTrimmedMaxBit;
+
+                                if (operationType == VariableOperationType.Binary_Addition)
+                                {
+                                    var con = new PinocchioConstraint(PinocchioConstraintType.Add);
+                                    ret.Constraints.Add(con);
+
+                                    con.InWires.Add(inVars[0].Wires[0]);
+                                    con.InWires.Add(inVars[1].Wires[0]);
+                                    con.OutWires.Add(wireToBeTrimmed);
+
+                                    wireToBeTrimmedMaxBit = 32 + 1;
+                                }
+                                else if (operationType == VariableOperationType.Binary_Subtract)
+                                {
+                                    var pow2_32 = new PinocchioWire(new BigInteger(System.UInt32.MaxValue) + 1);
+                                    ret.AnonymousWires.Add(pow2_32);
+
+                                    var negWire = new PinocchioWire(null);
+                                    ret.AnonymousWires.Add(negWire);
+
+                                    var con1 = new PinocchioConstraint(PinocchioConstraintType.Mul);
+                                    ret.Constraints.Add(con1);
+
+                                    con1.InWires.Add(inVars[1].Wires[0]);
+                                    con1.InWires.Add(commonArg.MinusOneWire);
+                                    con1.OutWires.Add(negWire);
+
+                                    var add1Con = new PinocchioConstraint(PinocchioConstraintType.Add);
+                                    ret.Constraints.Add(add1Con);
+
+                                    add1Con.InWires.Add(pow2_32);
+                                    add1Con.InWires.Add(inVars[0].Wires[0]);
+
+                                    var addTempWire = new PinocchioWire(null);
+                                    ret.AnonymousWires.Add(addTempWire);
+
+                                    add1Con.OutWires.Add(addTempWire);
+
+                                    var add2Con = new PinocchioConstraint(PinocchioConstraintType.Add);
+                                    ret.Constraints.Add(add2Con);
+
+                                    add2Con.InWires.Add(addTempWire);
+                                    add2Con.InWires.Add(negWire);
+                                    add2Con.OutWires.Add(wireToBeTrimmed);
+
+                                    wireToBeTrimmedMaxBit = 32 + 2;
+                                }
+                                else if (operationType == VariableOperationType.Binary_Multiplication)
+                                {
+                                    var con = new PinocchioConstraint(PinocchioConstraintType.Mul);
+                                    ret.Constraints.Add(con);
+
+                                    con.InWires.Add(inVars[0].Wires[0]);
+                                    con.InWires.Add(inVars[1].Wires[0]);
+                                    con.OutWires.Add(wireToBeTrimmed);
+
+                                    wireToBeTrimmedMaxBit = 32 + 32;
+                                }
+                                else
+                                {
+                                    throw CommonException.AssertFailedException();
+                                }
+
+                                // now trim the wire
+
+                                var splitCon = new PinocchioConstraint(PinocchioConstraintType.Split);
+                                ret.Constraints.Add(splitCon);
+
+                                splitCon.InWires.Add(wireToBeTrimmed);
+
+                                var bitWires = new List<PinocchioWire>();
+
+                                foreach (var i in Enumerable.Range(0, wireToBeTrimmedMaxBit))
+                                {
+                                    var boolWire = new PinocchioWire(null);
+                                    ret.AnonymousWires.Add(boolWire);
+
+                                    bitWires.Add(boolWire);
+
+                                    //todo: [boolWire01] 
+
+                                    splitCon.OutWires.Add(boolWire);
+                                }
+
+                                var packCon = new PinocchioConstraint(PinocchioConstraintType.Pack);
+                                ret.Constraints.Add(packCon);
+
+                                for (int i = 0; i < 32; i++)
+                                {
+                                    //todo: [boolWire01]  
+                                    packCon.InWires.Add(bitWires[i]);
+                                }
+
+                                packCon.OutWires.Add(outputWire);
+
+                                return ret;
+                            }
+
+                            else if (operationType == VariableOperationType.Binary_EqualTo ||
+                                     operationType == VariableOperationType.Binary_LessThan ||
+                                     operationType == VariableOperationType.Binary_LessEqualThan ||
+                                     operationType == VariableOperationType.Binary_GreaterThan ||
+                                     operationType == VariableOperationType.Binary_GreaterEqualThan ||
+                                     operationType == VariableOperationType.Binary_NotEqualTo)
+                            {
+                                // todo [LazyTrim]
+                                // currently, assume the variable has already been trimmed every time an operation is done
+                                // optimization can be done by implementing [MaxPossibleValue] 
+
+                                var subtractResultWire = new PinocchioWire(null);
+                                ret.AnonymousWires.Add(subtractResultWire);
+                                int subtractResultWireMaxBit;
+                                {
+                                    var pow2_32 = new PinocchioWire(new BigInteger(System.UInt32.MaxValue) + 1);
+                                    ret.AnonymousWires.Add(pow2_32);
+
+                                    var negWire = new PinocchioWire(null);
+                                    ret.AnonymousWires.Add(negWire);
+
+                                    var con1 = new PinocchioConstraint(PinocchioConstraintType.Mul);
+                                    ret.Constraints.Add(con1);
+
+                                    con1.InWires.Add(inVars[1].Wires[0]);
+                                    con1.InWires.Add(commonArg.MinusOneWire);
+                                    con1.OutWires.Add(negWire);
+
+                                    var add1Con = new PinocchioConstraint(PinocchioConstraintType.Add);
+                                    ret.Constraints.Add(add1Con);
+
+                                    add1Con.InWires.Add(pow2_32);
+                                    add1Con.InWires.Add(inVars[0].Wires[0]);
+
+                                    var addTempWire = new PinocchioWire(null);
+                                    ret.AnonymousWires.Add(addTempWire);
+
+                                    add1Con.OutWires.Add(addTempWire);
+
+                                    var add2Con = new PinocchioConstraint(PinocchioConstraintType.Add);
+                                    ret.Constraints.Add(add2Con);
+
+                                    add2Con.InWires.Add(addTempWire);
+                                    add2Con.InWires.Add(negWire);
+                                    add2Con.OutWires.Add(subtractResultWire);
+
+                                    subtractResultWireMaxBit = 32 + 2;
+                                }
+
+                                PinocchioWire notEqualToResultBitWire = null;
+
+                                if (operationType == VariableOperationType.Binary_NotEqualTo ||
+                                    operationType == VariableOperationType.Binary_EqualTo ||
+                                    operationType == VariableOperationType.Binary_LessEqualThan ||
+                                    operationType == VariableOperationType.Binary_GreaterThan)
+                                {
+                                    notEqualToResultBitWire = new PinocchioWire(null);
+                                    ret.AnonymousWires.Add(notEqualToResultBitWire);
+
+                                    var con = new PinocchioConstraint(PinocchioConstraintType.ZeroP);
+                                    con.InWires.Add(subtractResultWire);
+                                    con.OutWires.Add(notEqualToResultBitWire);
+                                }
+
+                                if (operationType == VariableOperationType.Binary_NotEqualTo)
+                                {
+                                    var con = new PinocchioConstraint(PinocchioConstraintType.Mul);
+                                    con.InWires.Add(notEqualToResultBitWire);
+                                    con.InWires.Add(commonArg.OneWire);
+                                    con.OutWires.Add(outputWire);
+
+                                    return ret;
+                                }
+                                else if (operationType == VariableOperationType.Binary_EqualTo)
+                                {
+                                    var con = new PinocchioConstraint(PinocchioConstraintType.Xor);
+                                    con.InWires.Add(notEqualToResultBitWire);
+                                    con.InWires.Add(commonArg.OneWire);
+                                    con.OutWires.Add(outputWire);
+
+                                    return ret;
+                                }
+
+                                PinocchioWire greaterThanResultBitWire;
+                                {
+                                    var splitCon = new PinocchioConstraint(PinocchioConstraintType.Split);
+                                    ret.Constraints.Add(splitCon);
+
+                                    splitCon.InWires.Add(subtractResultWire);
+
+                                    var bitWires = new List<PinocchioWire>();
+
+                                    foreach (var i in Enumerable.Range(0, subtractResultWireMaxBit))
+                                    {
+                                        var boolWire = new PinocchioWire(null);
+                                        ret.AnonymousWires.Add(boolWire);
+
+                                        bitWires.Add(boolWire);
+
+                                        //todo: [boolWire01] 
+
+                                        splitCon.OutWires.Add(boolWire);
+                                    }
+
+                                    greaterThanResultBitWire = bitWires[32];
+                                }
+
+                                if (operationType == VariableOperationType.Binary_GreaterEqualThan)
+                                {
+                                    var con = new PinocchioConstraint(PinocchioConstraintType.Mul);
+                                    con.InWires.Add(greaterThanResultBitWire);
+                                    con.InWires.Add(commonArg.OneWire);
+                                    con.OutWires.Add(outputWire);
+
+                                    return ret;
+                                }
+                                else if (operationType == VariableOperationType.Binary_LessThan)
+                                {
+                                    var con = new PinocchioConstraint(PinocchioConstraintType.Xor);
+                                    con.InWires.Add(greaterThanResultBitWire);
+                                    con.InWires.Add(commonArg.OneWire);
+                                    con.OutWires.Add(outputWire);
+
+                                    return ret;
+                                }
+                                else if (operationType == VariableOperationType.Binary_LessEqualThan)
+                                {
+                                    //todo
+                                }
+                                else if (operationType == VariableOperationType.Binary_GreaterThan)
+                                {
+                                    //todo
+                                }
+                                else
+                                {
+                                    throw CommonException.AssertFailedException();
+                                }
+                            }
+                            else if (operationType == VariableOperationType.Binary_Division ||
+                                     operationType == VariableOperationType.Binary_Remainder)
+                            {
+                                //todo
+                            }
+                            else
+                            {
+                                throw CommonException.AssertFailedException();
+                            }
                         }
                         else
                         {
@@ -1841,7 +2288,7 @@ namespace code0k_cc.Runtime
                             else
                             {
                                 throw CommonException.AssertFailedException();
-                            } 
+                            }
                         }
                         else
                         {
