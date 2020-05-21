@@ -131,6 +131,7 @@ namespace code0k_cc.Runtime
         {
             Debug.Assert(variable.Type == this);
             var retVariable = this.InternalConvertFunc(variable, targetType);
+            Debug.Assert(retVariable.Type == targetType);
             if (Object.ReferenceEquals(retVariable, variable))
             {
                 return retVariable;
@@ -451,7 +452,7 @@ namespace code0k_cc.Runtime
 
                 if (!variable.Value.IsConstant)
                 {
-                    return selfType.GetNewNizkVariable();
+                    return type.GetNewNizkVariable();
                 }
 
                 if (type == NType.UInt32)
@@ -464,7 +465,7 @@ namespace code0k_cc.Runtime
                             Value = new NizkUInt32Value()
                             {
                                 IsConstant = true,
-                                Value = System.UInt32.Parse(( ( (NizkFieldValue) variable.Value ).Value ).ToString()),
+                                Value = System.UInt32.Parse(( ( (NizkFieldValue) variable.Value ).Value ).ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture),
                             }
                         });
                     }
@@ -507,7 +508,7 @@ namespace code0k_cc.Runtime
 
                 if (!variable.Value.IsConstant)
                 {
-                    return selfType.GetNewNizkVariable();
+                    return type.GetNewNizkVariable();
                 }
 
                 if (type == NType.UInt32)
@@ -518,7 +519,7 @@ namespace code0k_cc.Runtime
                         Value = new NizkUInt32Value()
                         {
                             IsConstant = true,
-                            Value = System.UInt32.Parse(( ( (NizkFieldValue) variable.Value ).Value % ( new BigInteger(System.UInt32.MaxValue) + 1 ) ).ToString()),
+                            Value = System.UInt32.Parse(( ( (NizkFieldValue) variable.Value ).Value % ( new BigInteger(System.UInt32.MaxValue) + 1 ) ).ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture),
                         }
                     });
                 }
@@ -875,7 +876,7 @@ namespace code0k_cc.Runtime
 
                 if (!variable.Value.IsConstant)
                 {
-                    return selfType.GetNewNizkVariable();
+                    return type.GetNewNizkVariable();
                 }
 
                 if (type == NType.Field)
@@ -922,7 +923,7 @@ namespace code0k_cc.Runtime
 
                 if (!variable.Value.IsConstant)
                 {
-                    return selfType.GetNewNizkVariable();
+                    return type.GetNewNizkVariable();
                 }
 
                 if (type == NType.Field)
@@ -959,7 +960,7 @@ namespace code0k_cc.Runtime
 
                 if (!variable.Value.IsConstant)
                 {
-                    return selfType.GetNewNizkVariable();
+                    return type.GetNewNizkVariable();
                 }
 
                 if (type == NType.Field)
@@ -2060,7 +2061,7 @@ namespace code0k_cc.Runtime
                 }
                 if (!variable.Value.IsConstant)
                 {
-                    return selfType.GetNewNizkVariable();
+                    return type.GetNewNizkVariable();
                 }
                 if (type == NType.Field)
                 {

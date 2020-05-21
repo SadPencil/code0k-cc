@@ -8,7 +8,7 @@ using System.Numerics;
 using System.Text;
 using code0k_cc.Config;
 using code0k_cc.CustomException;
-using code0k_cc.Pinocchio.Constraint; 
+using code0k_cc.Pinocchio.Constraint;
 using code0k_cc.Runtime;
 using code0k_cc.Runtime.Nizk;
 using code0k_cc.Runtime.VariableMap;
@@ -136,33 +136,42 @@ namespace code0k_cc.Pinocchio
                         if (!rawVarToWires.ContainsKey(variableNode.RawVariable))
                         {
                             Debug.Assert(
-                                ( variableNode.NizkAttribute == NizkVariableType.Intermediate && variableNode.RawVariable.Value.IsConstant ) ||
+                                ( ( variableNode.NizkAttribute == NizkVariableType.Intermediate || variableNode.NizkAttribute == NizkVariableType.Output ) && variableNode.RawVariable.Value.IsConstant ) ||
                                 variableNode.NizkAttribute == NizkVariableType.Input ||
                                 variableNode.NizkAttribute == NizkVariableType.NizkInput);
 
                             PinocchioOutput output;
-
-                            // policy: checkRange is applied for nizkinput, and not applied for others
-                            if (variableNode.NizkAttribute == NizkVariableType.NizkInput)
-                            {
-                                output = variableNode.RawVariable.Type.VariableNodeToPinocchio(variableNode.RawVariable, commonArg, true);
-                                var con = new UserPrivateInputConstraint();
-                                AddConstraint(con);
-                                con.TypeWires = new PinocchioTypeWires(output.VariableWires);
-                            }
-                            else if (variableNode.NizkAttribute == NizkVariableType.Input)
-                            {
-                                output = variableNode.RawVariable.Type.VariableNodeToPinocchio(variableNode.RawVariable, commonArg, false);
-                                var con = new UserInputConstraint();
-                                AddConstraint(con);
-                                con.TypeWires = new PinocchioTypeWires(output.VariableWires);
-                            }
-                            else
+                            if (variableNode.RawVariable.Value.IsConstant)
                             {
                                 output = variableNode.RawVariable.Type.VariableNodeToPinocchio(variableNode.RawVariable, commonArg, false);
                                 var con = new ConstWireConstraint();
                                 AddConstraint(con);
                                 con.ConstVariableWires = output.VariableWires;
+                            }
+                            else
+                            {
+                                switch (variableNode.NizkAttribute)
+                                {
+                                    // policy: checkRange is applied for nizkinput, and not applied for others
+                                    case NizkVariableType.NizkInput:
+                                    {
+                                        output = variableNode.RawVariable.Type.VariableNodeToPinocchio(variableNode.RawVariable, commonArg, true);
+                                        var con = new UserPrivateInputConstraint();
+                                        AddConstraint(con);
+                                        con.TypeWires = new PinocchioTypeWires(output.VariableWires);
+                                        break;
+                                    }
+                                    case NizkVariableType.Input:
+                                    {
+                                        output = variableNode.RawVariable.Type.VariableNodeToPinocchio(variableNode.RawVariable, commonArg, false);
+                                        var con = new UserInputConstraint();
+                                        AddConstraint(con);
+                                        con.TypeWires = new PinocchioTypeWires(output.VariableWires);
+                                        break;
+                                    }
+                                    default:
+                                        throw CommonException.AssertFailedException();
+                                }
                             }
 
                             AddPinocchioOutput(output);
@@ -230,7 +239,7 @@ namespace code0k_cc.Pinocchio
                                 throw CommonException.AssertFailedException();
                         }
 
-                       _= sb.Append(" in ");
+                        _ = sb.Append(" in ");
                         _ = sb.Append(basicPinocchioConstraint.InWires.Count.ToString(CultureInfo.InvariantCulture));
                         _ = sb.Append(" <");
                         foreach (var wire in basicPinocchioConstraint.InWires)

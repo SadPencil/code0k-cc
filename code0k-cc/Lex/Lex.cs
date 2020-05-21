@@ -15,10 +15,10 @@ namespace code0k_cc.Lex
         {
             return Analyze(stream, new UTF8Encoding(false));
         }
-         
+
         internal static IEnumerable<Token> Analyze(Stream stream, Encoding encoding)
         {
-            StreamReader reader = new StreamReader(stream, encoding);
+            using StreamReader reader = new StreamReader(stream, encoding, false, -1, true);
 
             StringBuilder sb = new StringBuilder();
             LexState state = LexState.Empty;

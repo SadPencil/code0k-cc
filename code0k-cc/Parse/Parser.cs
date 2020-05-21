@@ -67,7 +67,7 @@ namespace code0k_cc.Parse
             //    Console.WriteLine();
             //}
 
-            Debug.Assert(tokenList.Last().TokenType == TokenType.EOL);
+            Debug.Assert(tokenList[tokenList.Count - 1].TokenType == TokenType.EOL);
             var token = tokenList[pos];
 
             if (unit.ChildType == ParseUnitChildType.Terminal)

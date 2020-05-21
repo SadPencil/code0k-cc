@@ -133,27 +133,33 @@ namespace code0k_cc.Runtime.VariableMap
 
                 if (mapNode is VariableNode varNode)
                 {
-                    if (varToVarRefs.ContainsKey(varNode.RawVariable))
+                    if (varNode.RawVariable.Value.IsConstant)
                     {
-                        var varRef = varToVarRefs[varNode.RawVariable];
-                        switch (varRef.NizkAttribute)
-                        {
-                            case NizkVariableType.Input:
-                            case NizkVariableType.NizkInput:
-                                Debug.Assert(!varNode.RawVariable.Value.IsConstant);
-                                break;
-
-                            case NizkVariableType.Output:
-                                throw new Exception($"Runtime error: output variable \"{varRef.VarName}\" has not been assigned.");
-
-                            case NizkVariableType.Intermediate:
-                            default:
-                                throw CommonException.AssertFailedException();
-                        }
+                        // okay
                     }
                     else
                     {
-                        Debug.Assert(varNode.RawVariable.Value.IsConstant);
+                        // is special var: has varRef
+                        if (varToVarRefs.ContainsKey(varNode.RawVariable))
+                        {
+                            Debug.Assert(!varNode.RawVariable.Value.IsConstant);
+
+                            var varRef = varToVarRefs[varNode.RawVariable];
+                            switch (varRef.NizkAttribute)
+                            {
+                                case NizkVariableType.Input:
+                                case NizkVariableType.NizkInput:
+                                    break;
+
+                                case NizkVariableType.Output:
+                                    throw new Exception($"Runtime error: output variable \"{varRef.VarName}\" has not been assigned.");
+
+                                case NizkVariableType.Intermediate:
+                                default:
+                                    throw CommonException.AssertFailedException();
+                            }
+                        }
+
                     }
 
                 }

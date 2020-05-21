@@ -16,10 +16,13 @@ namespace code0k_cc
         {
             Process cur = Process.GetCurrentProcess();
             Console.WriteLine("Usage: ");
-            Console.WriteLine($"\t{ ( cur.ProcessName.Contains('\"') ? ("\"" + cur.ProcessName + "\"") : cur.ProcessName )} <input-file>");
+            Console.WriteLine($"\t{ ( cur.ProcessName.Contains('\"', StringComparison.InvariantCulture) ? ( "\"" + cur.ProcessName + "\"" ) : cur.ProcessName )} <input-file>");
         }
         static void Main(string[] args)
         {
+#if DEBUG
+            var path = "input.txt";
+#else
             if (args.Length == 0)
             {
                 ShowHelp();
@@ -27,6 +30,9 @@ namespace code0k_cc
             }
 
             var path = args[0];
+#endif
+
+
             Debug.WriteLine(path);
 
             ParseUnitInstance mainProgram;
@@ -43,7 +49,7 @@ namespace code0k_cc
                 mainProgram = Parser.Parse(tokenList);
             }
 
-            using (var fs = System.IO.File.Open(path + ".out", FileMode.CreateNew, FileAccess.Write))
+            using (var fs = System.IO.File.Open(path + ".out", FileMode.Create, FileAccess.Write))
             {
                 using (var outputWriter = new StreamWriter(fs, new UTF8Encoding(false), -1, false))
                 {
