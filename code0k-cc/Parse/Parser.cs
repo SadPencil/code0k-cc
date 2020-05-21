@@ -46,11 +46,7 @@ namespace code0k_cc.Parse
                 throw new Exception("Maximum depth reached while parsing.");
             }
             //{
-            //    //debug
-            //    if (depth > 1000)
-            //    {
-            //        throw new Exception("stop");
-            //    }
+            //    //debug 
             //    Console.Write("\t" + depth);
             //    for (int kkk = 0; kkk < depth; ++kkk)
             //    {
@@ -67,7 +63,7 @@ namespace code0k_cc.Parse
             //    Console.WriteLine();
             //}
 
-            Debug.Assert(tokenList[tokenList.Count - 1].TokenType == TokenType.EOL);
+            Debug.Assert(tokenList[^1].TokenType == TokenType.EOL);
             var token = tokenList[pos];
 
             if (unit.ChildType == ParseUnitChildType.Terminal)
@@ -411,11 +407,15 @@ namespace code0k_cc.Parse
                 }
 
                 // execute function
-                var newExeArg = arg.Clone() as ExeArg;
+                var newExeArg = (ExeArg) arg.Clone();
                 newExeArg.Block = newBlockOverlay;
                 newExeArg.CallStack = new CallStack(funcDec, arg.CallStack);
 
                 var funRet = funcDec.Instance.Execute(newExeArg).StatementResult;
+
+                // todo combine vars
+                funRet = NizkUtils.NizkCombineStatementResult(funRet, funcDec.ParentBlock);
+
                 var funRetVar = NizkUtils.NizkCombineFunctionResult(funRet, funcDec.ReturnType);
                 return new ExeResult() { ExpressionResult = new ExpressionResult() { Variable = funRetVar } };
             }
@@ -440,7 +440,7 @@ namespace code0k_cc.Parse
                 var mainBlock = new BasicBlock(arg.Block.Block);
                 var mainBlockOverlay = new OverlayBlock(arg.Block.Overlay, mainBlock);
 
-                var newExeArg = arg.Clone() as ExeArg;
+                var newExeArg = (ExeArg) arg.Clone();
                 newExeArg.Block = mainBlockOverlay;
 
                 _ = instance.Children[0]?.Execute(newExeArg);
@@ -457,7 +457,7 @@ namespace code0k_cc.Parse
 
                 // execute function
                 var expRet = FunctionCallFunc(arg, mainFuncDec, new List<Variable>()).ExpressionResult;
-
+                 
                 // todo: save nizk variables
                 Dictionary<NizkVariableType, List<VariableRef>> nizkVars = new Dictionary<NizkVariableType, List<VariableRef>>()
                 {
@@ -754,7 +754,7 @@ namespace code0k_cc.Parse
                                                 break;
                                             case StatementResultType.Normal:
                                                 // execute next statement at this overlay
-                                                var newExeArg = arg.Clone() as ExeArg;
+                                                var newExeArg = (ExeArg) arg.Clone();
                                                 newExeArg.Block = new OverlayBlock(item.Overlay, arg.Block.Block);
                                                 var retRaw = nextStmtInstance.Execute(newExeArg).StatementResult;
 
@@ -1088,7 +1088,7 @@ namespace code0k_cc.Parse
 
                     StatementResult trueRetRaw;
                     {
-                        var newExeArg = arg.Clone() as ExeArg;
+                        var newExeArg = (ExeArg) arg.Clone();
                         newExeArg.Block = trueOverlayBlock;
                         trueRetRaw = instance.Children[4].Execute(newExeArg).StatementResult;
                     }
@@ -1103,7 +1103,7 @@ namespace code0k_cc.Parse
                     }
                     else
                     {
-                        var newExeArg = arg.Clone() as ExeArg;
+                        var newExeArg = (ExeArg) arg.Clone();
                         newExeArg.Block = falseOverlayBlock;
                         falseRetRaw = instance.Children[5].Execute(newExeArg).StatementResult;
                     }
@@ -1229,7 +1229,7 @@ namespace code0k_cc.Parse
                                         if (conditionVar.Value.IsConstant)
                                         {
                                             Debug.Assert(( (NizkBoolValue) conditionVar.Value ).Value);
-                                            var newExeArg = arg.Clone() as ExeArg;
+                                            var newExeArg = (ExeArg) arg.Clone();
                                             newExeArg.Block = new OverlayBlock(item.Overlay, arg.Block.Block);
                                             retSave = instance.Children[8].Execute(newExeArg).StatementResult;
                                         }
@@ -1237,7 +1237,7 @@ namespace code0k_cc.Parse
                                         {
                                             // while (condition) is just like while (true){if (condition) do_something; else break;} 
 
-                                            var newExeArg = arg.Clone() as ExeArg;
+                                            var newExeArg = (ExeArg) arg.Clone();
                                             newExeArg.Block = new OverlayBlock(new Overlay(item.Overlay), arg.Block.Block);
 
                                             retSave = new StatementResultTwoCase()
@@ -1346,7 +1346,7 @@ namespace code0k_cc.Parse
                     // new block
                     BasicBlock newBlock = new BasicBlock(arg.Block.Block);
                     OverlayBlock newOverlayBlock = new OverlayBlock(arg.Block.Overlay, newBlock);
-                    var newExeArg = arg.Clone() as ExeArg;
+                    var newExeArg = (ExeArg) arg.Clone();
                     newExeArg.Block = newOverlayBlock;
                     return instance.Children[1].Execute(newExeArg);
                 }

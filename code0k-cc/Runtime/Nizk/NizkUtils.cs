@@ -56,8 +56,16 @@ namespace code0k_cc.Runtime.Nizk
                     }
 
                 case StatementResultTwoCase ret:
+                    if (resultNType == NType.Void)
+                    {
+                        return NType.Void.GetEmptyVariable();
+                    }
+
                     var trueVar = NizkCombineFunctionResult(ret.TrueCase, resultNType);
                     var falseVar = NizkCombineFunctionResult(ret.FalseCase, resultNType);
+
+
+
                     return NizkConditionVariable(ret.Condition, trueVar, falseVar);
 
                 default:
