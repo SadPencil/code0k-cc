@@ -9,5 +9,18 @@ namespace code0k_cc.Pinocchio
     {
         public NType Type;
         public readonly List<PinocchioWire> Wires = new List<PinocchioWire>();
+
+        public PinocchioTypeWires() { }
+
+        public PinocchioTypeWires(NType type, PinocchioWire singleWire)
+        {
+            this.Type = type;
+            this.Wires.Add(singleWire);
+        }
+        public PinocchioTypeWires(PinocchioVariableWires variableWires)
+        {
+            this.Type = variableWires.RawVariable.Type;
+            variableWires.Wires.ForEach(this.Wires.Add);
+        }
     }
 }

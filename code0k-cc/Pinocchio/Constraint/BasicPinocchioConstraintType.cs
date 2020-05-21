@@ -12,8 +12,6 @@ namespace code0k_cc.Pinocchio
     {
         Mul,
         Add,
-        //MulConst, 
-        //MulConstNeg, 
         ZeroP,
         Xor,
         Or,

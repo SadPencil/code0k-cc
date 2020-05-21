@@ -37,7 +37,9 @@ namespace code0k_cc.Runtime
         {
             if (this.CommonConstantValueDictionary.ContainsKey(commonConstant))
             {
-                return new Variable(this.CommonConstantValueDictionary[commonConstant]);
+                var rawVariable = this.CommonConstantValueDictionary[commonConstant];
+                Debug.Assert(rawVariable.Type == this);
+                return new Variable(rawVariable);
             }
             else
             {
@@ -586,17 +588,16 @@ namespace code0k_cc.Runtime
 
             VariableNodeToPinocchioFunc = (rawVariable, commonArg, checkRange) =>
             {
-                var ret = new PinocchioOutput() { VariableWires = new PinocchioVariableWires(rawVariable) };
+                var ret = new PinocchioOutput();
 
-                var fieldValue = (NizkFieldValue) rawVariable.Value;
-                if (fieldValue.IsConstant)
+                var retWire = new PinocchioWire();
+                ret.VariableWires = new PinocchioVariableWires(rawVariable, retWire);
+
+                if (rawVariable.Value.IsConstant)
                 {
-                    ret.VariableWires.Wires.Add(new PinocchioWire(fieldValue.Value));
-                }
-                else
-                {
-                    var newWire = new PinocchioWire(null);
-                    ret.VariableWires.Wires.Add(newWire);
+                    var con = new ConstWireConstraint();
+                    ret.Constraints.Add(con);
+                    con.ConstVariableWires = ret.VariableWires;
                 }
 
                 return ret;
@@ -654,7 +655,7 @@ namespace code0k_cc.Runtime
                                     //todo: [MaxPossibleValue] design "Variable.MaxPossibleValue" and minimize the number of bits here
                                     foreach (var i in Enumerable.Range(0, My.Config.ModulusPrimeField_Prime_Bit))
                                     {
-                                        var boolWire = new PinocchioWire(null);
+                                        var boolWire = new PinocchioWire();
                                         ret.AnonymousWires.Add(boolWire);
 
                                         //todo: [boolWire01] 
@@ -668,7 +669,7 @@ namespace code0k_cc.Runtime
                                     packCon.OutWires.Add(outputWire);
                                     for (int i = My.Config.ModulusPrimeField_Prime_Bit - 1; i <= My.Config.ModulusPrimeField_Prime_Bit - 32; --i)
                                     {
-                                        var boolWire = new PinocchioWire(null);
+                                        var boolWire = new PinocchioWire();
                                         ret.AnonymousWires.Add(boolWire);
 
                                         //todo: [boolWire01] 
@@ -741,7 +742,7 @@ namespace code0k_cc.Runtime
                                 con1.InWires.Add(inVars[1].Wires[0]);
                                 con1.InWires.Add(commonArg.MinusOneWire);
 
-                                var var3 = new PinocchioWire(null);
+                                var var3 = new PinocchioWire();
                                 ret.AnonymousWires.Add(var3);
 
                                 con1.OutWires.Add(var3);
@@ -1306,27 +1307,28 @@ namespace code0k_cc.Runtime
 
             VariableNodeToPinocchioFunc = (rawVariable, commonArg, checkRange) =>
             {
-                var ret = new PinocchioOutput() { VariableWires = new PinocchioVariableWires(rawVariable) };
+                var ret = new PinocchioOutput();
 
-                var uint32Value = (NizkUInt32Value) rawVariable.Value;
-                if (uint32Value.IsConstant)
+                var retWire = new PinocchioWire();
+                ret.VariableWires = new PinocchioVariableWires(rawVariable, retWire);
+
+                if (rawVariable.Value.IsConstant)
                 {
-                    ret.VariableWires.Wires.Add(new PinocchioWire(new BigInteger(uint32Value.Value)));
+                    var con = new ConstWireConstraint();
+                    ret.Constraints.Add(con);
+                    con.ConstVariableWires = ret.VariableWires;
                 }
                 else
                 {
-                    var newWire = new PinocchioWire(null);
-                    ret.VariableWires.Wires.Add(newWire);
-
                     if (checkRange)
                     {
                         var splitCon = new BasicPinocchioConstraint(BasicPinocchioConstraintType.Split);
                         ret.Constraints.Add(splitCon);
 
-                        splitCon.InWires.Add(newWire);
+                        splitCon.InWires.Add(retWire);
                         foreach (var i in Enumerable.Range(0, 32))
                         {
-                            var boolWire = new PinocchioWire(null);
+                            var boolWire = new PinocchioWire();
                             ret.AnonymousWires.Add(boolWire);
 
                             //make sure boolWire is 0 or 1 (i.e. checkRange)
@@ -1444,10 +1446,9 @@ namespace code0k_cc.Runtime
                                 // currently, assume the variable has already been trimmed every time an operation is done
                                 // optimization can be done by implementing [MaxPossibleValue] 
 
-                                var pow2_32 = new PinocchioWire(new BigInteger(System.UInt32.MaxValue) + 1);
-                                ret.AnonymousWires.Add(pow2_32);
+                                var pow2_32 = commonArg.PowerOfTwoWires[32]; 
 
-                                var negWire = new PinocchioWire(null);
+                                var negWire = new PinocchioWire();
                                 ret.AnonymousWires.Add(negWire);
 
                                 var con1 = new BasicPinocchioConstraint(BasicPinocchioConstraintType.Mul);
@@ -1479,7 +1480,7 @@ namespace code0k_cc.Runtime
                                 // optimization can be done by implementing [MaxPossibleValue]  
                                 foreach (var i in Enumerable.Range(0, 32))
                                 {
-                                    var boolWire = new PinocchioWire(null);
+                                    var boolWire = new PinocchioWire();
                                     ret.AnonymousWires.Add(boolWire);
 
                                     bitWires.Add(boolWire);
@@ -1502,7 +1503,7 @@ namespace code0k_cc.Runtime
                                     xorCon.InWires.Add(bitWires[i]);
                                     xorCon.InWires.Add(commonArg.OneWire);
 
-                                    var newBitWire = new PinocchioWire(null);
+                                    var newBitWire = new PinocchioWire();
                                     ret.AnonymousWires.Add(newBitWire);
 
                                     xorCon.OutWires.Add(newBitWire);
@@ -1574,7 +1575,7 @@ namespace code0k_cc.Runtime
                                         // optimization can be done by implementing [MaxPossibleValue]  
                                         foreach (var j in Enumerable.Range(0, 32))
                                         {
-                                            var boolWire = new PinocchioWire(null);
+                                            var boolWire = new PinocchioWire();
                                             ret.AnonymousWires.Add(boolWire);
 
                                             bitWires[i].Add(boolWire);
@@ -1616,7 +1617,7 @@ namespace code0k_cc.Runtime
                                     con.InWires.Add(bitWires[0][i]);
                                     con.InWires.Add(bitWires[1][i]);
 
-                                    var newBitWire = new PinocchioWire(null);
+                                    var newBitWire = new PinocchioWire();
                                     ret.AnonymousWires.Add(newBitWire);
 
                                     con.OutWires.Add(newBitWire);
@@ -1636,7 +1637,7 @@ namespace code0k_cc.Runtime
                                 // currently, assume the variable has already been trimmed every time an operation is done
                                 // optimization can be done by implementing [MaxPossibleValue] 
 
-                                var wireToBeTrimmed = new PinocchioWire(null);
+                                var wireToBeTrimmed = new PinocchioWire();
                                 ret.AnonymousWires.Add(wireToBeTrimmed);
 
                                 int wireToBeTrimmedMaxBit;
@@ -1654,10 +1655,10 @@ namespace code0k_cc.Runtime
                                 }
                                 else if (operationType == VariableOperationType.Binary_Subtract)
                                 {
-                                    var pow2_32 = new PinocchioWire(new BigInteger(System.UInt32.MaxValue) + 1);
+                                    var pow2_32 = commonArg.PowerOfTwoWires[32];
                                     ret.AnonymousWires.Add(pow2_32);
 
-                                    var negWire = new PinocchioWire(null);
+                                    var negWire = new PinocchioWire();
                                     ret.AnonymousWires.Add(negWire);
 
                                     {
@@ -1675,7 +1676,7 @@ namespace code0k_cc.Runtime
                                     add1Con.InWires.Add(pow2_32);
                                     add1Con.InWires.Add(inVars[0].Wires[0]);
 
-                                    var addTempWire = new PinocchioWire(null);
+                                    var addTempWire = new PinocchioWire();
                                     ret.AnonymousWires.Add(addTempWire);
 
                                     add1Con.OutWires.Add(addTempWire);
@@ -1717,7 +1718,7 @@ namespace code0k_cc.Runtime
 
                                 foreach (var i in Enumerable.Range(0, wireToBeTrimmedMaxBit))
                                 {
-                                    var boolWire = new PinocchioWire(null);
+                                    var boolWire = new PinocchioWire();
                                     ret.AnonymousWires.Add(boolWire);
 
                                     bitWires.Add(boolWire);
@@ -1752,14 +1753,14 @@ namespace code0k_cc.Runtime
                                 // currently, assume the variable has already been trimmed every time an operation is done
                                 // optimization can be done by implementing [MaxPossibleValue] 
 
-                                var subtractResultWire = new PinocchioWire(null);
+                                var subtractResultWire = new PinocchioWire();
                                 ret.AnonymousWires.Add(subtractResultWire);
                                 int subtractResultWireMaxBit;
                                 {
-                                    var pow2_32 = new PinocchioWire(new BigInteger(System.UInt32.MaxValue) + 1);
+                                    var pow2_32 = commonArg.PowerOfTwoWires[32];
                                     ret.AnonymousWires.Add(pow2_32);
 
-                                    var negWire = new PinocchioWire(null);
+                                    var negWire = new PinocchioWire();
                                     ret.AnonymousWires.Add(negWire);
 
                                     var con1 = new BasicPinocchioConstraint(BasicPinocchioConstraintType.Mul);
@@ -1775,7 +1776,7 @@ namespace code0k_cc.Runtime
                                     add1Con.InWires.Add(pow2_32);
                                     add1Con.InWires.Add(inVars[0].Wires[0]);
 
-                                    var addTempWire = new PinocchioWire(null);
+                                    var addTempWire = new PinocchioWire();
                                     ret.AnonymousWires.Add(addTempWire);
 
                                     add1Con.OutWires.Add(addTempWire);
@@ -1792,7 +1793,7 @@ namespace code0k_cc.Runtime
 
                                 PinocchioWire notEqualToResultBitWire;
                                 {
-                                    notEqualToResultBitWire = new PinocchioWire(null);
+                                    notEqualToResultBitWire = new PinocchioWire();
                                     ret.AnonymousWires.Add(notEqualToResultBitWire);
 
                                     var con = new BasicPinocchioConstraint(BasicPinocchioConstraintType.ZeroP);
@@ -1815,7 +1816,7 @@ namespace code0k_cc.Runtime
                                 }
 
 
-                                PinocchioWire equalToResultBitWire = new PinocchioWire(null);
+                                PinocchioWire equalToResultBitWire = new PinocchioWire();
                                 ret.AnonymousWires.Add(equalToResultBitWire);
 
                                 {
@@ -1850,7 +1851,7 @@ namespace code0k_cc.Runtime
 
                                     foreach (var i in Enumerable.Range(0, subtractResultWireMaxBit))
                                     {
-                                        var boolWire = new PinocchioWire(null);
+                                        var boolWire = new PinocchioWire();
                                         ret.AnonymousWires.Add(boolWire);
 
                                         bitWires.Add(boolWire);
@@ -1877,7 +1878,7 @@ namespace code0k_cc.Runtime
 
 
 
-                                PinocchioWire lessThanResultBitWire = new PinocchioWire(null);
+                                PinocchioWire lessThanResultBitWire = new PinocchioWire();
                                 ret.AnonymousWires.Add(lessThanResultBitWire);
 
                                 {
@@ -1903,7 +1904,7 @@ namespace code0k_cc.Runtime
                                 }
 
 
-                                PinocchioWire lessEqualThanResultBitWire = new PinocchioWire(null);
+                                PinocchioWire lessEqualThanResultBitWire = new PinocchioWire();
                                 ret.AnonymousWires.Add(lessEqualThanResultBitWire);
 
                                 {
@@ -1945,10 +1946,8 @@ namespace code0k_cc.Runtime
                             else if (operationType == VariableOperationType.Binary_Division ||
                                      operationType == VariableOperationType.Binary_Remainder)
                             {
-
-
-
                                 //todo
+                                throw new NotImplementedException();
                             }
                             else
                             {
@@ -2178,25 +2177,26 @@ namespace code0k_cc.Runtime
 
             VariableNodeToPinocchioFunc = (rawVariable, commonArg, checkRange) =>
             {
-                var ret = new PinocchioOutput() { VariableWires = new PinocchioVariableWires(rawVariable) };
+                var ret = new PinocchioOutput();
 
-                var boolValue = (NizkBoolValue) rawVariable.Value;
-                if (boolValue.IsConstant)
+                var retWire = new PinocchioWire();
+                ret.VariableWires = new PinocchioVariableWires(rawVariable, retWire);
+                 
+                if (rawVariable.Value.IsConstant)
                 {
-                    ret.VariableWires.Wires.Add(new PinocchioWire(new BigInteger(boolValue.Value ? 1 : 0)));
+                    var con = new ConstWireConstraint();
+                    ret.Constraints.Add(con);
+                    con.ConstVariableWires = ret.VariableWires;
                 }
                 else
                 {
-                    var newWire = new PinocchioWire(null);
-                    ret.VariableWires.Wires.Add(newWire);
-
                     if (checkRange)
                     {
                         var boolCon = new BasicPinocchioConstraint(BasicPinocchioConstraintType.ZeroP);
                         ret.Constraints.Add(boolCon);
 
-                        boolCon.InWires.Add(newWire);
-                        boolCon.OutWires.Add(newWire);
+                        boolCon.InWires.Add(retWire);
+                        boolCon.OutWires.Add(retWire);
                     }
                 }
 
@@ -2337,7 +2337,7 @@ namespace code0k_cc.Runtime
                             }
                             else if (operationType == VariableOperationType.Binary_EqualTo)
                             {
-                                var wire1 = new PinocchioWire(null);
+                                var wire1 = new PinocchioWire();
                                 ret.AnonymousWires.Add(wire1);
 
                                 var con1 = new BasicPinocchioConstraint(BasicPinocchioConstraintType.Xor);

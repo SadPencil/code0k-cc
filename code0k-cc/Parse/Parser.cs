@@ -471,27 +471,7 @@ namespace code0k_cc.Parse
 
                 var map = VariableMap.GetMapFromVariableConnection(nizkVars[NizkVariableType.Input], nizkVars[NizkVariableType.NizkInput], nizkVars[NizkVariableType.Output]);
 
-                var sortResult = map.TopologicalSort();
-                foreach (var node in sortResult)
-                {
-                    //test
-
-                    switch (node)
-                    {
-                        case VariableNode nnode:
-                            Console.WriteLine(nnode.RawVariable.Type.TypeCodeName);
-                            break;
-                        case OperationNode nnode:
-                            Console.WriteLine(nnode.ConnectionType.ToString());
-                            break;
-                        default:
-                            Console.WriteLine("default");
-                            break;
-                    }
-                }
-                //todo
-
-                return new ExeResult() { MainProgramResult = new MainProgramResult() };
+                return new ExeResult() { MainProgramResult = new MainProgramResult() { VariableMap = map } };
             };
 
             MainProgramItem.Name = "Main Program Item";
@@ -505,11 +485,11 @@ namespace code0k_cc.Parse
                 FunctionImplementation,
             };
             MainProgramItem.Execute = (instance, arg) =>
-            {
+                    {
 
-                Debug.WriteLine("Executing Global " + instance.Children[0].ParseUnit.Name);
-                return instance.Children[0].Execute(arg);
-            };
+                        Debug.WriteLine("Executing Global " + instance.Children[0].ParseUnit.Name);
+                        return instance.Children[0].Execute(arg);
+                    };
 
             MainProgramLoop.Name = "Main Program Loop";
             MainProgramLoop.Type = ParseUnitType.SingleOptional;

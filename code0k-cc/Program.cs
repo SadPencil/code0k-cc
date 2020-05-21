@@ -2,8 +2,9 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text; 
+using System.Text;
 using code0k_cc.Parse;
+using code0k_cc.Pinocchio;
 using code0k_cc.Runtime.Block;
 using code0k_cc.Runtime.ExeArg;
 
@@ -44,12 +45,13 @@ namespace code0k_cc
                             new CallStack(null, null),
                             outputWriter,
                             Console.Out));
-                    
-                    //todo
+                    var map = ret.MainProgramResult.VariableMap;
+                    var pinocchio = new PinocchioArithmeticCircuit(map);
 
-
+                    pinocchio.OutputCircuit(outputWriter);
                 }
-            }}
+            }
+        }
 
         static void test(ParseUnitInstance p, int tab)
         {

@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Numerics;
 using System.Text;
 using code0k_cc.Config;
 using code0k_cc.CustomException;
+using code0k_cc.Pinocchio.Constraint;
 using code0k_cc.Runtime;
 using code0k_cc.Runtime.Nizk;
 using code0k_cc.Runtime.VariableMap;
@@ -28,12 +31,6 @@ namespace code0k_cc.Pinocchio
 
             void AddWire(PinocchioWire wire)
             {
-                // currently, any const-wire are not saved,
-                // and these const-wires are handled at constraint.
-                // this behavior will be changed later.
-                if (wire.Value != null) { return; }
-
-
                 if (wireToID.ContainsKey(wire)) { return; }
                 wireToID.Add(wire, wireList.Count);
                 wireList.Add(wire);
@@ -61,42 +58,70 @@ namespace code0k_cc.Pinocchio
             {
                 ret.AnonymousWires.ForEach(AddWire);
                 AddVariableWires(ret.VariableWires);
+
                 ret.Constraints.ForEach(AddConstraint);
             }
 
-
             var commonArg = new PinocchioCommonArg();
-
             {
-                var OneWire = new PinocchioWire(null);
-                AddWire(OneWire);
-                commonArg.OneWire = OneWire;
+                // 1
+                {
+                    commonArg.OneWire = new PinocchioWire();
+                    AddWire(commonArg.OneWire);
 
-                var ZeroWire = new PinocchioWire(null);
-                AddWire(ZeroWire);
-                commonArg.ZeroWire = ZeroWire;
+                    var con = new ConstWireConstraint();
+                    AddConstraint(con);
 
-                var MinusOneWire = new PinocchioWire(null);
-                AddWire(MinusOneWire);
-                commonArg.MinusOneWire = MinusOneWire;
+                    con.ConstVariableWires = new PinocchioVariableWires(
+                        NType.Field.GetCommonConstantValue(VariableCommonConstant.One).RawVariable,
+                        commonArg.OneWire);
+                }
+                // 0
+                {
+                    commonArg.ZeroWire = new PinocchioWire();
+                    AddWire(commonArg.ZeroWire);
 
-                var ZeroConstWire = new PinocchioWire(BigInteger.Zero);
-                AddWire(ZeroConstWire);
+                    var con = new ConstWireConstraint();
+                    AddConstraint(con);
 
-                var mulZeroConstraint = new BasicPinocchioConstraint(BasicPinocchioConstraintType.Mul);
-                AddConstraint(mulZeroConstraint);
-                mulZeroConstraint.InWires.Add(OneWire);
-                mulZeroConstraint.InWires.Add(ZeroConstWire);
-                mulZeroConstraint.OutWires.Add(ZeroWire);
+                    con.ConstVariableWires = new PinocchioVariableWires(
+                        NType.Field.GetCommonConstantValue(VariableCommonConstant.Zero).RawVariable,
+                        commonArg.ZeroWire);
+                }
+                // -1
+                {
+                    commonArg.MinusOneWire = new PinocchioWire();
+                    AddWire(commonArg.MinusOneWire);
 
-                var MinusOneConstWire = new PinocchioWire(My.Config.ModulusPrimeField_Prime - 1);
-                AddWire(MinusOneConstWire);
+                    var con = new ConstWireConstraint();
+                    AddConstraint(con);
 
-                var mulMinusOneConstraint = new BasicPinocchioConstraint(BasicPinocchioConstraintType.Mul);
-                AddConstraint(mulMinusOneConstraint);
-                mulMinusOneConstraint.InWires.Add(OneWire);
-                mulMinusOneConstraint.InWires.Add(MinusOneConstWire);
-                mulMinusOneConstraint.OutWires.Add(MinusOneWire);
+                    con.ConstVariableWires = new PinocchioVariableWires(
+                        NType.Field.GetCommonConstantValue(VariableCommonConstant.MinusOne).RawVariable,
+                        commonArg.MinusOneWire);
+                }
+                // 2
+                commonArg.PowerOfTwoWires = new PinocchioWire[My.Config.ModulusPrimeField_Prime_Bit + 1];
+                commonArg.PowerOfTwoWires[0] = commonArg.OneWire;
+
+                var powerOfTwoBaseVariable = NType.Field.GetCommonConstantValue(VariableCommonConstant.One);
+
+                foreach (int i in Enumerable.Range(1, My.Config.ModulusPrimeField_Prime_Bit))
+                {
+                    commonArg.PowerOfTwoWires[i] = new PinocchioWire();
+                    AddWire(commonArg.PowerOfTwoWires[i]);
+
+                    var con = new ConstWireConstraint();
+                    AddConstraint(con);
+
+                    powerOfTwoBaseVariable = NType.Field.BinaryOperation(
+                        powerOfTwoBaseVariable,
+                        powerOfTwoBaseVariable,
+                        VariableOperationType.Binary_Addition);
+
+                    con.ConstVariableWires = new PinocchioVariableWires(powerOfTwoBaseVariable.RawVariable,
+                        commonArg.PowerOfTwoWires[i]);
+                }
             }
 
             foreach (var node in this.VariableMap.TopologicalSort())
@@ -121,10 +146,23 @@ namespace code0k_cc.Pinocchio
                             if (variableNode.NizkAttribute == NizkVariableType.NizkInput)
                             {
                                 output = variableNode.RawVariable.Type.VariableNodeToPinocchio(variableNode.RawVariable, commonArg, true);
+                                var con = new UserPrivateInputConstraint();
+                                AddConstraint(con);
+                                con.TypeWires = new PinocchioTypeWires(output.VariableWires);
+                            }
+                            else if (variableNode.NizkAttribute == NizkVariableType.Input)
+                            {
+                                output = variableNode.RawVariable.Type.VariableNodeToPinocchio(variableNode.RawVariable, commonArg, false);
+                                var con = new UserInputConstraint();
+                                AddConstraint(con);
+                                con.TypeWires = new PinocchioTypeWires(output.VariableWires);
                             }
                             else
                             {
                                 output = variableNode.RawVariable.Type.VariableNodeToPinocchio(variableNode.RawVariable, commonArg, false);
+                                var con = new ConstWireConstraint();
+                                AddConstraint(con);
+                                con.ConstVariableWires = output.VariableWires;
                             }
 
                             AddPinocchioOutput(output);
@@ -171,6 +209,64 @@ namespace code0k_cc.Pinocchio
             }
 
             // todo: write these wire & constraints
+
+            foreach (var constraint in conList)
+            {
+                switch (constraint)
+                {
+                    case BasicPinocchioConstraint basicPinocchioConstraint:
+                        StringBuilder sb = new StringBuilder();
+                        switch (basicPinocchioConstraint.Type)
+                        {
+                            case BasicPinocchioConstraintType.Add: _ = sb.Append("add"); break;
+                            case BasicPinocchioConstraintType.Mul: _ = sb.Append("mul"); break;
+                            case BasicPinocchioConstraintType.Or: _ = sb.Append("or"); break;
+                            case BasicPinocchioConstraintType.Pack: _ = sb.Append("pack"); break;
+                            case BasicPinocchioConstraintType.Split: _ = sb.Append("split"); break;
+                            case BasicPinocchioConstraintType.Xor: _ = sb.Append("xor"); break;
+                            case BasicPinocchioConstraintType.ZeroP: _ = sb.Append("zerop"); break;
+
+                            default:
+                                throw CommonException.AssertFailedException();
+                        }
+
+                        sb.Append(" in ");
+                        sb.Append(basicPinocchioConstraint.InWires.Count.ToString(CultureInfo.InvariantCulture));
+                        sb.Append(" <");
+                        foreach (var wire in basicPinocchioConstraint.InWires)
+                        {
+                            sb.Append(" " + wireToID[wire].ToString(CultureInfo.InvariantCulture));
+                        }
+
+                        sb.Append(" > out ");
+                        sb.Append(basicPinocchioConstraint.OutWires.Count.ToString(CultureInfo.InvariantCulture));
+                        sb.Append(" <");
+                        foreach (var wire in basicPinocchioConstraint.OutWires)
+                        {
+                            sb.Append(" " + wireToID[wire].ToString(CultureInfo.InvariantCulture));
+                        }
+                        sb.Append(" >");
+
+                        outputWriter.WriteLine(sb.ToString());
+
+                        break;
+                    case UserInputConstraint userInputConstraint:
+                        userInputConstraint.TypeWires.Wires.ForEach(wire => outputWriter.WriteLine("input " + wireToID[wire]));
+                        break;
+                    case UserPrivateInputConstraint userPrivateInputConstraint:
+                        userPrivateInputConstraint.TypeWires.Wires.ForEach(wire => outputWriter.WriteLine("nizkinput " + wireToID[wire]));
+                        break;
+                    case ConstWireConstraint constWireConstraint:
+                        constWireConstraint.ConstVariableWires.Wires.ForEach(wire => outputWriter.WriteLine("input " + wireToID[wire]));
+                        break;
+                    case DivModConstraint divModConstraint:
+                        //todo
+                        throw new NotImplementedException();
+
+                    default:
+                        throw CommonException.AssertFailedException();
+                }
+            }
 
             // todo: write the output wires at the end
         }

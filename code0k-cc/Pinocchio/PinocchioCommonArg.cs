@@ -9,5 +9,7 @@ namespace code0k_cc.Pinocchio
         public PinocchioWire OneWire;
         public PinocchioWire ZeroWire;
         public PinocchioWire MinusOneWire;
+
+        public PinocchioWire[] PowerOfTwoWires;
     }
 }
