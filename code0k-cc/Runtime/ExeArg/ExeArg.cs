@@ -18,18 +18,12 @@ namespace code0k_cc.Runtime.ExeArg
         /// <summary>
         /// Debug purpose only. Do not use under an nizk-if/while statements.
         /// </summary>
-        public TextWriter StdOut;
+        public TextWriter StdOut; 
 
-        /// <summary>
-        /// The writer of the output code file.
-        /// </summary>
-        public TextWriter CodeOut;
-
-        public ExeArg(OverlayBlock block, CallStack callStack, TextWriter codeOut, TextWriter stdOut)
+        public ExeArg(OverlayBlock block, CallStack callStack, TextWriter stdOut)
         {
             this.Block = block;
-            this.CallStack = callStack;
-            this.CodeOut = codeOut;
+            this.CallStack = callStack; 
             this.StdOut = stdOut;
         }
 

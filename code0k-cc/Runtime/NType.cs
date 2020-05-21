@@ -65,16 +65,16 @@ namespace code0k_cc.Runtime
         /// </summary>
         private Func<string, Variable> ParseFunc;
 
-        public string GetString(RawVariable rawVariable)
+        public string GetVariableString(RawVariable rawVariable)
         {
             Debug.Assert(rawVariable.Type == this);
-            return this.GetStringFunc(rawVariable);
+            return this.GetVariableStringFunc(rawVariable);
         }
 
         /// <summary>
         /// Method to get a string from a value. Throw exceptions.
         /// </summary>
-        private Func<RawVariable, string> GetStringFunc;
+        private Func<RawVariable, string> GetVariableStringFunc;
 
         /// <summary>
         /// Generics Type Lists. Can be null.
@@ -285,7 +285,7 @@ namespace code0k_cc.Runtime
                 }
             };
 
-            this.GetStringFunc = variable => throw new Exception($"Type \"{this.TypeCodeName}\" doesn't support String().");
+            this.GetVariableStringFunc = variable => throw new Exception($"Type \"{this.TypeCodeName}\" doesn't support String().");
             this.ParseFunc = s => throw new Exception($"Type \"{this.TypeCodeName}\" doesn't support Parse().");
             this.GetNewNizkVariableFunc = () => throw new Exception($"Type \"{this.TypeCodeName}\" is not nizk-compatible.");
             this.VariableNodeToPinocchioFunc = (rawVariable, commonArg, checkRange) => throw new Exception($"Type \"{this.TypeCodeName}\" is not nizk-compatible.");
@@ -313,7 +313,7 @@ namespace code0k_cc.Runtime
                     throw new Exception($"Type \"{ NType.String}\" doesn't provide a constant for \"{commonConstant}\".");
                 }
             },
-            GetStringFunc = variable => ( (StringValue) ( variable.Value ) ).Value,
+            GetVariableStringFunc = variable => ( (StringValue) ( variable.Value ) ).Value,
             ParseFunc = str =>
             {
                 Debug.Assert(str.First() == '\"');
@@ -425,7 +425,7 @@ namespace code0k_cc.Runtime
                     throw new Exception($"Can't parse \"{str}\" as \"{NType.Field.TypeCodeName}\".");
                 }
             },
-            GetStringFunc = variable => ( (NizkFieldValue) variable.Value ).Value.ToString(CultureInfo.InvariantCulture),
+            GetVariableStringFunc = variable => ( (NizkFieldValue) variable.Value ).Value.ToString(CultureInfo.InvariantCulture),
             GetNewNizkVariableFunc = () => new Variable(new RawVariable()
             {
                 Type = NType.Field,
@@ -843,7 +843,7 @@ namespace code0k_cc.Runtime
                     throw new Exception($"Can't parse \"{str}\" as \"{NType.UInt32.TypeCodeName}\".");
                 }
             },
-            GetStringFunc = variable => ( (NizkUInt32Value) variable.Value ).Value.ToString(CultureInfo.InvariantCulture),
+            GetVariableStringFunc = variable => ( (NizkUInt32Value) variable.Value ).Value.ToString(CultureInfo.InvariantCulture),
             GetNewNizkVariableFunc = () => new Variable(new RawVariable()
             {
                 Type = NType.UInt32,
@@ -2034,7 +2034,7 @@ namespace code0k_cc.Runtime
                     throw new Exception($"Can't parse \"{str}\" as \"{NType.Bool.TypeCodeName}\".");
                 }
             },
-            GetStringFunc = variable => ( (NizkBoolValue) variable.Value ).Value.ToString(CultureInfo.InvariantCulture),
+            GetVariableStringFunc = variable => ( (NizkBoolValue) variable.Value ).Value.ToString(CultureInfo.InvariantCulture),
             GetNewNizkVariableFunc = () => new Variable(new RawVariable()
             {
                 Type = NType.Bool,

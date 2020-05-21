@@ -25,7 +25,7 @@ namespace code0k_cc.Pinocchio
             this.VariableMap = variableMap;
         }
 
-        public void OutputCircuit(TextWriter outputWriter)
+        public void OutputCircuit(TextWriter arithWriter, TextWriter inHelperWriter)
         {
             var wireToID = new Dictionary<PinocchioWire, int>();
 
@@ -194,7 +194,7 @@ namespace code0k_cc.Pinocchio
                                 {
                                     var comment = new CommentConstraint();
                                     AddConstraint(comment);
-                                    comment.Comment = $"The following {output.VariableWires.Wires.Count.ToString(CultureInfo.InvariantCulture)} wires are of a constant value {variableNode.RawVariable.Type.GetString(variableNode.RawVariable)}.";
+                                    comment.Comment = $"The following {output.VariableWires.Wires.Count.ToString(CultureInfo.InvariantCulture)} wires are of a constant value {variableNode.RawVariable.Type.GetVariableString(variableNode.RawVariable)}.";
 
                                     var con = new ConstWireConstraint();
                                     AddConstraint(con);
@@ -370,23 +370,38 @@ namespace code0k_cc.Pinocchio
                         }
                         _ = sb.Append(" >");
 
-                        outputWriter.WriteLine(sb.ToString());
+                        arithWriter.WriteLine(sb.ToString());
 
                         break;
                     case UserInputConstraint userInputConstraint:
-                        userInputConstraint.TypeWires.Wires.ForEach(wire => outputWriter.WriteLine("input " + wireToID[wire] + " //userinput"));
+                        Debug.Assert(userInputConstraint.TypeWires.Wires.Count != 0);
+                        userInputConstraint.TypeWires.Wires.ForEach(wire => arithWriter.WriteLine("input " + wireToID[wire] + " //userinput"));
+                        userInputConstraint.TypeWires.Wires.ForEach(wire => inHelperWriter.WriteLine(wireToID[wire] + " <to-be-filled-by-user>"));
                         break;
                     case UserPrivateInputConstraint userPrivateInputConstraint:
-                        userPrivateInputConstraint.TypeWires.Wires.ForEach(wire => outputWriter.WriteLine("nizkinput " + wireToID[wire] + " //userinput"));
+                        Debug.Assert(userPrivateInputConstraint.TypeWires.Wires.Count != 0);
+                        userPrivateInputConstraint.TypeWires.Wires.ForEach(wire => arithWriter.WriteLine("nizkinput " + wireToID[wire] + " //userinput"));
+                        userPrivateInputConstraint.TypeWires.Wires.ForEach(wire => inHelperWriter.WriteLine(wireToID[wire] + " <to-be-filled-by-user>"));
                         break;
                     case OutputConstraint outputConstraint:
-                        outputConstraint.TypeWires.Wires.ForEach(wire => outputWriter.WriteLine("output " + wireToID[wire] + " //output"));
+                        Debug.Assert(outputConstraint.TypeWires.Wires.Count != 0);
+                        outputConstraint.TypeWires.Wires.ForEach(wire => arithWriter.WriteLine("output " + wireToID[wire] + " //output"));
                         break;
                     case ConstWireConstraint constWireConstraint:
-                        constWireConstraint.ConstVariableWires.Wires.ForEach(wire => outputWriter.WriteLine("input " + wireToID[wire] + " //const"));
+                        Debug.Assert(constWireConstraint.ConstVariableWires.Wires.Count != 0);
+                        constWireConstraint.ConstVariableWires.Wires.ForEach(wire => arithWriter.WriteLine("input " + wireToID[wire] + " //const"));
+                        if (constWireConstraint.ConstVariableWires.Wires.Count == 1)
+                        {
+                            constWireConstraint.ConstVariableWires.Wires.ForEach(wire => inHelperWriter.WriteLine(wireToID[wire] + " " + constWireConstraint.ConstVariableWires.RawVariable.Type.GetVariableString(constWireConstraint.ConstVariableWires.RawVariable)));
+                        }
+                        else
+                        {
+                            constWireConstraint.ConstVariableWires.Wires.ForEach(wire => inHelperWriter.WriteLine(wireToID[wire] + " <todo-multiple-wires-constant>"));
+                        }
+
                         break;
                     case CommentConstraint commentConstraint:
-                        outputWriter.WriteLine("//" + commentConstraint.Comment);
+                        arithWriter.WriteLine("//" + commentConstraint.Comment);
                         break;
                     case DivModConstraint divModConstraint:
                         //todo

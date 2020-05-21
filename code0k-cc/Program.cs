@@ -49,30 +49,40 @@ namespace code0k_cc
                 mainProgram = Parser.Parse(tokenList);
             }
 
-            string outPath = path + ".arith";
-            if (File.Exists(outPath))
+            string arithPath = path + ".arith";
+            if (File.Exists(arithPath))
             {
-                File.Delete(outPath);
+                File.Delete(arithPath);
             }
 
-            using (var fs = System.IO.File.Open(outPath, FileMode.CreateNew, FileAccess.Write))
+            string inHelperPath = path + ".in.txt";
+            if (File.Exists(inHelperPath))
             {
-                using (var outputWriter = new StreamWriter(fs, new UTF8Encoding(false), -1, false))
-                {
-                    OverlayBlock blk = new OverlayBlock(new Overlay(null), new BasicBlock(null));
-                    Debug.WriteLine($"root blk {blk}");
-                    var ret = mainProgram.Execute(
-                        new ExeArg(
-                            blk,
-                            new CallStack(null, null),
-                            outputWriter,
-                            Console.Out));
-                    var map = ret.MainProgramResult.VariableMap;
-                    var pinocchio = new PinocchioArithmeticCircuit(map);
+                File.Delete(inHelperPath);
+            }
 
-                    pinocchio.OutputCircuit(outputWriter);
+            using (var arithFs = System.IO.File.Open(arithPath, FileMode.CreateNew, FileAccess.Write))
+            {
+                using (var inFs = System.IO.File.Open(inHelperPath, FileMode.CreateNew, FileAccess.Write))
+                {
+                    using var arithWriter = new StreamWriter(arithFs, new UTF8Encoding(false), -1, false);
+                    using var inWriter = new StreamWriter(inFs, new UTF8Encoding(false), -1, false);
+                    {
+                        OverlayBlock blk = new OverlayBlock(new Overlay(null), new BasicBlock(null));
+                        Debug.WriteLine($"root blk {blk}");
+                        var ret = mainProgram.Execute(
+                            new ExeArg(
+                                blk,
+                                new CallStack(null, null),
+                                Console.Out));
+                        var map = ret.MainProgramResult.VariableMap;
+                        var pinocchio = new PinocchioArithmeticCircuit(map);
+
+                        pinocchio.OutputCircuit(arithWriter, inWriter);
+                    }
                 }
             }
+
         }
 
         //static void test(ParseUnitInstance p, int tab)
