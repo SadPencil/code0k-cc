@@ -49,7 +49,7 @@ namespace code0k_cc
                 mainProgram = Parser.Parse(tokenList);
             }
 
-            string outPath = path + ".out";
+            string outPath = path + ".arith";
             if (File.Exists(outPath))
             {
                 File.Delete(outPath);
