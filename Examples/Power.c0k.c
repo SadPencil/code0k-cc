@@ -8,7 +8,7 @@ void main() max (1){
     c = 1;
     uint32 i = 0;
     while (i < b) max (MAX_LOOP){
-    	c = c * a;
+        c = c * a;
         i = i + 1;
     }
 }
