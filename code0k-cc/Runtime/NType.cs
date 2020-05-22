@@ -2214,11 +2214,23 @@ namespace code0k_cc.Runtime
                 {
                     if (checkRange)
                     {
-                        var boolCon = new BasicPinocchioConstraint(BasicPinocchioConstraintType.ZeroP);
-                        ret.Constraints.Add(boolCon);
+                        // R * (R-1) = 0
+                        var wire3 = new PinocchioWire();
+                        ret.AnonymousWires.Add(wire3);
 
-                        boolCon.InWires.Add(retWire);
-                        boolCon.OutWires.Add(retWire);
+                        var addCon = new BasicPinocchioConstraint(BasicPinocchioConstraintType.Add);
+                        ret.Constraints.Add(addCon);
+
+                        addCon.InWires.Add(retWire);
+                        addCon.InWires.Add(commonArg.MinusOneWire);
+                        addCon.OutWires.Add(wire3);
+
+                        var mulCom = new BasicPinocchioConstraint(BasicPinocchioConstraintType.Mul);
+                        ret.Constraints.Add(mulCom);
+
+                        mulCom.InWires.Add(retWire);
+                        mulCom.InWires.Add(wire3);
+                        mulCom.OutWires.Add(commonArg.ZeroWire);
                     }
                 }
 

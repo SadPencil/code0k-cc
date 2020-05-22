@@ -319,6 +319,7 @@ namespace code0k_cc.Pinocchio
             }
 
             // write these wire & constraints
+            arithWriter.WriteLine("total " + ( wireToID.Keys.Count.ToString(CultureInfo.InvariantCulture) ));
             foreach (var constraint in conList)
             {
                 switch (constraint)
@@ -338,6 +339,16 @@ namespace code0k_cc.Pinocchio
                             default:
                                 throw CommonException.AssertFailedException();
                         }
+
+                        //zerop compatibility
+                        if (basicPinocchioConstraint.Type == BasicPinocchioConstraintType.ZeroP &&
+                            basicPinocchioConstraint.OutWires.Count == 1)
+                        {
+                            basicPinocchioConstraint.OutWires.Insert(0, commonArg.OneWire);
+                        }
+
+                        //zerop compatibility end
+
 
                         _ = sb.Append(" in ");
                         _ = sb.Append(basicPinocchioConstraint.InWires.Count.ToString(CultureInfo.InvariantCulture));
@@ -361,21 +372,21 @@ namespace code0k_cc.Pinocchio
                         break;
                     case UserInputConstraint userInputConstraint:
                         Debug.Assert(userInputConstraint.TypeWires.Wires.Count != 0);
-                        userInputConstraint.TypeWires.Wires.ForEach(wire => arithWriter.WriteLine("input " + wireToID[wire] + " //userinput"));
+                        userInputConstraint.TypeWires.Wires.ForEach(wire => arithWriter.WriteLine("input " + wireToID[wire] + " #userinput"));
                         userInputConstraint.TypeWires.Wires.ForEach(wire => inHelperWriter.WriteLine(wireToID[wire] + " <to-be-filled-by-user>"));
                         break;
                     case UserPrivateInputConstraint userPrivateInputConstraint:
                         Debug.Assert(userPrivateInputConstraint.TypeWires.Wires.Count != 0);
-                        userPrivateInputConstraint.TypeWires.Wires.ForEach(wire => arithWriter.WriteLine("nizkinput " + wireToID[wire] + " //userinput"));
+                        userPrivateInputConstraint.TypeWires.Wires.ForEach(wire => arithWriter.WriteLine("nizkinput " + wireToID[wire] + " #userinput"));
                         userPrivateInputConstraint.TypeWires.Wires.ForEach(wire => inHelperWriter.WriteLine(wireToID[wire] + " <to-be-filled-by-user>"));
                         break;
                     case OutputConstraint outputConstraint:
                         Debug.Assert(outputConstraint.TypeWires.Wires.Count != 0);
-                        outputConstraint.TypeWires.Wires.ForEach(wire => arithWriter.WriteLine("output " + wireToID[wire] + " //output"));
+                        outputConstraint.TypeWires.Wires.ForEach(wire => arithWriter.WriteLine("output " + wireToID[wire] + " #output"));
                         break;
                     case ConstWireConstraint constWireConstraint:
                         Debug.Assert(constWireConstraint.ConstVariableWires.Wires.Count != 0);
-                        constWireConstraint.ConstVariableWires.Wires.ForEach(wire => arithWriter.WriteLine("input " + wireToID[wire] + " //const"));
+                        constWireConstraint.ConstVariableWires.Wires.ForEach(wire => arithWriter.WriteLine("input " + wireToID[wire] + " #const"));
                         if (constWireConstraint.ConstVariableWires.Wires.Count == 1)
                         {
                             constWireConstraint.ConstVariableWires.Wires.ForEach(wire => inHelperWriter.WriteLine(wireToID[wire] + " " + constWireConstraint.ConstVariableWires.RawVariable.Type.GetVariableString(constWireConstraint.ConstVariableWires.RawVariable)));
@@ -387,7 +398,7 @@ namespace code0k_cc.Pinocchio
 
                         break;
                     case CommentConstraint commentConstraint:
-                        arithWriter.WriteLine("//" + commentConstraint.Comment);
+                        arithWriter.WriteLine("#" + commentConstraint.Comment);
                         break;
                     case DivModConstraint divModConstraint:
                         //todo
