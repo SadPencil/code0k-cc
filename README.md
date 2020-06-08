@@ -39,6 +39,30 @@ dotnet publish -r linux-x64 -c Release -p:PublishSingleFile=true
 
 And place the executable file to `/usr/local/bin`, naming `code0k-cc`.
 
+## On Mac OSX
+Issue 1:
+```
+The application to execute does not exist: '/usr/local/bin/code0k-cc.dll'.
+```
+Solution: ```
+cp ../code0k-cc/bin/Release/netcoreapp3.1/osx-x64/code0k-cc.dll /usr/local/bin/
+```
+
+Issue 2:
+```
+A fatal error was encountered. The library 'libhostpolicy.dylib' required to execute the application was not found in '/usr/local/share/dotnet'.
+```
+Solution:
+```
+sudo cp ../code0k-cc/bin/Release/netcoreapp3.1/osx-x64/libhostpolicy.dylib /usr/local/share/dotnet/
+```
+
+Issue 3:
+```
+Could not resolve CoreCLR path. For more details, enable tracing by setting COREHOST_TRACE environment variable to 1
+```
+
+
 ## Compile the zero-knowledge code
 
 For convenience, the input file is called `input.c0k.c`. You may get an example file from `Examples` folder.  
