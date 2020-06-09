@@ -13,34 +13,38 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 3.1.101
+        dotnet-version: '3.1.x'
+
     - name: Install dependencies
       run: dotnet restore
+
     - name: Build
       run: dotnet build --configuration Release --no-restore
+
     - name: Test
       run: dotnet test --no-restore --verbosity normal
+
+    - name: Prepare for publish
+      run: mkdir -p /tmp/code0k/build/ && mkdir -p /tmp/code0k/artifact/ && mkdir -p /tmp/code0k/output/
+
     - name: Publish linux-x64
-      run: dotnet publish -r linux-x64 -c Release -o build/linux-x64 -p:PublishSingleFile=true && gzip build/linux-x64/code0k-cc
-    - name: Upload linux-x64
-      uses: actions/upload-artifact@v1
-      with:
-        name: linux-x64
-        path: build/linux-x64/code0k-cc.gz
+      run: dotnet publish -r linux-x64 -c Release -o /tmp/code0k/build/linux-x64 -p:PublishSingleFile=true && mv /tmp/code0k/build/linux-x64/code0k-cc /tmp/code0k/artifact/code0k-cc-linux-x64
+
     - name: Publish win-x64
-      run: dotnet publish -r win-x64 -c Release -o build/win-x64 -p:PublishSingleFile=true && gzip build/win-x64/code0k-cc.exe
-    - name: Upload win-x64
-      uses: actions/upload-artifact@v1
-      with:
-        name: win-x64
-        path: build/win-x64/code0k-cc.exe.gz
+      run: dotnet publish -r win-x64 -c Release -o /tmp/code0k/build/win-x64 -p:PublishSingleFile=true && mv /tmp/code0k/build/win-x64/code0k-cc.exe /tmp/code0k/artifact/code0k-cc-win-x64.exe
+
     - name: Publish osx-x64
-      run: dotnet publish -r osx-x64 -c Release -o build/osx-x64 -p:PublishSingleFile=true && gzip build/osx-x64/code0k-cc
-    - name: Upload osx-x64
-      uses: actions/upload-artifact@v1
+      run: dotnet publish -r osx-x64 -c Release -o /tmp/code0k/build/osx-x64 -p:PublishSingleFile=true && mv /tmp/code0k/build/osx-x64/code0k-cc /tmp/code0k/artifact/code0k-cc-osx-x64
+
+    - name: Compress artifacts
+      run: tar -Jcvf /tmp/code0k/output/binaries.tar.xz -C /tmp/code0k/artifact .
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v2
       with:
-        name: osx-x64
-        path: build/osx-x64/code0k-cc.gz
+        name: binaries
+        path: /tmp/code0k/output/binaries.tar.xz
