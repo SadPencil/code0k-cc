@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Numerics;
 using System.Text;
 using code0k_cc.Config;
 using code0k_cc.CustomException;
@@ -309,13 +308,38 @@ namespace code0k_cc.Pinocchio
             // todo: declare the output wires at the end
             foreach (var (rawVariable, (typeWires, varName)) in outputVariableWiresDict)
             {
-                var comment = new CommentConstraint();
-                AddConstraint(comment);
-                comment.Comment = $"The following {typeWires.Wires.Count.ToString(CultureInfo.InvariantCulture)} wires are output wires of variable \"{varName}\".";
+                var newTypeWires = new PinocchioTypeWires();
+                newTypeWires.Type = typeWires.Type;
 
-                var con = new OutputConstraint();
-                AddConstraint(con);
-                con.TypeWires = typeWires;
+                // mul by 1
+                foreach (var wire in typeWires.Wires)
+                {
+                    var newWire = new PinocchioWire();
+                    AddWire(newWire);
+
+                    var con = new BasicPinocchioConstraint(BasicPinocchioConstraintType.Mul);
+                    AddConstraint(con);
+
+                    con.InWires.Add(wire);
+                    con.InWires.Add(commonArg.OneWire);
+                    con.OutWires.Add(newWire);
+
+                    newTypeWires.Wires.Add(newWire);
+                    // ReSharper disable once UseIndexFromEndExpression
+                    Debug.Assert(typeWires.Wires[newTypeWires.Wires.Count - 1] == wire);
+                }
+
+                {
+                    var comment = new CommentConstraint();
+                    AddConstraint(comment);
+                    comment.Comment = $"The following {newTypeWires.Wires.Count.ToString(CultureInfo.InvariantCulture)} wires are output wires of variable \"{varName}\".";
+                }
+
+                {
+                    var con = new OutputConstraint();
+                    AddConstraint(con);
+                    con.TypeWires = newTypeWires;
+                }
             }
 
             // write these wire & constraints
@@ -340,14 +364,14 @@ namespace code0k_cc.Pinocchio
                                 throw CommonException.AssertFailedException();
                         }
 
-                        //zerop compatibility
+                        // zerop compatibility
                         if (basicPinocchioConstraint.Type == BasicPinocchioConstraintType.ZeroP &&
                             basicPinocchioConstraint.OutWires.Count == 1)
                         {
                             basicPinocchioConstraint.OutWires.Insert(0, commonArg.OneWire);
                         }
 
-                        //zerop compatibility end
+                        // zerop compatibility end
 
 
                         _ = sb.Append(" in ");
