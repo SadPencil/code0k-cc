@@ -25,36 +25,25 @@ jobs:
       run: dotnet test --no-restore --verbosity normal
     - name: Publish linux-x64
       run: dotnet publish -r linux-x64 -c Release -o build/linux-x64 -p:PublishSingleFile=true
+      run: gzip build/linux-x64/code0k-cc
     - name: Upload linux-x64
       uses: actions/upload-artifact@v1
       with:
         name: linux-x64
-        path: build/linux-x64
-    - name: Publish linux-arm64
-      run: dotnet publish -r linux-arm64 -c Release -o build/linux-arm64 -p:PublishSingleFile=true
-    - name: Upload linux-arm64
-      uses: actions/upload-artifact@v1
-      with:
-        name: linux-arm64
-        path: build/linux-arm64
+        path: build/linux-x64/code0k-cc.gz
     - name: Publish win-x64
       run: dotnet publish -r win-x64 -c Release -o build/win-x64 -p:PublishSingleFile=true
+      run: gzip build/win-x64/code0k-cc
     - name: Upload win-x64
       uses: actions/upload-artifact@v1
       with:
         name: win-x64
-        path: build/win-x64
-    - name: Publish win-arm64
-      run: dotnet publish -r win-arm64 -c Release -o build/win-arm64 -p:PublishSingleFile=true
-    - name: Upload win-arm64
+        path: build/win-x64/code0k-cc.gz
+    - name: Publish osx-x64
+      run: dotnet publish -r osx-x64 -c Release -o build/osx-x64 -p:PublishSingleFile=true
+      run: gzip build/win-x64/code0k-cc
+    - name: Upload osx-x64
       uses: actions/upload-artifact@v1
       with:
-        name: win-arm64
-        path: build/win-arm64
-    - name: Publish osx-amd64
-      run: dotnet publish -r osx-amd64 -c Release -o build/osx-amd64 -p:PublishSingleFile=true
-    - name: Upload osx-amd64
-      uses: actions/upload-artifact@v1
-      with:
-        name: osx-amd64
-        path: build/osx-amd64
+        name: osx-x64
+        path: build/osx-x64/code0k-cc.gz
