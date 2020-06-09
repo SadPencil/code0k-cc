@@ -20,6 +20,8 @@ namespace code0k_cc
         }
         static void Main(string[] args)
         {
+            Console.Error.WriteLine("Warning: This project is still at very early stage. The compiler may crash, producing a wrong output, or having potential bugs. According to the LICENSE, you may not use the program for anything.");
+        
 #if DEBUG
             var path = "input.txt";
 #else
