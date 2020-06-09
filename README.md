@@ -44,8 +44,7 @@ Issue 1:
 ```
 The application to execute does not exist: '/usr/local/bin/code0k-cc.dll'.
 ```
-Solution: 
-```
+Solution: ```
 cp ../code0k-cc/bin/Release/netcoreapp3.1/osx-x64/code0k-cc.dll /usr/local/bin/
 ```
 
