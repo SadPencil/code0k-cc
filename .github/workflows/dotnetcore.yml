@@ -38,7 +38,7 @@ jobs:
         name: win-x64
         path: build/win-x64/code0k-cc.gz
     - name: Publish osx-x64
-      run: dotnet publish -r osx-x64 -c Release -o build/osx-x64 -p:PublishSingleFile=true && gzip build/win-x64/code0k-cc
+      run: dotnet publish -r osx-x64 -c Release -o build/osx-x64 -p:PublishSingleFile=true && gzip build/osx-x64/code0k-cc
     - name: Upload osx-x64
       uses: actions/upload-artifact@v1
       with:
