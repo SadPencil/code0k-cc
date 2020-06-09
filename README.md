@@ -48,7 +48,13 @@ For convenience, the input file is called `input.c0k.c`. You may get an example 
 You may use `gcc` to pre-process the file. This enabling `#include` `#ifdef` and removing the comment of the source code.
 
 ```bash
+# command on Bash
 gcc -E input.c0k.c | grep -v "^#" > input.c0k.i
+```
+
+```cmd
+# command on Windows cmd
+gcc -E input.c0k.c | findstr -V "^#" > input.c0k.i
 ```
 
 ### Compile
