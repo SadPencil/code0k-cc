@@ -8,7 +8,7 @@ After this project goes to alpha phase, a pre-compiled binary will be provided f
 
 ### Prerequisite
 
-- .NET Core 3.1 or later Installed on a Windows / Linux platform
+- [.NET Core 3.1 or later](https://dotnet.microsoft.com/download/dotnet-core) Installed on a Windows / Linux platform
 
 ### Compile Command
 
