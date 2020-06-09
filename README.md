@@ -4,13 +4,20 @@ Warning: This project is still at very early stage. The compiler may crash, prod
 
 ## Get the compiler
 
+### Download
+
 After this project goes to alpha phase, a pre-compiled binary will be provided for common platforms.
 
-### Prerequisite
+
+And place the executable file to `/usr/local/bin`, naming `code0k-cc`.
+
+### Compile the compiler by hand
+
+#### Prerequisite
 
 - [.NET Core 3.1 or later](https://dotnet.microsoft.com/download/dotnet-core) Installed on a Windows / Linux platform
 
-### Compile Command
+#### Compile
 
 ```bash
 dotnet publish -r <RUNTIME_IDENTIFIER> -c Release -p:PublishSingleFile=true
