@@ -53,7 +53,7 @@ gcc -E input.c0k.c | grep -v "^#" > input.c0k.i
 ```
 
 ```cmd
-# command on Windows cmd
+REM command on Windows cmd
 gcc -E input.c0k.c | findstr -V "^#" > input.c0k.i
 ```
 
