@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using code0k_cc.Pinocchio;
+using code0k_cc.Runtime.Type;
 using code0k_cc.Standalone;
 using code0k_cc.Runtime.ValueOfType;
 using code0k_cc.Runtime.VariableMap;
@@ -12,8 +13,6 @@ namespace code0k_cc.Runtime
     {
         public NType Type => this.RawVariable.Type;
         public IValueOfType Value => this.RawVariable.Value;
-
-        //todo: [MaxPossibleValue]
 
         public readonly RawVariable RawVariable;
 

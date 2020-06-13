@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using code0k_cc.Runtime;
+using code0k_cc.Runtime.Type;
 
 namespace code0k_cc.Pinocchio
 {

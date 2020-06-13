@@ -6,6 +6,7 @@ using System.Text;
 using code0k_cc.CustomException;
 using code0k_cc.Runtime.Block;
 using code0k_cc.Runtime.ExeResult;
+using code0k_cc.Runtime.Type;
 using code0k_cc.Runtime.ValueOfType;
 
 namespace code0k_cc.Runtime.Nizk
