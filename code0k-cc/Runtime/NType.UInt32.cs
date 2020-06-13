@@ -14,6 +14,8 @@ namespace code0k_cc.Runtime
 {
     partial class NType
     {
+        //todo: [MaxPossibleValue]
+
         public static readonly NType UInt32 = new NType("uint32")
         {
             GetCommonConstantValueFunc = commonConstant =>

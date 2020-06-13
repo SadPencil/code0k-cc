@@ -13,8 +13,6 @@ namespace code0k_cc.Runtime
         public NType Type => this.RawVariable.Type;
         public IValueOfType Value => this.RawVariable.Value;
 
-        //todo: [MaxPossibleValue]
-
         public readonly RawVariable RawVariable;
 
         public Variable(RawVariable rawVariable)
