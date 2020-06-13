@@ -1,19 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using code0k_cc.Config;
-using code0k_cc.CustomException;
-using code0k_cc.Lex;
 using code0k_cc.Pinocchio;
-using code0k_cc.Pinocchio.Constraint;
 using code0k_cc.Runtime.ExeResult;
-using code0k_cc.Runtime.ValueOfType;
 
-namespace code0k_cc.Runtime
+namespace code0k_cc.Runtime.Type
 {
     partial class NType
     {

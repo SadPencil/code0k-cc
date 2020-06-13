@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -7,7 +6,7 @@ using code0k_cc.CustomException;
 using code0k_cc.Lex;
 using code0k_cc.Runtime.ValueOfType;
 
-namespace code0k_cc.Runtime
+namespace code0k_cc.Runtime.Type
 {
    partial class NType
     {

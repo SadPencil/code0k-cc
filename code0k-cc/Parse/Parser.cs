@@ -14,6 +14,7 @@ using code0k_cc.Runtime.Block;
 using code0k_cc.Runtime.ExeArg;
 using code0k_cc.Runtime.ExeResult;
 using code0k_cc.Runtime.Nizk;
+using code0k_cc.Runtime.Type;
 using code0k_cc.Runtime.ValueOfType;
 using code0k_cc.Runtime.VariableMap;
 
