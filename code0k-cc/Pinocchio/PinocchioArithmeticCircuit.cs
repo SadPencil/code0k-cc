@@ -317,8 +317,8 @@ namespace code0k_cc.Pinocchio
             // note: even if all the output of some constraints are not used, it is NOT considered useless
             // example here: input 1; split in 1 <1> out 32 <2,3,4,...,33>; this constraint ensure that "input 1" is smaller than 2^32, and must not be deleted while optimizing
 
-            // todo: declare the output wires at the end
-            foreach (var (rawVariable, (typeWires, varName)) in outputVariableWiresDict)
+            // declare the output wires at the end
+            foreach (var (_, (typeWires, varName)) in outputVariableWiresDict)
             {
                 var newTypeWires = new PinocchioTypeWires();
                 newTypeWires.Type = typeWires.Type;
@@ -445,6 +445,7 @@ namespace code0k_cc.Pinocchio
                 }
             }
 
+            // congrats!
         }
 
 
