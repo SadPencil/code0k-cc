@@ -64,7 +64,8 @@ namespace code0k_cc.Runtime
                     throw new Exception($"Can't parse \"{str}\" as \"{NType.Bool.TypeCodeName}\".");
                 }
             },
-            GetVariableStringFunc = variable => ( (NizkBoolValue) variable.Value ).Value.ToString(CultureInfo.InvariantCulture),
+            GetVariableStringFunc = variable => ((NizkBoolValue)variable.Value).Value.ToString(CultureInfo.InvariantCulture),
+            GetVariableIntFunc = variable => ((NizkBoolValue)variable.Value).Value == false ? 0 : 1,
             GetNewNizkVariableFunc = () => new Variable(new RawVariable()
             {
                 Type = NType.Bool,
@@ -88,11 +89,11 @@ namespace code0k_cc.Runtime
                 }
                 if (type == NType.Field)
                 {
-                    return NType.Field.GetCommonConstantValue(( (NizkBoolValue) variable.Value ).Value ? VariableCommonConstant.One : VariableCommonConstant.Zero);
+                    return NType.Field.GetCommonConstantValue(((NizkBoolValue)variable.Value).Value ? VariableCommonConstant.One : VariableCommonConstant.Zero);
                 }
                 else if (type == NType.UInt32)
                 {
-                    return NType.UInt32.GetCommonConstantValue(( (NizkBoolValue) variable.Value ).Value ? VariableCommonConstant.One : VariableCommonConstant.Zero);
+                    return NType.UInt32.GetCommonConstantValue(((NizkBoolValue)variable.Value).Value ? VariableCommonConstant.One : VariableCommonConstant.Zero);
                 }
                 else if (type == NType.Bool)
                 {

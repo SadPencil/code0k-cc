@@ -78,7 +78,8 @@ namespace code0k_cc.Runtime
                     throw new Exception($"Can't parse \"{str}\" as \"{NType.UInt32.TypeCodeName}\".");
                 }
             },
-            GetVariableStringFunc = variable => ( (NizkUInt32Value) variable.Value ).Value.ToString(CultureInfo.InvariantCulture),
+            GetVariableStringFunc = variable => ((NizkUInt32Value)variable.Value).Value.ToString(CultureInfo.InvariantCulture),
+            GetVariableIntFunc = variable => new BigInteger(((NizkUInt32Value)variable.Value).Value),
             GetNewNizkVariableFunc = () => new Variable(new RawVariable()
             {
                 Type = NType.UInt32,
@@ -115,15 +116,15 @@ namespace code0k_cc.Runtime
                         Value = new NizkFieldValue()
                         {
                             IsConstant = true,
-                            Value = new BigInteger(( (NizkUInt32Value) variable.Value ).Value),
+                            Value = new BigInteger(((NizkUInt32Value)variable.Value).Value),
                         }
                     });
                 }
                 else if (type == NType.Bool)
                 {
-                    if (( (NizkUInt32Value) variable.Value ).Value <= 1)
+                    if (((NizkUInt32Value)variable.Value).Value <= 1)
                     {
-                        return NType.Bool.GetCommonConstantValue(( (NizkUInt32Value) variable.Value ).Value == 1 ? VariableCommonConstant.One : VariableCommonConstant.Zero);
+                        return NType.Bool.GetCommonConstantValue(((NizkUInt32Value)variable.Value).Value == 1 ? VariableCommonConstant.One : VariableCommonConstant.Zero);
                     }
                     else
                     {
@@ -162,7 +163,7 @@ namespace code0k_cc.Runtime
                         Value = new NizkFieldValue()
                         {
                             IsConstant = true,
-                            Value = new BigInteger(( (NizkUInt32Value) variable.Value ).Value),
+                            Value = new BigInteger(((NizkUInt32Value)variable.Value).Value),
                         }
                     });
                 }
@@ -199,13 +200,13 @@ namespace code0k_cc.Runtime
                         Value = new NizkFieldValue()
                         {
                             IsConstant = true,
-                            Value = new BigInteger(( (NizkUInt32Value) variable.Value ).Value),
+                            Value = new BigInteger(((NizkUInt32Value)variable.Value).Value),
                         }
                     });
                 }
                 else if (type == NType.Bool)
                 {
-                    return NType.Bool.GetCommonConstantValue(( (NizkUInt32Value) variable.Value ).Value == 0 ? VariableCommonConstant.Zero : VariableCommonConstant.One);
+                    return NType.Bool.GetCommonConstantValue(((NizkUInt32Value)variable.Value).Value == 0 ? VariableCommonConstant.Zero : VariableCommonConstant.One);
                 }
                 else
                 {

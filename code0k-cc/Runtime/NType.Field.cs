@@ -80,6 +80,7 @@ namespace code0k_cc.Runtime
                 }
             },
             GetVariableStringFunc = variable => ( (NizkFieldValue) variable.Value ).Value.ToString(CultureInfo.InvariantCulture),
+            GetVariableIntFunc = variable => ((NizkFieldValue)variable.Value).Value,
             GetNewNizkVariableFunc = () => new Variable(new RawVariable()
             {
                 Type = NType.Field,

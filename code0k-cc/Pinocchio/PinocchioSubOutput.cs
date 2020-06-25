@@ -7,9 +7,11 @@ namespace code0k_cc.Pinocchio
 {
     class PinocchioSubOutput
     {
+        // These wires always comes first.
         public PinocchioVariableWires VariableWires;
-        // note that these constraints are ordered.
+        // Constraints are ordered. Topological orders must be satisfied.
         public readonly List<IPinocchioConstraint> Constraints = new List<IPinocchioConstraint>();
+        // AnonymousWires are ordered (after VariableWires). Topological orders must be satisfied.
         public readonly List<PinocchioWire> AnonymousWires = new List<PinocchioWire>();
     }
 }

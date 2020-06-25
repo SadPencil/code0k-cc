@@ -70,6 +70,17 @@ namespace code0k_cc.Runtime
         /// </summary>
         private Func<RawVariable, string> GetVariableStringFunc;
 
+        public BigInteger GetVariableInt(RawVariable rawVariable)
+        {
+            Debug.Assert(rawVariable.Type == this);
+            return this.GetVariableIntFunc(rawVariable);
+        }
+
+        /// <summary>
+        /// Method to get a string from a value. Throw exceptions.
+        /// </summary>
+        private Func<RawVariable, BigInteger> GetVariableIntFunc;
+
         /// <summary>
         /// Generics Type Lists. Can be null.
         /// </summary>
@@ -167,7 +178,7 @@ namespace code0k_cc.Runtime
         {
             Debug.Assert(variable.Type == this);
 
-            if (( this.UnaryOperationFuncs?.ContainsKey(op) ).GetValueOrDefault())
+            if ((this.UnaryOperationFuncs?.ContainsKey(op)).GetValueOrDefault())
             {
                 var retVariable = this.UnaryOperationFuncs[op](variable);
 
@@ -194,7 +205,7 @@ namespace code0k_cc.Runtime
         public Variable BinaryOperation(Variable variable, Variable another, VariableOperationType op)
         {
             Debug.Assert(variable.Type == this);
-            if (( this.BinaryOperationFuncs?.ContainsKey(op) ).GetValueOrDefault())
+            if ((this.BinaryOperationFuncs?.ContainsKey(op)).GetValueOrDefault())
             {
                 var retVariable = this.BinaryOperationFuncs[op](variable, another);
                 // add connection
@@ -282,6 +293,7 @@ namespace code0k_cc.Runtime
             };
 
             this.GetVariableStringFunc = variable => throw new Exception($"Type \"{this.TypeCodeName}\" doesn't support String().");
+            this.GetVariableIntFunc = variable => throw new Exception($"Type \"{this.TypeCodeName}\" doesn't support Int().");
             this.ParseFunc = s => throw new Exception($"Type \"{this.TypeCodeName}\" doesn't support Parse().");
             this.GetNewNizkVariableFunc = () => throw new Exception($"Type \"{this.TypeCodeName}\" is not nizk-compatible.");
             this.VariableNodeToPinocchioFunc = (rawVariable, commonArg, checkRange) => throw new Exception($"Type \"{this.TypeCodeName}\" is not nizk-compatible.");
@@ -360,7 +372,7 @@ namespace code0k_cc.Runtime
         }
         public static bool operator !=(NType op1, NType op2)
         {
-            return !( op1 == op2 );
+            return !(op1 == op2);
         }
 
     }

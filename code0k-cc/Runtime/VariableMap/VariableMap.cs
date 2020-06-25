@@ -216,6 +216,9 @@ namespace code0k_cc.Runtime.VariableMap
                 // update children
                 foreach (var node in currentNode.NextNodes)
                 {
+                    Debug.Assert(remainingNodes.Contains(node));
+                    Debug.Assert(nodePrevsDict[node].Contains(currentNode));
+
                     _ = nodePrevsDict[node].Remove(currentNode);
                     if (nodePrevsDict[node].Count == 0)
                     {
