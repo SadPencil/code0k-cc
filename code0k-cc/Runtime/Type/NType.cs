@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Numerics;
 using code0k_cc.Pinocchio;
 using code0k_cc.Runtime.ExeResult;
 
