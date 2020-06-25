@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using code0k_cc.Runtime.ValueOfType;
 
-namespace code0k_cc.Runtime
+namespace code0k_cc.Runtime.Type
 {
     partial class NType
     {

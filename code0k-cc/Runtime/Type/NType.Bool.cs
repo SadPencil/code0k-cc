@@ -2,13 +2,12 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
-using System.Text;
 using code0k_cc.CustomException;
 using code0k_cc.Pinocchio;
 using code0k_cc.Pinocchio.Constraint;
 using code0k_cc.Runtime.ValueOfType;
 
-namespace code0k_cc.Runtime
+namespace code0k_cc.Runtime.Type
 {
     partial class NType
     {

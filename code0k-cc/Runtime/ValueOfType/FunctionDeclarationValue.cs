@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using code0k_cc.Standalone;
 using code0k_cc.Parse;
 using code0k_cc.Runtime.Block;
+using code0k_cc.Runtime.Type;
 
 namespace code0k_cc.Runtime.ValueOfType
 {
